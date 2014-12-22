@@ -12,30 +12,30 @@
 				"children":
 				[
 					{
-						"caption": "T3S",
+						"caption": "ArcticTypescript",
 						"children":
 						[
 							{
 								"command": "open_file",
-								"args": {"file": "${packages}/T3S/README.md"},
+								"args": {"file": "${packages}/ArcticTypescript/README.md"},
 								"caption": "README"
 							},
 							{
 								"command": "open_file",
-								"args": {"file": "${packages}/T3S/CHANGES.txt"},
+								"args": {"file": "${packages}/ArcticTypescript/CHANGES.txt"},
 								"caption": "CHANGES"
 							},
-							{ 
+							{
 								"caption": "-"
 							},
 							{
 								"command": "open_file",
-								"args": {"file": "${packages}/T3S/T3S.sublime-settings"},
+								"args": {"file": "${packages}/ArcticTypescript/ArcticTypescript.sublime-settings"},
 								"caption": "Settings – Default"
 							},
 							{
 								"command": "open_file",
-								"args": {"file": "${packages}/User/T3S.sublime-settings"},
+								"args": {"file": "${packages}/User/ArcticTypescript.sublime-settings"},
 								"caption": "Settings – User"
 							}
 						]

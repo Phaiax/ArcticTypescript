@@ -2,72 +2,72 @@
 	{
 		"command": "typescript_completion",
 		"keys": ["ctrl+space"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_error_panel",
 		"keys": ["alt+shift+e"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_error_goto",
 		"keys": ["alt+shift+e", "alt+shift+h"],
 		"args": {"n": 0 },
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_error_goto",
 		"keys": ["alt+shift+e", "alt+shift+j"],
 		"args": {"n": 1 },
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_error_goto",
 		"keys": ["alt+shift+e", "alt+shift+k"],
 		"args": {"n": 2 },
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_error_goto",
 		"keys": ["alt+shift+e", "alt+shift+l"],
 		"args": {"n": 3 },
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_reload_project",
 		"keys": ["f5"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_definition",
 		"keys": ["f4"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_structure",
 		"keys": ["f3"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_type",
 		"keys": ["f1"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_references",
 		"keys": ["f2"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_build",
 		"args": {"characters": ""},
 		"keys": ["f8"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
 		"command": "typescript_build",
 		"args": {"characters": ""},
 		"keys": ["ctrl+b"],
-		"context": [ {"key": "T3S"} ]
+		"context": [ {"key": "ArcticTypescript"} ]
 	}
 ]

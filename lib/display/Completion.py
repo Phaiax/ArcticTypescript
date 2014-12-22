@@ -23,11 +23,11 @@ class Completion(object):
 			entries = json.loads(tss_result_json)['entries']
 		except:
 			if tss_result_json.strip() == 'null':
-				sublime.status_message('T3S: no completions available')
+				sublime.status_message('ArcticTypescript: no completions available')
 			else:
 				print('completion json error : ', tss_result_json)
 			return 0
-		
+
 		for entry in entries:
 			if self.interface and entry['kind'] != 'primitive type' and entry['kind'] != 'interface' : continue
 			key = self._get_list_key(entry)
@@ -50,18 +50,18 @@ class Completion(object):
 		(cursor_line, cursor_col) = view.rowcol(cursor_pos)
 
 		char = view.substr(cursor_pos-1)
-		
+
 
 		enabled = force_enable or (char in self.completion_chars)
 		self.interface = char is ':'
 
 		if enabled:
 			Debug('autocomplete', "Autocompletion for line %i , %i, forced=%s" % (cursor_line+1, cursor_col+1, force_enable) )
-	
+
 			is_member = is_member_completion( get_content_of_line_at(view, cursor_pos) )
 			is_member_str = str( is_member ).lower() # 'true' or 'false'
 
-			# do execute tss.js complete for cursor positon after last dot, so we use 
+			# do execute tss.js complete for cursor positon after last dot, so we use
 			# sublimes fuzzy mechanism to reduce the list, not the mechanism
 			# (1:1 matching of the typed chars) tss.js would use
 
@@ -80,10 +80,10 @@ class Completion(object):
 			self.enabled_for['viewid'] = view.id()
 			self.enabled_for['line'] = cursor_line
 			self.enabled_for['col'] = autocomplete_col
-			
+
 			Debug('autocomplete', " -> push current file contents as update to tss.js")
 			TSS.update(*get_file_infos(view))
-			
+
 			def async_react_completions_available(tss_result_json, filename, line, col, is_member_str):
 				Debug('autocomplete', "Autocompletion results available for line %i , %i" % (line+1, col+1) )
 
@@ -116,7 +116,7 @@ class Completion(object):
 
 				Debug('autocomplete', " -> command to sublime to now show autocomplete box with prepared list" )
 
-				# this will trigger Listener.on_query_completions 
+				# this will trigger Listener.on_query_completions
 				# but on_query_completions needs to have the completion list
 				# already available
 				current_view.run_command('auto_complete',{
@@ -125,10 +125,10 @@ class Completion(object):
 					'next_completion_if_showing': True
 				})
 				Debug('autocomplete', " -> (sublime cmd finished)" )
-			
+
 			TSS.complete(view.file_name(), cursor_line, autocomplete_col, is_member_str, async_react_completions_available)
 
-			
+
 
 
 	# ENTRY KEY
@@ -181,7 +181,7 @@ class Completion(object):
 					args.append(arg)
 					arg = ""
 				else:
-					arg+=char	
+					arg+=char
 			else:
 				arg+=char
 

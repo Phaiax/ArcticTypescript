@@ -21,7 +21,7 @@ from .Utils import read_file, get_file_infos, get_prefix, debounce, ST3, catch_C
 
 # AUTO COMPLETION
 class TypescriptCompletion(sublime_plugin.TextCommand):
-	
+
 	def run(self, edit):
 		COMPLETION.trigger(self.view, TSS, force_enable=True)
 
@@ -43,11 +43,11 @@ class TypescriptType(sublime_plugin.TextCommand):
 		TSS.assert_initialisation_finished(self.view.file_name())
 
 		if not ST3: return
-		
+
 		pos = self.view.sel()[0].begin()
 		(_line, _col) = self.view.rowcol(pos)
 		_view = self.view
-		
+
 		def async_react(types, filename, line, col):
 			if types == None: return
 			if 'kind' not in types: return
@@ -66,7 +66,7 @@ class TypescriptType(sublime_plugin.TextCommand):
 				liste = [kind+' '+types['fullSymbolName']+' '+types['type']]
 
 			view.show_popup_menu(liste, None)
-			
+
 		# start async request
 		TSS.type(self.view.file_name(), _line, _col, callback=async_react)
 
@@ -78,7 +78,7 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 	@catch_CancelCommand
 	def run(self, edit):
 		TSS.assert_initialisation_finished(self.view.file_name())
-		
+
 		pos = self.view.sel()[0].begin()
 		(_line, _col) = self.view.rowcol(pos)
 		_view = self.view
@@ -96,7 +96,7 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 
 			view = sublime.active_window().open_file(definition['file'])
 			self.open_view(view, definition)
-			
+
 		TSS.definition(self.view.file_name(), _line, _col, callback=async_react)
 
 	def open_view(self,view,definition):
@@ -132,7 +132,7 @@ class TypescriptReferences(sublime_plugin.TextCommand):
 		pos = self.view.sel()[0].begin()
 		(line, col) = self.view.rowcol(pos)
 		_view = self.view
-		
+
 		def async_react(refs, filename, line, col):
 			self.refs = refs
 			self.window = sublime.active_window()
@@ -186,7 +186,7 @@ class TypescriptStructure(sublime_plugin.TextCommand):
 		T3SVIEWS.OUTLINE.bring_to_top(back_to=self.view)
 
 		self.view.run_command('typescript_update_structure', {"force": True})
-	
+
 
 # REFRESH OUTLINE VIEW to match CURRENT VIEW
 class TypescriptUpdateStructure(sublime_plugin.TextCommand):
@@ -197,7 +197,7 @@ class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 
 		def async_react(members, filename, sender_view_id):
 			## members is the already json-decoded tss.js answer
-			Debug('structure', 'STRUCTURE async_react for %s in start view %s, now view %s' 
+			Debug('structure', 'STRUCTURE async_react for %s in start view %s, now view %s'
 					% (filename, self.view.id(), sublime.active_window().active_view().id()) )
 
 			if sublime.active_window().active_view().id() != sender_view_id or self.view.id() != sender_view_id:
@@ -208,7 +208,7 @@ class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 
 
 		if T3SVIEWS.OUTLINE.is_active() and (force or not T3SVIEWS.OUTLINE.is_current_ts(self.view)):
-			Debug('structure', 'STRUCTURE for %s in view %s, active view is %s' 
+			Debug('structure', 'STRUCTURE for %s in view %s, active view is %s'
 				% (self.view.file_name(), self.view.id(), sublime.active_window().active_view().id()))
 			TSS.structure(self.view.file_name(), self.view.id(), async_react)
 
@@ -283,11 +283,11 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 		filename = self.view.file_name()
 
 		if not SETTINGS.get('activate_build_system', get_root(filename)):
-			print("T3S: build_system_disabled")
+			print("ArcticTypescript: build_system_disabled")
 			return
 
 		TSS.assert_initialisation_finished(filename)
-		
+
 		self.window = sublime.active_window()
 		if characters != False:
 			self.window.run_command('save')
@@ -295,13 +295,13 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 		compiler = Compiler(self.window, get_root(filename), filename)
 		compiler.daemon = True
 		compiler.start()
-		
+
 		sublime.status_message('Compiling : ' + filename)
-			
+
 
 class TypescriptBuildView(sublime_plugin.TextCommand):
-	
-	def run(self, edit_token, filename):		
+
+	def run(self, edit_token, filename):
 		if filename != 'error':
 			ts_filename = self.view.file_name()
 			if SETTINGS.get('show_build_file', get_root(ts_filename)):

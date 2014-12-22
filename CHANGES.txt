@@ -1,3 +1,11 @@
+version 0.3.0 :
+	renamed and cloned into ArcticTypescript
+	included pull request #63 from T3S (https://github.com/Railk/T3S/pull/63)
+	shortcuts changed
+
+version 0.2.0:
+	<untracked>
+
 version 0.1.2 :
 
 	- added :

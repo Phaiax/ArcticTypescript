@@ -30,9 +30,9 @@ possible_classifications = [ 'all',
 # DEBUG
 def Debug(classification, text):
 	if 'all' in print_classifications or classification in print_classifications:
-		print("T3S: %s: %s" % (classification.ljust(8), text))
+		print("ArcticTypescript: %s: %s" % (classification.ljust(8), text))
 	if classification not in possible_classifications:
-		print("T3S: debug: got unknown debug message classification: %s. " \
+		print("ArcticTypescript: debug: got unknown debug message classification: %s. " \
 			"Consider adding this to possible_classifications" % classification)
 	sys.stdout.flush()
 
@@ -67,7 +67,7 @@ def max_calls(limit = 1500, name=""):
 # CANCEL COMMAND EXCEPTION
 class CancelCommand(Exception):
 	pass
-	
+
 # CANCEL COMMAND EXCEPTION CATCHER DECORATOR
 def catch_CancelCommand(func):
 	def catcher(*kargs, **kwargs):
@@ -177,7 +177,7 @@ def is_dts(view):
 	return view.file_name() and view.file_name().endswith('.d.ts')
 
 
-# IS AN OBJECT MEMBER 
+# IS AN OBJECT MEMBER
 # TRUE: line=Instance. or line=Instance.fooba or line=Instance.foobar.alic
 # FALSE: line=Inst
 js_id_re = re.compile(u'^[_$a-zA-Z\u00FF-\uFFFF][_$a-zA-Z0-9\u00FF-\uFFFF]*')
@@ -257,7 +257,7 @@ def get_lines(view):
 # GET FILE INFO
 def get_file_infos(view):
 	return (view.file_name(), get_lines(view), get_content(view))
-	
+
 # MAKE MD5 of disk contents of file
 def hash_file(filename, blocksize=65536):
 	f = open(filename)

@@ -36,7 +36,7 @@ def init(view):
 
 	if not file_exists(root):
 		sublime.status_message("Typescript root file %s not found!" % root)
-		print("T3S: Typescript root file %s not found! Update your .sublime-project file." % root)
+		print("ArcticTypescript: Typescript root file %s not found! Update your .sublime-project file." % root)
 		return
 
 	filename = view.file_name()
@@ -59,7 +59,7 @@ def init(view):
 		TSS.init(root)
 		view.settings().set('auto_complete', SETTINGS.get("auto_complete", root))
 		view.settings().set('extensions', ['ts'])
-		
+
 @max_calls()
 def on_init(root):
 	TSS.removeEventListener('init', root, on_init)
@@ -102,7 +102,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	def on_activated(self, view):
 		init(view)
 
-		
+
 	# ON CLONED FILE
 	@max_calls()
 	def on_clone(self, view):
@@ -171,8 +171,8 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# ON QUERY CONTEXT (execute commandy only on .ts files)
 	def on_query_context(self, view, key, operator, operand, match_all):
-		if key == "T3S":
+		if key == "ArcticTypescript":
 			view = sublime.active_window().active_view()
 			return is_ts(view)
-			
-			
+
+

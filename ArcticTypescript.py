@@ -14,8 +14,9 @@ if int(sublime.version()) >= 3000:
 		pass
 
 else:
-	from lib.Commands import *
-	from lib.Listener import TypescriptEventListener, init
-	from lib.display.T3SViews import TypescriptEventListener2
+	sublime.error_message("ArcticTypescript does not support Sublime Text 2")
+	#from lib.Commands import *
+	#from lib.Listener import TypescriptEventListener, init
+	#from lib.display.T3SViews import TypescriptEventListener2
 
-	sublime.set_timeout(lambda:init(sublime.active_window().active_view()),1000)
+	#sublime.set_timeout(lambda:init(sublime.active_window().active_view()),1000)

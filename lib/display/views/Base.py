@@ -5,7 +5,7 @@ from ...Utils import Debug, max_calls
 
 class Base(object):
 	"""
-		This object represents a special view to display T3S information like
+		This object represents a special view to display ArcticTypescript information like
 		the error list or the outline structure
 	"""
 
@@ -42,7 +42,7 @@ class Base(object):
 		view.set_name(self.name)
 		view.set_scratch(True)
 		view.set_read_only(True)
-		view.set_syntax_file('Packages/T3S/theme/Typescript.tmLanguage')
+		view.set_syntax_file('Packages/ArcticTypescript/theme/Typescript.tmLanguage')
 		view.settings().set('line_numbers', False)
 		view.settings().set('word_wrap', True)
 		view.settings().set('extensions',['js'])
@@ -57,7 +57,7 @@ class Base(object):
 
 	@max_calls()
 	def hide(self):
-		""" closes this special T3S view """
+		""" closes this special ArcticTypescript view """
 		v = self.get_view()
 		if v is not None:
 			v.close()
@@ -82,7 +82,7 @@ class Base(object):
 	def _search_existing_view(self):
 		"""
 			returns True if a view with the name of
-			this T3S view is open and sets it as reference
+			this ArcticTypescript view is open and sets it as reference
 		"""
 		for w in sublime.windows():
 			for v in w.views():

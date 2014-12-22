@@ -36,7 +36,7 @@ class ProjectSettings(object):
 			return self._default(token)
 
 	def _default(self,token):
-		return sublime.load_settings('T3S.sublime-settings').get(token)
+		return sublime.load_settings('ArcticTypescript.sublime-settings').get(token)
 
 
 # ------------------------------------- PROJECT ERROR ----------------------------------------- #
@@ -230,7 +230,7 @@ class ProjectError(object):
 
 	# PARSE SETTINGS
 	def _get_settings(self):
-		settings = sublime.load_settings('T3S.sublime-settings')
+		settings = sublime.load_settings('ArcticTypescript.sublime-settings')
 		return {
 			"auto_complete" : settings.get('auto_complete'),
 			"node_path" : settings.get('node_path'),

@@ -74,8 +74,8 @@ class CompilerReader(Thread):
 			try:
 				line = json.loads(line.decode('UTF-8'))
 			except ValueError as v:
-				print('T3S ERROR: NON JSON ANSWER from build.js: %s' % line.decode('UTF-8'))
-				print('T3S: compiler error')
+				print('ArcticTypescript ERROR: NON JSON ANSWER from build.js: %s' % line.decode('UTF-8'))
+				print('ArcticTypescript: compiler error')
 				break
 			if 'output' in line:
 				if ST3:
@@ -88,7 +88,7 @@ class CompilerReader(Thread):
 				else:
 					sublime.set_timeout(lambda:show_view(self.window,line),0)
 			else:
-				print('T3S: compiler error')
+				print('ArcticTypescript: compiler error')
 		Debug('build+', 'BUILD RESULTS READER THREAD finished')
 		self.stdout.close()
 

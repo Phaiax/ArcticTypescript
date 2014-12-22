@@ -140,7 +140,7 @@ function exec(index){
 	});
 }
 
-console.log(encode({'output':'T3S building ... '+commands+EOL}));
+console.log(encode({'output':'ArcticTypescript building ... '+commands+EOL}));
 exec(0);
 
 ////////////////////////////////////////////////////////////////////////////////////////
