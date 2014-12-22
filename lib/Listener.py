@@ -123,7 +123,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 		view.run_command('typescript_update_structure', {"force": True})
 		ERRORS.start_recalculation(view.file_name())
 
-		if SETTINGS.get('build_on_save', get_root(filename)):
+		if get_root(filename) and SETTINGS.get('build_on_save', get_root(filename)):
 			sublime.active_window().run_command('typescript_build',{"characters":False})
 
 
@@ -154,7 +154,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 		view.run_command('typescript_update_structure', {"force": True})
 		COMPLETION.trigger(view, TSS)
 
-		if not SETTINGS.get('error_on_save_only', get_root(filename)):
+		if get_root(filename) and not SETTINGS.get('error_on_save_only', get_root(filename)):
 			ERRORS.start_recalculation(view.file_name())
 
 
