@@ -11,6 +11,9 @@ This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you
  - read this readme
  - uninstall T3S
  - only use one root file
+ - delete the *.sublime-workspace files in your projects
+ - close all file tabs in your old T3S Projects
+ - update your key binding overrides, The new key is 'ArcticTypescript'
 
 
 ### Important Changes:
