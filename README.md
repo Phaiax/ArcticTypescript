@@ -3,43 +3,49 @@ ArcticTypescript
 
 TypeScript plugin for Sublime Text 3 using TypeScript tools : https://github.com/clausreinke/typescript-tools
 
-I'm using the same error icons has SublimeLinter.
-I took inspiration from: https://github.com/raph-amiard/sublime-typescript
+Sublime Text 2 is not supported anymore. Use T3S instead.
+
+### T3S
+
+This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you switch to ArcticTypescript, please:
+ - read this readme
+ - uninstall T3S
+ - only use one root file
 
 
-### vdev Changes (this update may break old configurations)
-- The reference directory to resolve relative root files has changed:
-	- You have: /home/user/ts/projectX/X.sublimeproject and /home/user/ts/projectX/main.ts
-	- Before you specified "projectX/main.ts" as root file
-	- NOW you need to specify "main.ts" only. (This is the default sublime way of relative paths.)
-- The default shortcut to switch to the error view changed to: CTRL + SHIFT + E
-- There are 4 new shortcuts to jump to the first four Errors: CTRL + SHIFT + E + H (or J, K, L)
-- currently failing on ST2
+### Important Changes:
 
-### v0.2.0 Changes (updates i make can break some things as i don't always fully check on each OS)
-- On focusing a ts file if no project is found for it; a project creation process begin
-- You need to redo your project settings as i've added the possibility to have settings per project (cf. examples)
-- You need to redo your user settings as the file name have changed to reflect the plugin name
-- Error and Outline panels have been replaced by views (you can click on each line to go to the corresponding place)
-- Build system is integrated to the plugin (you still need <code>tsc</code>) and you can set your node path (settings)
-- You can build on save (settings) and have a the current file resulting javascript file in a split view (settings)
-- When you close all the ts file of a project, the project (and the node corresponding node process) is closed
-- One branch only for Sublime text 2 and 3
-- Completion on <code>:</code> with <code>ctrl+space</code> to have the primitives and interface
-- Quick panel for user message (initialisation,closing project etc...)
-- Todo :
-
-	1. Better layout management
-	2. Tests everything on OSes and ST2/ST3
+v0.3.0:
+- relative root files now have a different base directory
+- The default shortcut to switch to the error view changed to: CTRL + ALT + E
+- There are 4 new shortcuts to jump to the first four Errors: CTRL + ALT + E + H (or J, K, L)
 
 
 ### Features
+
 - TypeScript language auto completion
 - TypeScript language error highlighting
 - TypeScript language syntax highlighting
 - Typescript file outline view
 - A build System
 - Basic refactoring
+
+### Commands:
+
+Create a project file first (read below).
+
+- <code>ctrl+space</code> Trigger code completion.
+- <code>alt+shift+e</code> Open a <code>view</code> listing all the **errors** across all the files of the project.
+- <code>alt+shift+e, h</code> Goto first error in error list.
+- <code>alt+shift+e, j</code> Goto second error in error list.
+- <code>alt+shift+e, k</code> Goto third error in error list.
+- <code>alt+shift+e, l</code> Goto 4th error in error list.
+- <code>f1</code> Click on a property, a class, a method etc... then press f1 to have **details** about it.
+- <code>f2</code> Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk).
+- <code>f3</code> Open a ***outline*** <code>view</code> of the file (class,methods,properties, etc...).
+- <code>f4</code> Click on a property, a class, a method etc... then press f4 to go to the **definition**.
+- <code>f5</code> **Reload** the current project.
+- <code>f8</code> or <code>ctrl+b</code> Build the project.
 
 
 ### Dependencies
@@ -48,105 +54,60 @@ I took inspiration from: https://github.com/raph-amiard/sublime-typescript
 
 
 ### OS
-Tested on Windows & Ubuntu & OSX not entirely for now on <code>DEV</code>
+Tested on Ubuntu so far. For Windows & OSX please submit any issues.
 
 
 ### Installation
 
-##### Sublime text Package directory:
-Click the <code>Preferences > Browse Packages…</code> menu
+- Install Package Control for Sublime Text 3: https://sublime.wbond.net/installation
+- Sublime command: <code>Package Control: Install Package</code> > <code>ArcticTypescript</code>
 
+## Your Project
 
-##### Without Git:
-Download the latest source zip from github and extract the files to your Sublime Text <code>Packages</code> directory, into a new directory named <code>T3S</code>.
+##### General Information about projects and ArcticTypescript
 
-##### With Git:
-1. Clone the repository in your Sublime Text <code>Packages</code> directory.
-2. Checkout dev branch using <code>git checkout dev</code>.
+This plugin uses the typescript-tools (https://github.com/clausreinke/typescript-tools) to provide code completion, parsing, ...
 
+To init the services, a so-called root file is required. This enables the tools to find all typescript files which belong together. Currently this is not implemented properly. Until this is fixed, i recommend to ONLY use ONE root file.
 
-### Project
+If you have multiple entry points, use the one which includes more references. For example use test.ts instead of main.ts as rootfile, so all test files will be included in the internal project tree of the typescript tools. Or create a kind of fake root.ts file that references all your other entry points (main.ts, test.ts, ...).
 
-For the plugin to work you need to define a project :
+##### Project Settings
 
+For ArcticTypescript to work, you must define some settings either
 
-1. Inside your <code>project_name.sublime-project</code> file if you have one
-2. By creating a <code>.sublimets</code> at the root of your project folder
+1. inside your <code>project_name.sublime-project</code> file if you have one
+2. or by creating a <code>.sublimets</code> at the root of your project folder.
 
-You can look inside the <code>example folder</code> for setup examples or if you focus a ts file and no project are found a project creation porcess will be initiated
+You can look inside the <code>example folder</code> for setup examples.
 
-To open a project, you need to open the folder where your project is with <code>file > open folder</code> or <code>project > open project</code>
+If you open any .ts file and ArcticTypescript can't find any project settings, you will be promted to create them.
 
-##### You have a sublime text project or want to create a project with multiple root files
-You can indicate your typescript root files in your project_name.sublime-project like so :
+To open a project, you need to open the folder where your project is with <code>File > Open Folder ...</code> or <code>Project > Open Project ...</code>
+
+**Watch out, the settings (names, ..) may change in future versions of ArcticTypescript. If you encounter problems, read the changelog and readme first.**
+
+##### Project Settings in a projectname.sublime-project file
 
 	"settings":
 	{
 			"typescript":
 			{
 				"roots":[
-					"path/from/top/folder/to/your/root/file_1.ts",
-					"path/from/top/folder/to/your/root/file_2.ts",
-					...
-					"path/from/top/folder/to/your/root/file_X.ts"
+					"path/from/top/folder/to/your/root/file_1.ts"
 				]
 			}
 	}
 
-And also add (optionnal) your project settings :
+And also add (optional) project settings :
 
-		"settings":
-		{
-			"typescript":
-			{
-				"roots":[
-					"path/from/top/folder/to/your/root/file_1.ts",
-					"path/from/top/folder/to/your/root/file_2.ts",
-					...
-					"path/from/top/folder/to/your/root/file_X.ts"
-				],
-				"settings":{
-					"auto_complete":true,
-					"node_path":"none",
-					"error_on_save_only":false,
-					"build_on_save":false,
-					"show_build_file":false,
-					"build_parameters":{
-						"pre_processing_commands":[],
-						"post_processing_commands":[],
-						"output_dir_path":"none",
-						"concatenate_and_emit_output_file_path":"none",
-						"source_files_root_path":"none",
-						"map_files_root_path":"none",
-						"module_kind":"none",
-						"allow_bool_synonym":false,
-						"allow_import_module_synonym":false,
-						"generate_declaration":false,
-						"no_implicit_any_warning":false,
-						"skip_resolution_and_preprocessing":false,
-						"remove_comments_from_output":false,
-						"generate_source_map":false,
-						"ecmascript_target":"ES3"
-					}
-				}
-			}
-		}
-
-- One of "output_dir_path" (for --outDir) and "concatenate_and_emit_output_file_path" (for --out) needs to contain a file path/directory. If you want to insert a relative path, it has to start with a dot: . The relative path is relative to the folder of the root file.
-- For any path related config option: If no path is given, please insert "none".
-- show_build_file displays the compiled file in an extra view inside of sublime.
-
-##### You want to create a single root file project and don't want to create a sublime-project
-You can create a .sublimets file in the folder containing the typescript root file :
-
+	"settings":
 	{
-			"root":"root_file_name.ts"
-	}
-
-And also add (optionnal) your project settings :
-
+		"typescript":
 		{
-			"root":"root_file_name.ts",
+			"roots":[
+				"path/from/top/folder/to/your/root/file_1.ts",
+			],
 			"settings":{
 				"auto_complete":true,
 				"node_path":"none",
@@ -172,19 +133,56 @@ And also add (optionnal) your project settings :
 				}
 			}
 		}
+	}
 
-### Commands:
+The build parameters (except for pre_processing_commands and post_processing_commands) are converted into the command line options of the typescript compiler tsc.
 
-1. <code>f1</code> Click on a property, a class, a method etc... then press f1 to have detail about it (ST3 ONLY)
-2. <code>f2</code> Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk)
-2. <code>f3</code> Open a outline <code>view</code> of the file (class,methods,properties, etc...)
-3. <code>f4</code> Click on a property, a class, a method etc... then press f4 to go to the definition
-4. <code>f5</code> Reload the current project
-5. <code>f8</code> or <code>ctrl+b</code> Build the project
-6. <code>ctrl+shift+e</code> Open a <code>view</code> listing all the errors across all the files of the project
+- Either <code>output_dir_path</code> (for --outDir) or <code>concatenate_and_emit_output_file_path</code> (for --out) must contain a file path/directory. If you want to insert a relative path, it has to start with a dot: <code>.</code> The relative path is relative to the folder of the root file.
+- For any path related config option: If no path is given, please insert <code>"none"</code>.
+- <code>show_build_file</code> displays the compiled file in an extra view inside of sublime.
+
+##### Project Settings in a .sublimets file
+
+You want to create a **single root file project** and don't want to create a sublime-project
+You can create a <code>.sublimets</code> file in the folder containing the typescript root file :
+
+	{
+			"root":"root_file_name.ts"
+	}
+
+And also add (optionnal) your project settings :
+
+	{
+		"root":"root_file_name.ts",
+		"settings":{
+			"auto_complete":true,
+			"node_path":"none",
+			"error_on_save_only":false,
+			"build_on_save":false,
+			"show_build_file":false,
+			"build_parameters":{
+				"pre_processing_commands":[],
+				"post_processing_commands":[],
+				"output_dir_path":"none",
+				"concatenate_and_emit_output_file_path":"none",
+				"source_files_root_path":"none",
+				"map_files_root_path":"none",
+				"module_kind":"none",
+				"allow_bool_synonym":false,
+				"allow_import_module_synonym":false,
+				"generate_declaration":false,
+				"no_implicit_any_warning":false,
+				"skip_resolution_and_preprocessing":false,
+				"remove_comments_from_output":false,
+				"generate_source_map":false,
+				"ecmascript_target":"ES3"
+			}
+		}
+	}
+
 
 ### Settings:
-You can acces the plugin settings from <code>Preferences > Packages Settings > T3S</code>, to modify the settings please copy the default settings inside the user settings one, and make your modification there otherwise your settings will be override by an update of the plugin, or put the settings inside your project file.
+You can acces the plugin settings from <code>Preferences > Packages Settings > ArcticTypescript</code>, to modify the settings please copy the default settings inside the user settings one, and make your modification there otherwise your settings will be override by an update of the plugin, or put the settings inside your project file.
 
 
 You have 6 settings available:
@@ -285,7 +283,7 @@ These are the default values:
 			"ecmascript_target":"ES3"
 		}
 
-Here's an exemple that do:
+Here's an example that do:
 
 1. One pre processing command : <code>node .settings/.components</code>
 2. The actual compilation with an output dir and amd module : <code>tsc /absolute/path/to/filename.ts --outDir ./.build --module amd</code>
@@ -338,7 +336,7 @@ You can circle through the function variables (if there's some) like with the sn
 You can click on highlighted part to see the error description in the status bar
 
 ##### Error View:
-You have the possibility to open an <code>Error view</code> that will list all the errors accross all your project file with the command <code>ctrl+shift+e</code>
+You have the possibility to open an <code>Error view</code> that will list all the errors accross all your project file with the command <code>ctrl+alt+e</code>
 You can then click on each row, it'll open or focus the already open file concerned by the error.
 
 ##### Reloading the project:
@@ -346,4 +344,30 @@ You have the possibility to <code>reload</code> the project by pressing <code>F5
 
 ##### Building the project:
 you can build the current project with <code>F8</code> on a file. if you have activated <code>show_build_file</code> option it will show a <code>Split view</code> with the corresponding javascript file
+
+
+
+Credits
+----------------------------------------------------------------------------
+
+I'm using the same error icons has SublimeLinter.
+I took inspiration from: https://github.com/raph-amiard/sublime-typescript
+
+
+
+### v0.2.0 Changes (updates i make can break some things as i don't always fully check on each OS)
+- On focusing a ts file if no project is found for it; a project creation process begin
+- You need to redo your project settings as i've added the possibility to have settings per project (cf. examples)
+- You need to redo your user settings as the file name have changed to reflect the plugin name
+- Error and Outline panels have been replaced by views (you can click on each line to go to the corresponding place)
+- Build system is integrated to the plugin (you still need <code>tsc</code>) and you can set your node path (settings)
+- You can build on save (settings) and have a the current file resulting javascript file in a split view (settings)
+- When you close all the ts file of a project, the project (and the node corresponding node process) is closed
+- One branch only for Sublime text 2 and 3
+- Completion on <code>:</code> with <code>ctrl+space</code> to have the primitives and interface
+- Quick panel for user message (initialisation,closing project etc...)
+- Todo :
+
+	1. Better layout management
+	2. Tests everything on OSes and ST2/ST3
 
