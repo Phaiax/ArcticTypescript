@@ -20,6 +20,7 @@
 				"error_on_save_only":false,
 				"build_on_save":false,
 				"show_build_file":false,
+				"auto_complete":true,
 				"build_parameters":
 				{
 					"pre_processing_commands":[],
