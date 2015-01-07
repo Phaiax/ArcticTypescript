@@ -1,5 +1,5 @@
 import sublime, sys
-from unittest import TestCase
+from sublime_unittest import TestCase
 
 
 

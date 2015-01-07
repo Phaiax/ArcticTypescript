@@ -1,6 +1,39 @@
-import sublime, sys
-from unittest import TestCase
+import sublime, sys, os
+from ArcticTypescript.lib.ArcticTestCase import ArcticTestCase
+from sublime_unittest import TestCase
+from unittest.mock import MagicMock as MM
 
+Project =  sys.modules["ArcticTypescript.lib.system.Project"]
+
+class test_project_opening(ArcticTestCase):
+
+
+
+    def test_opening_ts_file_should_trigger_dialog(self):
+        self.assert_no_typescript_project_settings()
+
+        tmp_show = Project.ProjectError.show
+        Project.ProjectError.show = MM()
+
+        tsfile = self.create_ts_file()
+
+        view = sublime.active_window().open_file(tsfile)
+        sublime.active_window().focus_view(view)
+
+        yield 10 # pause 10 ms
+
+        self.assertTrue(Project.ProjectError.show.called)
+        Project.ProjectError.show = tmp_show #reset
+
+        self.close_view(view)
+
+        os.remove(tsfile)
+
+    def test_opening_ts_file_should_create_projectclass(self):
+        pass
+        #sublime.active_window().project_data()
+        #x = Project.project_by_view(1)
+        #self.assertEqual(x, 13)
 
 # for testing sublime command
 

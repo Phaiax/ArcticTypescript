@@ -13,6 +13,7 @@ Just for clarity: For development, do not install ArcticTypescript via Package C
 
  * Install randy3k's UnitTesting via Package Control
  * Install Restart via Package Control
+ * Install "Plugin UnitTest Harness" via Package Control
  * You may change the Keycode F5 for restart, since it interferes with ArcticTypescript at the moment
 
 

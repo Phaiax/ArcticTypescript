@@ -14,10 +14,13 @@ PROJECT_LIST = []
 def project_by_view(view):
 	return 13
 
-class Project(object):
+class OpenedProject(object):
 	""" Manages ErrorViews, OutlineViews, the TSS process
-		and open windows which belong to a Project """
-	pass
+		and open windows which belong to a Project.
+		This class should replace all current global variables.
+		 """
+	def __init__(self):
+		pass
 
 
 
