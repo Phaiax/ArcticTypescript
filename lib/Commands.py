@@ -313,7 +313,3 @@ class TypescriptBuildView(sublime_plugin.TextCommand):
 				else:
 					T3SVIEWS.COMPILE.set_text(edit_token, filename)
 
-
-
-
-

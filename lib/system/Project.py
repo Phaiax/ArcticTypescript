@@ -9,6 +9,18 @@ import json
 from ..Utils import dirname, read_and_decode_json_file, get_kwargs, ST3
 
 
+PROJECT_LIST = []
+
+def project_by_view(view):
+	return 13
+
+class Project(object):
+	""" Manages ErrorViews, OutlineViews, the TSS process
+		and open windows which belong to a Project """
+	pass
+
+
+
 # ------------------------------------- PROJECT SETTINGS ---------------------------------------- #
 
 class ProjectSettings(object):
