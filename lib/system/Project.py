@@ -3,7 +3,7 @@
 from subprocess import Popen, PIPE
 
 import sublime
-import os
+import os, sys, subprocess
 import json
 
 from ..Utils import dirname, read_and_decode_json_file, get_kwargs, ST3
@@ -208,12 +208,26 @@ class ProjectError(object):
 
 	# OPEN PROJECT
 	def _open_project(self,path):
-		kwargs = get_kwargs()
-		if os.name == 'nt':
-			os.chdir(self._get_sublime_path())
-			Popen(['sublime_text.exe','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
+		if sys.platform == 'win32':
+			# /S: only the outer quotes are removed, all other quotes are preserved
+			subprocess.call('cmd /S /C "'+ os.path.join(os.getcwd(), 'sublime_text.exe') + ' --project "' + path + '" "', shell=True)
+		elif sys.platform == 'darwin':
+			path = path.replace(" ", "\\ ")
+			subprocess.call(""+ os.path.join(os.getcwd(), 'subl') + ' --project ' + path + '', shell=True)
 		else:
-			Popen([''+self._get_sublime_path()+'','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
+			#Restarting ST3 on linux
+			path = path.replace(" ", "\\ ")
+			print("Open project ..: " + ""+ os.path.join(os.getcwd(), 'sublime_text') + ' --project ' + path + '')
+			subprocess.call(""+ os.path.join(os.getcwd(), 'sublime_text') + ' --project ' + path + '', shell=True)
+
+
+		# kwargs = get_kwargs()
+		# if os.name == 'nt':
+		# 	os.chdir(self._get_sublime_path())
+		# 	Popen(['sublime_text.exe','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
+		# else:
+		# 	print("Open project ..: " + self._get_sublime_path())
+		# 	Popen([''+self._get_sublime_path()+'','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
 
 
 	# GET PROJECT FOLDERS
