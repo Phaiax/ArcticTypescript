@@ -122,7 +122,7 @@ function end(built){
 	}
 	if(error!=="") console.log(encode({'output':EOL+"ERRORS : "+EOL+EOL+error}));
 
-	if(built) console.log(encode({'filename':file}));
+	if(built) console.log(encode({'filename':file, 'output': "Success"+EOL}));
 	else console.log(encode({'filename':'error'}));
 }
 
