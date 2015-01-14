@@ -14,7 +14,7 @@ import time
 
 from .Settings import SETTINGS
 from ..display.Message import MESSAGE
-from ..Utils import get_tss, get_kwargs, encode, ST3, Debug
+from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporary_disabled
 
 
 #    PROCESSES = global Processes() instance
@@ -54,10 +54,19 @@ class Processes(object):
 	def is_initialized(self, root):
 		""" Returns True if both processes (SLOW and FAST) have been started. """
 		return root in self.roots \
-		   and self.roots[root] is not None \
-		   and self.roots[root][Processes.SLOW].started \
-		   and self.roots[root][Processes.FAST].started
+			and self.roots[root] is not None \
+			and self.roots[root][Processes.SLOW].started \
+			and self.roots[root][Processes.FAST].started
 		
+	def initialisation_error(self, root):
+		""" Returns Errormessage if initializing has failed for root otherwise false"""
+		if root in self.roots and self.roots[root] is not None:
+			if self.roots[root][Processes.SLOW].error:
+				return self.roots[root][Processes.SLOW].error
+			if self.roots[root][Processes.FAST].error:
+				return self.roots[root][Processes.FAST].error
+		return False
+
 	def initialisation_started(self, root):
 		""" Returns True if start_tss_processes_for() has been called with root """
 		return root in self.roots
@@ -93,6 +102,11 @@ class Processes(object):
 
 	def _wait_for_finish_and_notify_user(self, root, init_finished_callback, i=1, dir=-1):
 		""" Displays animated Message as long as TSS is initing. Is recoursive function. """
+		if self.initialisation_error(root):
+			sublime.error_message('Typescript initializion error for root file : %s\n >>> %s\n ArcticTypescript is disabled until you restart sublime.'
+						 % (os.path.basename(root), self.initialisation_error(root)))
+			set_plugin_temporary_disabled()
+			return
 		if not self.is_initialized(root):
 			(i, dir) = self._display_animated_init_message(i, dir)
 			# recoursive:
@@ -132,7 +146,8 @@ class TssJsStarterThread(Thread):
 	def __init__(self,root):
 		""" init for project <root> """
 		self.root = root
-		self.started = False;
+		self.started = False
+		self.error = False
 		Thread.__init__(self)
 	
 	def run(self):
@@ -143,8 +158,15 @@ class TssJsStarterThread(Thread):
 		tss = get_tss()
 		kwargs = get_kwargs()
 
+		try:
+			self.tss_process = Popen([node, tss, self.root], stdin=PIPE, stdout=PIPE, **kwargs)
+		except FileNotFoundError:
+			self.error = "\n".join(["Could not find nodejs.",
+					"I have tried this path: %s" % node,
+					"Please install nodejs and/or set node_path in the project or plugin settings to the actual executable.",
+					"If you are on windows and just have installed node, you first need to logout and login again."])
+			return
 
-		self.tss_process = Popen([node, tss, self.root], stdin=PIPE, stdout=PIPE, **kwargs)
 		self.tss_process.stdout.readline()
 
 		self.tss_queue = Queue()

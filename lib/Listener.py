@@ -13,7 +13,8 @@ from .system.Processes import PROCESSES
 from .system.Settings import SETTINGS
 from .Tss import TSS
 from .Utils import debounce, is_ts, is_dts, read_file, get_file_infos, ST3, \
-				   Debug, max_calls, run_command_on_any_ts_view, file_exists
+				   Debug, max_calls, run_command_on_any_ts_view, file_exists, \
+				   is_plugin_temporary_disabled
 
 
 # ------------------------------------------- INIT ------------------------------------------ #
@@ -21,11 +22,13 @@ c = [0]
 
 @max_calls(name='main init')
 def init(view):
+
 	c[0] = c[0] + 1
 	if c[0] == 10:
 		pass #import spdb ; spdb.start()
 
-
+	if is_plugin_temporary_disabled():
+		return
 	if not is_ts(view) or is_dts(view):
 		return
 	if read_file(view.file_name()) is None:
