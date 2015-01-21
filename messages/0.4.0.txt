@@ -1,0 +1,13 @@
+Arctic Typescript:
+
+Note for users which have used additional "" in the typescript settings to enclose paths that included spaces.
+
+	Example:
+		"output_dir_path" : "\"Space In Foldername\"",
+		"concatenate_and_emit_output_file_path" : "\"Space In Foldername\"",
+
+	Action:
+		Build will fail. You have to remove the additional enclosing ""
+
+	Why:
+		https://github.com/Phaiax/ArcticTypescript/issues/17
