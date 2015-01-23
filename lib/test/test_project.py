@@ -7,27 +7,53 @@ Project =  sys.modules["ArcticTypescript.lib.system.Project"]
 
 class test_project_opening(ArcticTestCase):
 
+    def setUp(self):
+        # No settings or other files
+        self.clear_files_except_sublimeproject()
+        #self.assert_no_typescript_project_settings()
 
 
-    def test_opening_ts_file_should_trigger_dialog(self):
-        self.assert_no_typescript_project_settings()
+    def test_opening_ts_file_should_trigger_dialog_if_no_project_settings(self):
+        """ Dialog is only shown when no .sublimets or *.sublime-project is found
+        or if these files do not specify any root files"""
 
+        return
+        # mock show method
         tmp_show = Project.ProjectError.show
         Project.ProjectError.show = MM()
 
-        tsfile = self.create_ts_file()
-
-        view = sublime.active_window().open_file(tsfile)
-        sublime.active_window().focus_view(view)
+        self.create_ts_file()
+        self.open_and_focus_tsfile()
 
         yield 10 # pause 10 ms
 
         self.assertTrue(Project.ProjectError.show.called)
-        Project.ProjectError.show = tmp_show #reset
 
-        self.close_view(view)
+        # reset mocked method
+        Project.ProjectError.show = tmp_show
+        self.close_view()
+        self.rm_file()
 
-        os.remove(tsfile)
+
+    def test_opening_ts_file_should_init_project(self):
+        self.create_settings()
+        self.create_ts_file()
+
+        tmp_init = Project.OpenedProject.__init__
+        Project.OpenedProject.__init__ = MM()
+
+        self.open_and_focus_tsfile()
+
+        yield 10
+
+        self.assertTrue(Project.OpenedProject.__init__)
+
+        # reset mocked method
+        Project.OpenedProject.__init__ = tmp_init
+        #self.close_view()
+        #self.rm_file()
+
+
 
     def test_opening_ts_file_should_create_projectclass(self):
         pass

@@ -25,7 +25,7 @@ if int(sublime.version()) >= 3000:
 		package_pattern = 'ArcticTypescript'
 		if filepattern != '':
 			package_pattern = "%s:%s" % (package_pattern, filepattern)
-		if projectfile.endswith(testproject):
+		if projectfile is not None and projectfile.endswith(testproject):
 			sublime.set_timeout(lambda:sublime.run_command(
 						'unit_testing',
 						{'output': 'panel', 'package': package_pattern}), 300)

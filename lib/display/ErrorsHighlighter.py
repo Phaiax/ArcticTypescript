@@ -51,7 +51,7 @@ class ErrorsHighlighter(object):
 
 							self.errors[key][(a,b)] = e['text']
 
-							if e['category'] == 'Error': 
+							if e['category'] == 'Error':
 								error_regions.append(sublime.Region(a,b))
 							else:
 								warning_regions.append(sublime.Region(a,b))
@@ -66,7 +66,7 @@ class ErrorsHighlighter(object):
 	@max_calls(name='ErrorHighlighter.display_error_in_status_if_cursor')
 	def display_error_in_status_if_cursor(self,view):
 		"""
-			Displays the error message in the sublime status 
+			Displays the error message in the sublime status
 			line if the cursor is above an error (in source code).
 			For the click on the error list, see T3SVIEWS.ERROR.on_click()
 		"""
