@@ -269,9 +269,39 @@
 					<key>name</key>
 					<string>punctuation.definition.comment.ts</string>
 				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+				<key>3</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.comment.ts</string>
+				</dict>
+				<key>4</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
+				<key>5</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+				<key>6</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.comment.ts</string>
+				</dict>
+				<key>7</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
 			</dict>
 			<key>match</key>
-			<string>(//).*$\n?</string>
+			<string>(//)(?:(?:[^"]*(")([^"]*)("))|(?:[^']*(')([^']*)(')))?.*$\n?</string>
 			<key>name</key>
 			<string>comment.line.double-slash.ts</string>
 		</dict>
