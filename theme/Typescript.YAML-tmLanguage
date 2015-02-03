@@ -95,15 +95,12 @@ repository:
 
   comment-line:
     name: comment.line.double-slash.ts
-    match: (//)(?:(?:[^"]*(")([^"]*)("))|(?:[^']*(')([^']*)(')))?.*$\n?
-    captures:
-      '1': {name: punctuation.definition.comment.ts}
-      '2': {name: punctuation.definition.string.begin.ts}
-      '3': {name: punctuation.definition.comment.ts}
-      '4': {name: punctuation.definition.string.end.ts}
-      '5': {name: punctuation.definition.string.begin.ts}
-      '6': {name: punctuation.definition.comment.ts}
-      '7': {name: punctuation.definition.string.end.ts}
+    begin: (//)
+    end: $\n?
+    patterns:
+      - include: '#string-in-oneline-comment'
+      - name: punctuation.definition.comment.ts
+        match: ([^\n\r"])
 
   expression:
     comment: The main building block
@@ -366,6 +363,38 @@ repository:
     beginCaptures:
       '0': {name: punctuation.definition.string.begin.ts}
     end: "'"
+    endCaptures:
+      '0': {name: punctuation.definition.string.end.ts}
+    patterns:
+    - match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
+      name: constant.character.escape.ts
+
+
+  string-in-oneline-comment:
+    comment: Quoted Strings within oneline comments like // aergae "THIS"
+    name: comment.string.ts
+    patterns:
+    - include: '#string-quoted-single-in-oneline-comment'
+    - include: '#string-quoted-double-in-oneline-comment'
+
+  string-quoted-double-in-oneline-comment:
+    name: comment.string.quoted.double.ts
+    begin: '"'
+    beginCaptures:
+      '0': {name: punctuation.definition.string.begin.ts}
+    end: '"|[\n]'
+    endCaptures:
+      '0': {name: punctuation.definition.string.end.ts}
+    patterns:
+    - name: constant.character.escape.ts
+      match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
+
+  string-quoted-single-in-oneline-comment:
+    name: comment.string.quoted.single.ts
+    begin: "'"
+    beginCaptures:
+      '0': {name: punctuation.definition.string.begin.ts}
+    end: "'|[\n]"
     endCaptures:
       '0': {name: punctuation.definition.string.end.ts}
     patterns:
