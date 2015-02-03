@@ -95,11 +95,15 @@ repository:
 
   comment-line:
     name: comment.line.double-slash.ts
-    match: |-
-      (//).*$
-      ?
+    match: (//)(?:(?:[^"]*(")([^"]*)("))|(?:[^']*(')([^']*)(')))?.*$\n?
     captures:
       '1': {name: punctuation.definition.comment.ts}
+      '2': {name: punctuation.definition.string.begin.ts}
+      '3': {name: punctuation.definition.comment.ts}
+      '4': {name: punctuation.definition.string.end.ts}
+      '5': {name: punctuation.definition.string.begin.ts}
+      '6': {name: punctuation.definition.comment.ts}
+      '7': {name: punctuation.definition.string.end.ts}
 
   expression:
     comment: The main building block
