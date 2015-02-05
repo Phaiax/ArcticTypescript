@@ -5,7 +5,7 @@ import sys
 import os
 
 from .Liste import get_root
-from .Project import ProjectSettings, ProjectError
+from .Project import ProjectSettings, ProjectError, errorSetting
 from ..Utils import read_and_decode_json_file, read_file, get_any_ts_view, fn2l, get_any_view_with_root
 
 # ----------------------------------------- CONSTANT ---------------------------------------- #
@@ -79,9 +79,12 @@ class Settings(object):
 				ProjectError(SUBLIME_TS,[config_data['root']+' is not a valid root file',config_file],config_file)
 				return None
 
+		if errorSetting["ignore"]:
+			return None
+
 		error_type = SUBLIME_PROJECT if has_project_settings else NO_PROJECT
 		path = sublime.active_window().project_file_name() if has_project_settings else None
-		message = ['No valid root file for this project inside your project file',path] if has_project_settings else ['You didn\'t create a project file, please create one:','Choose between the three possibilities bellow :']
+		message = ['No valid root file for this project inside your project file',path] if has_project_settings else ['You didn\'t create a project file, please create one:','Choose between the four possibilities bellow :']
 		ProjectError(error_type,message,path)
 		return None
 

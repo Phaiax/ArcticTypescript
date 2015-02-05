@@ -18,6 +18,10 @@ This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you
 
 ### Important Changes:
 
+v0.4.0:
+- build system: (relative) paths with spaces are now enclosed in "" automatically
+- > If you used additional "" to workaround the issue, you have to remove them, refer to messages/0.4.0.txt
+
 v0.3.0:
 - relative root files now have a different base directory
 - The default shortcut to switch to the error view changed to: CTRL + ALT + E

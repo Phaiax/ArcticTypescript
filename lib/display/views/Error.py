@@ -42,7 +42,7 @@ class Error(Base):
 	@max_calls(name='Error.on_click')
 	def on_click(self,line):
 		if line in self.points and line in self.files:
-			view = sublime.active_window().open_file(self.files[line])			
+			view = sublime.active_window().open_file(self.files[line])
 			self._focus_error_in_view(view, self.points[line])
 
 
@@ -60,7 +60,7 @@ class Error(Base):
 			return
 		else:
 			a = view.text_point(*point[0])
-			b = view.text_point(*point[1]) 
+			b = view.text_point(*point[1])
 			region = sublime.Region(a,b)
 
 			Debug('focus', 'Error click -> _focus_error_in_view %i, %s' % (view.id(), view.file_name()))
@@ -110,9 +110,9 @@ class Error(Base):
 			self.files[line] = e['file']
 
 
-		if len(errors) == 0: 
+		if len(errors) == 0:
 			text.append("\n\nno errors")
-		
+
 		text.append('\n')
 		self.text = ''.join(text)
 
@@ -164,8 +164,8 @@ class Error(Base):
 			sublime.set_timeout(lambda: self.update_message(), 1000)
 		## calls set_error_calculation_status_message() with an edit_token
 		if self._is_view_still_open():
-			Debug('errorpanel', "Error view: %s %a" % (self._view_reference.name(), self._view_reference.file_name()))
-			self._view_reference.run_command('typescript_set_error_calculation_status_message', {"message": msg}) 
+			Debug('errorpanel', "Error view: %s %a: %s" % (self._view_reference.name(), self._view_reference.file_name(), msg[0:20]))
+			self._view_reference.run_command('typescript_set_error_calculation_status_message', {"message": msg})
 
 	def create_message(self):
 		""" returns (need_recall, msg) """
@@ -189,8 +189,8 @@ class Error(Base):
 			calculation_time = time.time() - self.execution_started_time
 			msg += "/".ljust(int(calculation_time) + 1, "\"")
 			need_recall = True
-			
-		# after this calculation another calculation will be started: ... 
+
+		# after this calculation another calculation will be started: ...
 		if self.is_unstarted_calculation_pending():
 			msg += " ..."
 		return (need_recall, msg)

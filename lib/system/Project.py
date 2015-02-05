@@ -24,6 +24,8 @@ class OpenedProject(object):
 
 
 
+errorSetting = {"ignore": False};
+
 # ------------------------------------- PROJECT SETTINGS ---------------------------------------- #
 
 class ProjectSettings(object):
@@ -90,6 +92,7 @@ class ProjectError(object):
 			self.messages.append(['Create a sublime project-file (one or multiple root files)','Click here and follow the instructions'])
 			self.messages.append(['Create a .sublimets project file (one root file only)','Click here and follow the instructions'])
 			self.messages.append(['I don\'t understand please show me the README file','Click here to open the README.md file'])
+			self.messages.append(['I don\'t want to create a typescript project now' ,'Ignore typescript project error for this session'])
 			self.window.show_quick_panel(self.messages,self._on_create_project)
 
 
@@ -120,6 +123,8 @@ class ProjectError(object):
 			pass
 		elif index == 3:
 			self.window.open_file(dirname+'/README.md')
+		elif index == 4:
+			errorSetting["ignore"] = True
 
 
 	# SET PROJECT NAME

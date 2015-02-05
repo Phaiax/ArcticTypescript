@@ -14,7 +14,7 @@ import time
 
 from .Settings import SETTINGS
 from ..display.Message import MESSAGE
-from ..Utils import get_tss, get_kwargs, encode, ST3, Debug
+from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporary_disabled
 
 
 #    PROCESSES = global Processes() instance
@@ -32,7 +32,7 @@ from ..Utils import get_tss, get_kwargs, encode, ST3, Debug
 
 
 # ----------------------------------------- PROCESSES ---------------------------------------- #
- 
+
 class Processes(object):
 	"""
 		Keeps two tss.js Processes and adapters for each project root.
@@ -54,10 +54,19 @@ class Processes(object):
 	def is_initialized(self, root):
 		""" Returns True if both processes (SLOW and FAST) have been started. """
 		return root in self.roots \
-		   and self.roots[root] is not None \
-		   and self.roots[root][Processes.SLOW].started \
-		   and self.roots[root][Processes.FAST].started
-		
+			and self.roots[root] is not None \
+			and self.roots[root][Processes.SLOW].started \
+			and self.roots[root][Processes.FAST].started
+
+	def initialisation_error(self, root):
+		""" Returns Errormessage if initializing has failed for root otherwise false"""
+		if root in self.roots and self.roots[root] is not None:
+			if self.roots[root][Processes.SLOW].error:
+				return self.roots[root][Processes.SLOW].error
+			if self.roots[root][Processes.FAST].error:
+				return self.roots[root][Processes.FAST].error
+		return False
+
 	def initialisation_started(self, root):
 		""" Returns True if start_tss_processes_for() has been called with root """
 		return root in self.roots
@@ -69,17 +78,17 @@ class Processes(object):
 		"""
 		if self.initialisation_started(root):
 			return
-			
+
 		print('Typescript initializing ' + root)
 
 		process_slow = TssJsStarterThread(root)
 		process_slow.start()
-		
+
 		process_fast = TssJsStarterThread(root)
 		process_fast.start()
-		
+
 		self.roots[root] = ( process_slow, process_fast )
-		
+
 		self._wait_for_finish_and_notify_user(root, init_finished_callback)
 
 	def kill_and_remove(self, root):
@@ -93,6 +102,11 @@ class Processes(object):
 
 	def _wait_for_finish_and_notify_user(self, root, init_finished_callback, i=1, dir=-1):
 		""" Displays animated Message as long as TSS is initing. Is recoursive function. """
+		if self.initialisation_error(root):
+			sublime.error_message('Typescript initializion error for root file : %s\n >>> %s\n ArcticTypescript is disabled until you restart sublime.'
+						 % (os.path.basename(root), self.initialisation_error(root)))
+			set_plugin_temporary_disabled()
+			return
 		if not self.is_initialized(root):
 			(i, dir) = self._display_animated_init_message(i, dir)
 			# recoursive:
@@ -132,9 +146,10 @@ class TssJsStarterThread(Thread):
 	def __init__(self,root):
 		""" init for project <root> """
 		self.root = root
-		self.started = False;
+		self.started = False
+		self.error = False
 		Thread.__init__(self)
-	
+
 	def run(self):
 		"""
 			Starts the tss.js typescript services server process and the adapter thread.
@@ -143,17 +158,30 @@ class TssJsStarterThread(Thread):
 		tss = get_tss()
 		kwargs = get_kwargs()
 
+		try:
+			self.tss_process = Popen([node, tss, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, **kwargs)
+			Debug('tss', 'STARTED tss with: %s' % ' '.join([node, tss, self.root]))
+		except FileNotFoundError:
+			self.error = "\n".join(["Could not find nodejs.",
+					"I have tried this path: %s" % node,
+					"Please install nodejs and/or set node_path in the project or plugin settings to the actual executable.",
+					"If you are on windows and just have installed node, you first need to logout and login again."])
+			return
 
-		self.tss_process = Popen([node, tss, self.root], stdin=PIPE, stdout=PIPE, **kwargs)
-		self.tss_process.stdout.readline()
+
+		first_out = self.tss_process.stdout.readline()
+		Debug('tss', 'FIRST TSS MESSAGE: %s' % first_out)
+
+		self.check_process_health()
 
 		self.tss_queue = Queue()
 		self.tss_adapter = TssAdapterThread(self.tss_process.stdin,
-											  self.tss_process.stdout, 
-											  self.tss_queue)
+											  self.tss_process.stdout,
+											  self.tss_queue,
+											  self.check_process_health)
 		self.tss_adapter.daemon = True
 		self.tss_adapter.start()
-		
+
 		self.started = True
 
 
@@ -163,13 +191,18 @@ class TssJsStarterThread(Thread):
 
 	def kill_tssjs_queue_and_adapter(self):
 		"""
-			Tells adapter to leave syncronized queue and to finish 
+			Tells adapter to leave syncronized queue and to finish
 			and kills the tss.js process.
 		"""
 		self.tss_queue.put("stop!") # setinel value to stop queue
 		self.tss_process.kill()
 
-
+	def check_process_health(self):
+		if self.tss_process.poll() is not None:
+			Debug('tss', 'TSS process has terminated unexpectly')
+			errorout = self.tss_process.stderr.readlines()
+			print("Arctic Typescript: tss.js error:")
+			print(''.join([str(s.decode('UTF-8')) for s in errorout]))
 
 # ----------------------------------------- ADAPTER THREAD -------------------------- #
 
@@ -193,14 +226,15 @@ class TssAdapterThread(Thread):
 		If the setinel string "stop!" arrives on the syncronized queue, this thread will finish.
 	"""
 
-	def __init__(self, stdin, stdout, queue):
+	def __init__(self, stdin, stdout, queue, check_process_health_function):
 		"""
-			stdin, stdout: Connection to tss.js, 
+			stdin, stdout: Connection to tss.js,
 			queue: Synchronized queue to receive AsyncCommand instances.
 		"""
 		self.stdin = stdin
 		self.stdout = stdout
 		self.queue = queue
+		self.check_process_health = check_process_health_function
 		self.middleware_queue = []
 		Thread.__init__(self)
 
@@ -208,7 +242,7 @@ class TssAdapterThread(Thread):
 		""" Working Loop. """
 		# block until queue is not empty anymore
 		# leave loop and finish thread if "stop!" arrives
-		for async_command in iter(self.queue.get, "stop!"): 
+		for async_command in iter(self.queue.get, "stop!"):
 			Debug('adapter', "CONTINUTE execution queue")
 
 			self.append_to_middlewarequeue(async_command)
@@ -286,6 +320,7 @@ class TssAdapterThread(Thread):
 
 			command_to_execute = self.merge_cmd_on_middleware_queue_and_return_replacement(command_to_execute)
 			if command_to_execute: # can be None if merge_procrastinate() has defered current item
+				Debug('adapter', "EXECUTE now: %s" % command_to_execute.id)
 				self.execute(command_to_execute)
 
 
@@ -306,7 +341,7 @@ class TssAdapterThread(Thread):
 		commands_to_remove = []
 		newest_command = command
 		for possible_replacement in self.middleware_queue: # from old to new
-			if possible_replacement.id == command.id: 
+			if possible_replacement.id == command.id:
 				newest_command = possible_replacement
 				commands_to_remove.append(possible_replacement)
 
@@ -329,15 +364,15 @@ class TssAdapterThread(Thread):
 		commands_to_remove = []
 		for possible_duplicate in self.middleware_queue: # from old to new
 			if possible_duplicate.id == command.id:
-				commands_to_remove.append(possible_duplicate) 
+				commands_to_remove.append(possible_duplicate)
 
-		if len(commands_to_remove) > 0:						
-			newest_command = commands_to_remove.pop() # don't delete newest duplicate command. 
+		if len(commands_to_remove) > 0:
+			newest_command = commands_to_remove.pop() # don't delete newest duplicate command.
 			command.on_replaced(newest_command)
 			for c in commands_to_remove:
 				c.on_replaced(newest_command)
-				self.middleware_queue.remove(c)	
-			Debug('adapter+', "MERGED with %i other commands (procrastinated): %s" % (len(commands_to_remove), command.id) )	
+				self.middleware_queue.remove(c)
+			Debug('adapter+', "MERGED with %i other commands (procrastinated): %s" % (len(commands_to_remove), command.id) )
 			return None # defer, no execution in this round
 		else:
 			return command # no defer, execute now, command has already been poped
@@ -353,18 +388,22 @@ class TssAdapterThread(Thread):
 			self.append_to_middlewarequeue(async_command, set_timer=True) # reappend to end
 			Debug('adapter+', "MOVED to end of queue, debouncing")
 			return
-
 		async_command.time_execute = time.time()
 		try:
 			self.stdin.write(encode(async_command.command))
 			self.stdin.write(encode("\n"))
 			self.stdin.flush()
+			Debug('tss++', "Send to tss.js: %s" % async_command.command[0:100])
 
 			async_command.on_execute()
 			# causes result callback to be called async
-			async_command.on_result(self.stdout.readline().decode('UTF-8'))
-		except:
-			pass
+			results = self.stdout.readline().decode('UTF-8')
+			Debug('tss++', "Received from tss.js: %s" % results[0:100])
+			async_command.on_result(results)
+		except Exception as e:
+			Debug('tss++', "ERROR: %s" % e)
+			self.check_process_health()
+
 
 
 # -------------------------------------------- INIT ------------------------------------------ #

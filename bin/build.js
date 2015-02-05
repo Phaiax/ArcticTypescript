@@ -62,13 +62,22 @@ function build_commands(){
 	var commands = [];
 
 	if(config["output_dir_path"][0] == ".") {
-
 		config['output_dir_path'] = path.join(directory,config["output_dir_path"]);
 		console.log(encode({'output':'config["output_dir_path"]: : '+config["output_dir_path"]+EOL}));
 	}
+
+	if(config['output_dir_path'].indexOf(" ") > -1) {
+		config['output_dir_path'] = '"' + config['output_dir_path'] + '"';
+	}
+
 	if(config["concatenate_and_emit_output_file_path"][0] == ".") {
 		config['concatenate_and_emit_output_file_path'] = path.join(directory,config["concatenate_and_emit_output_file_path"]);
 	}
+
+	if(config['concatenate_and_emit_output_file_path'].indexOf(" ") > -1) {
+		config['concatenate_and_emit_output_file_path'] = '"' + config['concatenate_and_emit_output_file_path'] + '"';
+	}
+
 
 	for (var option in config){
 		if(default_values[option] != config[option] && non_cmdline_options.indexOf(option) == -1) {
@@ -122,7 +131,7 @@ function end(built){
 	}
 	if(error!=="") console.log(encode({'output':EOL+"ERRORS : "+EOL+EOL+error}));
 
-	if(built) console.log(encode({'filename':file}));
+	if(built) console.log(encode({'filename':file, 'output': "Success"+EOL}));
 	else console.log(encode({'filename':'error'}));
 }
 

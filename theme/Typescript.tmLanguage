@@ -262,18 +262,25 @@
 		</dict>
 		<key>comment-line</key>
 		<dict>
-			<key>captures</key>
-			<dict>
-				<key>1</key>
+			<key>begin</key>
+			<string>(//)</string>
+			<key>end</key>
+			<string>$\n?</string>
+			<key>name</key>
+			<string>comment.line.double-slash.ts</string>
+			<key>patterns</key>
+			<array>
 				<dict>
+					<key>include</key>
+					<string>#string-in-oneline-comment</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>([^\n\r"])</string>
 					<key>name</key>
 					<string>punctuation.definition.comment.ts</string>
 				</dict>
-			</dict>
-			<key>match</key>
-			<string>(//).*$\n?</string>
-			<key>name</key>
-			<string>comment.line.double-slash.ts</string>
+			</array>
 		</dict>
 		<key>expression</key>
 		<dict>
@@ -1017,6 +1024,24 @@
 				</dict>
 			</array>
 		</dict>
+		<key>string-in-oneline-comment</key>
+		<dict>
+			<key>comment</key>
+			<string>Quoted Strings within oneline comments like // aergae "THIS"</string>
+			<key>name</key>
+			<string>comment.string.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#string-quoted-single-in-oneline-comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string-quoted-double-in-oneline-comment</string>
+				</dict>
+			</array>
+		</dict>
 		<key>string-quoted-double</key>
 		<dict>
 			<key>begin</key>
@@ -1051,6 +1076,40 @@
 				</dict>
 			</array>
 		</dict>
+		<key>string-quoted-double-in-oneline-comment</key>
+		<dict>
+			<key>begin</key>
+			<string>"</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>"|[\n]</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>comment.string.quoted.double.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>name</key>
+					<string>constant.character.escape.ts</string>
+				</dict>
+			</array>
+		</dict>
 		<key>string-quoted-single</key>
 		<dict>
 			<key>begin</key>
@@ -1075,6 +1134,41 @@
 			</dict>
 			<key>name</key>
 			<string>string.quoted.single.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>name</key>
+					<string>constant.character.escape.ts</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-quoted-single-in-oneline-comment</key>
+		<dict>
+			<key>begin</key>
+			<string>'</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>'|[
+]</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>comment.string.quoted.single.ts</string>
 			<key>patterns</key>
 			<array>
 				<dict>
