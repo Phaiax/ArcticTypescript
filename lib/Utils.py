@@ -73,13 +73,13 @@ def set_plugin_temporary_disabled(disabled=True):
 
 # CANCEL COMMAND EXCEPTION
 class CancelCommand(Exception):
-	""" Throw this exception in a command. The decorator 
+	""" Throw this exception in a command. The decorator
 		catch_CancelCommand will catch it and cancel silently """
 	pass
 
 # CANCEL COMMAND EXCEPTION CATCHER DECORATOR
 def catch_CancelCommand(func):
-	""" Decorate every command with this one. It will check for 
+	""" Decorate every command with this one. It will check for
 		the plugin disabled flag and catch CancelCommand exceptins. """
 
 	def catcher(*kargs, **kwargs):
