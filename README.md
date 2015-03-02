@@ -18,7 +18,8 @@ This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you
 
 ### Important Changes:
 
-v0.4.3:
+v0.5.0:
+- You will need a new config file called tsconfig.json
 - Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
 - Dropped support for Outline view, since typescript-tools have dropped support for this. Will come back with tsserver.
 
@@ -91,6 +92,21 @@ For ArcticTypescript to work, you must define some settings either
 2. or by creating a <code>.sublimets</code> at the root of your project folder.
 
 You can look inside the <code>example folder</code> for setup examples.
+
+Temporarily, you need to define the compiler settings twice: You will also need a <code>tsconfig.json</code> file. Autocompletion and error view will now be initialized using <code>tsconfig.json</code>.
+
+Example:
+
+	{
+		"compilerOptions" : {
+			"target" : "es5",
+			"module" : "commonjs"
+		}
+	}
+
+Refer to https://www.npmjs.com/package/tsconfig for more options.
+
+<b>In future, all compiler options will move to tsconfig.json</b>
 
 If you open any .ts file and ArcticTypescript can't find any project settings, you will be promted to create them.
 

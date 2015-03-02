@@ -1,0 +1,15 @@
+Arctic Typescript:
+
+tldr: new configfile tsconfig.json. There will be a popup if you are affected.
+
+
+- autocompletion and error view will use the Typescript head version, the unreleased Typescript 1.5 beta
+- autocompletion and error view will now be initialized using tsconfig.json
+- you need to create a tsconfig.json inside of your source folder or some parent folder. Example config:
+
+{ "compilerOptions" : { "target" : "es5", "module" : "commonjs" } }
+
+- refer to https://www.npmjs.com/package/tsconfig for more options.
+- for now, you need to manage both configs in parallel, since the old config is still used for the build system.
+- In the FOLLOWING releases, there will be another change which eliminates the need for root files and the old config structure.
+
