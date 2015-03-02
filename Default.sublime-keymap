@@ -44,11 +44,6 @@
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"command": "typescript_structure",
-		"keys": ["f3"],
-		"context": [ {"key": "ArcticTypescript"} ]
-	},
-	{
 		"command": "typescript_type",
 		"keys": ["f1"],
 		"context": [ {"key": "ArcticTypescript"} ]

@@ -39,12 +39,7 @@
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: Outline view",
-		"command": "typescript_structure",
-		"context": [ {"key": "ArcticTypescript"} ]
-	},
-	{
-		"caption": "Typescript: View member type (ST3 only)",
+		"caption": "Typescript: View member type",
 		"command": "typescript_type",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},

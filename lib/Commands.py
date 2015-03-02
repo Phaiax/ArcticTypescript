@@ -61,9 +61,9 @@ class TypescriptType(sublime_plugin.TextCommand):
 
 			kind = get_prefix(types['kind'])
 			if types['docComment'] != '':
-				liste = types['docComment'].split('\n')+[kind+' '+types['fullSymbolName']+' '+types['type']]
+				liste = types['docComment'].split('\n')+[types['type']]
 			else:
-				liste = [kind+' '+types['fullSymbolName']+' '+types['type']]
+				liste = [types['type']]
 
 			view.show_popup_menu(liste, None)
 
@@ -179,6 +179,7 @@ class TypescriptStructure(sublime_plugin.TextCommand):
 	@catch_CancelCommand
 	@max_calls(name='TypescriptStructure')
 	def run(self, edit_token):
+		return # typescript tools dropped support for this
 		Debug('structure', 'open view if not already open')
 		TSS.assert_initialisation_finished(self.view.file_name())
 
@@ -193,24 +194,28 @@ class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 	@catch_CancelCommand
 	@max_calls(name='TypescriptUpdateStructure')
 	def run(self, edit_token, force=False):
-		TSS.assert_initialisation_finished(self.view.file_name())
-
-		def async_react(members, filename, sender_view_id):
-			## members is the already json-decoded tss.js answer
-			Debug('structure', 'STRUCTURE async_react for %s in start view %s, now view %s'
-					% (filename, self.view.id(), sublime.active_window().active_view().id()) )
-
-			if sublime.active_window().active_view().id() != sender_view_id or self.view.id() != sender_view_id:
-				Debug('structure', 'STRUCTURE async_react canceled because of view change')
-				return
-
-			self.view.run_command('typescript_outline_view_set_text', {"members": members} )
+		typescript_update_structure(self.view, force)
 
 
-		if T3SVIEWS.OUTLINE.is_active() and (force or not T3SVIEWS.OUTLINE.is_current_ts(self.view)):
-			Debug('structure', 'STRUCTURE for %s in view %s, active view is %s'
-				% (self.view.file_name(), self.view.id(), sublime.active_window().active_view().id()))
-			TSS.structure(self.view.file_name(), self.view.id(), async_react)
+def typescript_update_structure(view, force):
+	TSS.assert_initialisation_finished(view.file_name())
+
+	def async_react(members, filename, sender_view_id):
+		## members is the already json-decoded tss.js answer
+		Debug('structure', 'STRUCTURE async_react for %s in start view %s, now view %s'
+				% (filename, view.id(), sublime.active_window().active_view().id()) )
+
+		if sublime.active_window().active_view().id() != sender_view_id or view.id() != sender_view_id:
+			Debug('structure', 'STRUCTURE async_react canceled because of view change')
+			return
+
+		view.run_command('typescript_outline_view_set_text', {"members": members} )
+
+
+	if T3SVIEWS.OUTLINE.is_active() and (force or not T3SVIEWS.OUTLINE.is_current_ts(view)):
+		Debug('structure', 'STRUCTURE for %s in view %s, active view is %s'
+			% (view.file_name(), view.id(), sublime.active_window().active_view().id()))
+		TSS.structure(view.file_name(), view.id(), async_react)
 
 
 # OPEN and WRITE TEXT TO OUTLINE VIEW

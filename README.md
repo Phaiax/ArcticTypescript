@@ -18,6 +18,10 @@ This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you
 
 ### Important Changes:
 
+v0.4.3:
+- Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
+- Dropped support for Outline view, since typescript-tools have dropped support for this. Will come back with tsserver.
+
 v0.4.0:
 - build system: (relative) paths with spaces are now enclosed in "" automatically
 - > If you used additional "" to workaround the issue, you have to remove them, refer to messages/0.4.0.txt

@@ -46,7 +46,6 @@ class Outline(Base):
 			a = self.ts_view.text_point(start_line-1, left-1)
 			b = self.ts_view.text_point(end_line-1, right-1)
 			region = sublime.Region(a, b)
-
 			kind = get_prefix(member['loc']['kind'])
 			container_kind = get_prefix(member['loc']['containerKind'])
 			if member['loc']['kindModifiers'] != "":

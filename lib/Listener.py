@@ -3,6 +3,7 @@
 import sublime
 import sublime_plugin
 
+from .Commands import typescript_update_structure
 from .display.T3SViews import T3SVIEWS
 from .display.Completion import COMPLETION
 from .display.Errors import ERRORS
@@ -154,7 +155,8 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 			TSS.update(filename, num_lines, content)
 			FILES.update(filename, num_lines, content)
 
-		view.run_command('typescript_update_structure', {"force": True})
+		#view.run_command('typescript_update_structure', {"force": True})
+		typescript_update_structure(view, True)
 		COMPLETION.trigger(view, TSS)
 
 		if get_root(filename) and not SETTINGS.get('error_on_save_only', get_root(filename)):
