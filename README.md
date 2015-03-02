@@ -3,7 +3,7 @@ ArcticTypescript
 
 TypeScript plugin for Sublime Text 3 using TypeScript tools : https://github.com/clausreinke/typescript-tools
 
-Sublime Text 2 is not supported anymore. Use T3S instead.
+Sublime Text 2 is not supported anymore: Use the T3S plugin instead of this one for Sublime Text 2 users.
 
 ### T3S
 
@@ -21,7 +21,7 @@ This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you
 v0.5.0:
 - You will need a new config file called tsconfig.json
 - Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
-- Dropped support for Outline view, since typescript-tools have dropped support for this. Will come back with tsserver.
+- Dropped support for Outline view, since typescript-tools has dropped support for this. This feature will come back again with tsserver.
 
 v0.4.0:
 - build system: (relative) paths with spaces are now enclosed in "" automatically
@@ -38,7 +38,6 @@ v0.3.0:
 - TypeScript language auto completion
 - TypeScript language error highlighting
 - TypeScript language syntax highlighting
-- Typescript file outline view
 - A build System
 - Basic refactoring
 
@@ -54,7 +53,6 @@ Create a project file first (read below).
 - <code>alt+shift+e, l</code> Goto 4th error in error list.
 - <code>f1</code> Click on a property, a class, a method etc... then press f1 to have **details** about it.
 - <code>f2</code> Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk).
-- <code>f3</code> Open a ***outline*** <code>view</code> of the file (class,methods,properties, etc...).
 - <code>f4</code> Click on a property, a class, a method etc... then press f4 to go to the **definition**.
 - <code>f5</code> **Reload** the current project.
 - <code>f8</code> or <code>ctrl+b</code> Build the project.
@@ -93,7 +91,9 @@ For ArcticTypescript to work, you must define some settings either
 
 You can look inside the <code>example folder</code> for setup examples.
 
-Temporarily, you need to define the compiler settings twice: You will also need a <code>tsconfig.json</code> file. Autocompletion and error view will now be initialized using <code>tsconfig.json</code>.
+Temporarily, you need to define the compiler settings twice:
+
+You will also need a <code>tsconfig.json</code> file.
 
 Example:
 
@@ -106,7 +106,7 @@ Example:
 
 Refer to https://www.npmjs.com/package/tsconfig for more options.
 
-<b>In future, all compiler options will move to tsconfig.json</b>
+Autocompletion and error view will now be initialized using <code>tsconfig.json</code>. The integrated build system still uses the <i>old</i> compiler options inside of <code>.sublimets</code> or <code>project_name.sublime-project</code>. <b>In future, all compiler options will move to tsconfig.json</b>
 
 If you open any .ts file and ArcticTypescript can't find any project settings, you will be promted to create them.
 
