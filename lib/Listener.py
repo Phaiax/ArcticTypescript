@@ -156,7 +156,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 			FILES.update(filename, num_lines, content)
 
 		#view.run_command('typescript_update_structure', {"force": True})
-		typescript_update_structure(view, True)
+		#typescript_update_structure(view, True)
 		COMPLETION.trigger(view, TSS)
 
 		if get_root(filename) and not SETTINGS.get('error_on_save_only', get_root(filename)):
