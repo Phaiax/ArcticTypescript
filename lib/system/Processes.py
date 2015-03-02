@@ -8,13 +8,13 @@ except ImportError:
 	from Queue import Queue, Empty
 
 import sublime
-import os
+import os, os.path
 import time
 
 
 from .Settings import SETTINGS
 from ..display.Message import MESSAGE
-from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporary_disabled
+from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporary_disabled, find_tsconfigdir
 
 
 #    PROCESSES = global Processes() instance
@@ -156,10 +156,28 @@ class TssJsStarterThread(Thread):
 		"""
 		node = SETTINGS.get_node(self.root)
 		tss = get_tss()
+		cwd =  os.path.abspath(os.path.dirname(self.root))
+		tsconfigdir = find_tsconfigdir(cwd)
 		kwargs = get_kwargs()
 
+		if tsconfigdir is None:
+			self.error = "\n".join(["Announcement:", "",
+				"   Configuration for compiler options will change its location from .sublimets or abcdef.sublime-project to tsconfig.json", "",
+				"   Currently the ArcticTypescript build system will use the old config, and the ArcticTypescript services like the error list and autocompletion will use the new tsconfig.json file.",
+				"   In the next versions of ArcticTypescript, the build system will switch to the new config too, but for now, you need both.",
+				"",
+				"   What to do now:", "",
+				" - Create a tsconfig.json file inside of your source root folder or some parent folder.",
+				" - Configure using this file. Example:",
+				'{ "compilerOptions" : { "target" : "es5", "module" : "commonjs" } }',
+				" - For more options, refer to ",
+				"     https://www.npmjs.com/package/tsconfig",
+				"     (filesGlob are not available for now)", "", ""
+				])
+			return
+
 		try:
-			self.tss_process = Popen([node, tss, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, **kwargs)
+			self.tss_process = Popen([node, tss, "--project", tsconfigdir, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, **kwargs)
 			Debug('tss', 'STARTED tss with: %s' % ' '.join([node, tss, self.root]))
 		except FileNotFoundError:
 			self.error = "\n".join(["Could not find nodejs.",

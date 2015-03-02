@@ -261,12 +261,23 @@ def get_content(view):
 def get_content_of_line_at(view, pos):
 	return view.substr(sublime.Region(view.line(pos-1).a, pos))
 
+def find_tsconfigdir(rootdir):
+	rootdir = os.path.abspath(rootdir)
+	if "tsconfig.json" in os.listdir(rootdir):
+		return rootdir
+
+	parentdir = os.path.abspath(os.path.join(rootdir, os.pardir))
+	if parentdir == rootdir:
+		return None
+	else:
+		return find_tsconfigdir(parentdir)
+
+
 
 # GET LINES
 def get_lines(view):
 	(lines, col) = view.rowcol(view.size())
 	return lines
-
 
 # GET FILE INFO
 def get_file_infos(view):
