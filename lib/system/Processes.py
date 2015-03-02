@@ -158,7 +158,7 @@ class TssJsStarterThread(Thread):
 		tss = get_tss()
 		cwd =  os.path.abspath(os.path.dirname(self.root))
 		tsconfigdir = find_tsconfigdir(cwd)
-		kwargs = get_kwargs()
+		# kwargs = get_kwargs()
 
 		if tsconfigdir is None:
 			self.error = "\n".join(["Announcement:", "",
@@ -177,7 +177,7 @@ class TssJsStarterThread(Thread):
 			return
 
 		try:
-			self.tss_process = Popen([node, tss, "--project", tsconfigdir, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, **kwargs)
+			self.tss_process = Popen([node, tss, "--project", tsconfigdir, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd)
 			Debug('tss', 'STARTED tss with: %s' % ' '.join([node, tss, self.root]))
 		except FileNotFoundError:
 			self.error = "\n".join(["Could not find nodejs.",
