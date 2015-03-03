@@ -128,12 +128,14 @@ def get_tss():
 
 
 # GET PROCESS KWARGS
-def get_kwargs():
+def get_kwargs(stderr=True):
 	if os.name == 'nt':
-		errorlog = open(os.devnull, 'w')
 		startupinfo = subprocess.STARTUPINFO()
 		startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-		return {'stderr':errorlog, 'startupinfo':startupinfo}
+		if stderr:
+			errorlog = open(os.devnull, 'w')
+			return {'stderr':errorlog, 'startupinfo':startupinfo}
+		return {'startupinfo':startupinfo}
 	else:
 		return {}
 
