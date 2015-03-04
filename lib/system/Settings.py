@@ -5,7 +5,7 @@ import sys
 import os
 
 from .Liste import get_root
-from .Project import ProjectSettings, ProjectError, errorSetting
+#from .Project import ProjectSettings, ProjectError, errorSetting
 from ..Utils import read_and_decode_json_file, read_file, get_any_ts_view, fn2l, get_any_view_with_root
 
 # ----------------------------------------- CONSTANT ---------------------------------------- #
@@ -53,8 +53,8 @@ class Settings(object):
 				root_top_folder = self.get_top_folder(os.path.dirname(root_path))
 				if current_folder.lower().startswith(root_top_folder.lower()):
 					if root_path not in self.projects_type:
-						self.projects_type[root_path] = ProjectSettings(SUBLIME_PROJECT)
-
+						#TODOself.projects_type[root_path] = ProjectSettings(SUBLIME_PROJECT)
+						pass
 					return root_path
 
 		# PROJECT SETTINGS BUT NO ROOTS INSIDE > DO WE HAVE A SUBLIMETS FILE ?
@@ -72,20 +72,20 @@ class Settings(object):
 				data = read_file(root_path)
 				if data != None:
 					if root_path not in self.projects_type:
-						self.projects_type[root_path] = ProjectSettings(SUBLIME_TS,config_file)
-
+						#TODOself.projects_type[root_path] = ProjectSettings(SUBLIME_TS,config_file)
+						pass
 					return root_path
 
-				ProjectError(SUBLIME_TS,[config_data['root']+' is not a valid root file',config_file],config_file)
+				#ProjectError(SUBLIME_TS,[config_data['root']+' is not a valid root file',config_file],config_file)
 				return None
 
-		if errorSetting["ignore"]:
-			return None
+		#if errorSetting["ignore"]:
+		#		return None
 
 		error_type = SUBLIME_PROJECT if has_project_settings else NO_PROJECT
 		path = sublime.active_window().project_file_name() if has_project_settings else None
 		message = ['No valid root file for this project inside your project file',path] if has_project_settings else ['You didn\'t create a project file, please create one:','Choose between the four possibilities bellow :']
-		ProjectError(error_type,message,path)
+		#ProjectError(error_type,message,path)
 		return None
 
 

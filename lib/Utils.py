@@ -12,7 +12,7 @@ import sys
 
 DEFAULT_DEBOUNCE_DELAY = 0.8
 
-print_classifications = []
+print_classifications = ['project', 'project+']
 # possible classifications:
 possible_classifications = [ 'all',
 	'tss', 'tss+', 'tss++',
@@ -25,7 +25,8 @@ possible_classifications = [ 'all',
 	'errorpanel', 'errorpanel+',
 	'focus', 'max_calls',
 	'layout',
-	'goto']
+	'goto',
+	'project', 'project+']
 
 # DEBUG
 def Debug(classification, text):
@@ -63,13 +64,53 @@ def max_calls(limit = 1500, name=""):
 		return wrapper
 	return decorator
 
-# Allows Disabeling of ArcticTypescript
-plugin_temporary_disbled = False
-def is_plugin_temporary_disabled():
-	return plugin_temporary_disbled
 
-def set_plugin_temporary_disabled(disabled=True):
-	plugin_temporary_disbled = disabled
+# ############## Allows Disabling of ArcticTypescript ######################
+
+plugin_disabled_for_folders = [] # path for certain folders or '*global'
+
+def is_plugin_globally_disabled():
+	return "*global" in plugin_disabled_for_folders
+
+def is_plugin_temporarily_disabled(folder=None):
+	""" Returns True if the plugin is disabled globally or for folder.
+		Folder can be a view """
+	if is_plugin_globally_disabled() or folder is None:
+		return is_plugin_globally_disabled()
+	if folder is not None and isinstance(folder, sublime.View):
+		if folder.file_name() is None:
+			return is_plugin_globally_disabled()
+		folder = os.path.dirname(folder.file_name())
+	folder = os.path.normcase(folder)
+	return folder in plugin_disabled_for_folders
+
+
+def set_plugin_temporarily_enabled(folder=None):
+	""" Disables the plugin globally or for folder.
+		Folder can be a view """
+	if folder is None and is_plugin_globally_disabled():
+		plugin_disabled_for_folders.remove("*global")
+	else:
+		if isinstance(folder, sublime.View):
+			folder = os.path.dirname(folder.file_name())
+		folder = os.path.normcase(folder)
+		Debug('project', 'Enable ArcticTypescript for %s' % folder)
+		if folder in plugin_disabled_for_folders:
+			plugin_disabled_for_folders.remove(folder)
+
+
+def set_plugin_temporarily_disabled(folder=None):
+	""" Enables the plugin globally or for folder.
+		Folder can be a view """
+	if folder is None and not is_plugin_globally_disabled():
+		plugin_disabled_for_folders.append("*global")
+	else:
+		if isinstance(folder, sublime.View):
+			folder = os.path.dirname(folder.file_name())
+		folder = os.path.normcase(folder)
+		Debug('project', 'Disable ArcticTypescript for %s' % folder)
+		if folder not in plugin_disabled_for_folders:
+			plugin_disabled_for_folders.append(folder)
 
 # CANCEL COMMAND EXCEPTION
 class CancelCommand(Exception):
@@ -83,7 +124,7 @@ def catch_CancelCommand(func):
 		the plugin disabled flag and catch CancelCommand exceptins. """
 
 	def catcher(*kargs, **kwargs):
-		if is_plugin_temporary_disabled():
+		if is_plugin_temporarily_disabled():
 			return # do not execute command
 		try:
 			func(*kargs, **kwargs)
@@ -94,6 +135,7 @@ def catch_CancelCommand(func):
 
 # PACKAGE PATH
 dirname = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
+package_path = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
 
 
 # VERSIONS
@@ -185,7 +227,7 @@ def is_ts(view):
 	if fn is None or fn2 is None or fn3 is None:
 		pass
 		#import spdb ; spdb.start()
-	return fn.endswith('.ts')
+	return fn.endswith('.ts') and not fn.endswith('.d.ts')
 
 
 # IS A TYPESCRIPT DEFINITION FILE
@@ -264,9 +306,13 @@ def get_content_of_line_at(view, pos):
 	return view.substr(sublime.Region(view.line(pos-1).a, pos))
 
 def find_tsconfigdir(rootdir):
+	""" Returns the normalized dir, in which the tsconfig.json file is located"""
 	rootdir = os.path.abspath(rootdir)
-	if "tsconfig.json" in os.listdir(rootdir):
-		return rootdir
+	try:
+		if file_exists(os.path.join(rootdir, "tsconfig.json")):
+			return os.path.normcase(rootdir)
+	except FileNotFoundError:
+		pass
 
 	parentdir = os.path.abspath(os.path.join(rootdir, os.pardir))
 	if parentdir == rootdir:
@@ -314,3 +360,29 @@ def fn2l(filename):
 	return filename2linux(filename)
 
 
+def get_first(somelist, function):
+	""" Returns the first item of somelist for which function(item) is True """
+	for item in somelist:
+		if function(item):
+			return item
+	return None
+
+def get_deep(obj, selector):
+	""" Returns the object given by the selector, eg a:b:c:1 for ['a']['b']['c'][1] """
+	try:
+		if type(selector) is str:
+			selector = selector.split(':')
+
+		if len(selector) == 0:
+			return obj
+
+		top_selector = selector.pop(0)
+
+		if type(obj) is list:
+			top_selector = int(top_selector)
+			return get_deep(obj[top_selector], selector)
+
+		if type(obj) is dict:
+			return get_deep(obj[top_selector], selector)
+	except:
+		raise KeyError(str(selector))

@@ -6,21 +6,217 @@ import sublime
 import os, sys, subprocess
 import json
 
-from ..Utils import dirname, read_and_decode_json_file, get_kwargs, ST3
+from ..Utils import dirname, read_and_decode_json_file, get_kwargs, ST3, find_tsconfigdir, file_exists, is_plugin_temporarily_disabled, is_ts, is_dts, read_file, get_deep, Debug, get_first
+
+from .ProjectWizzard import ProjectWizzard
 
 
-PROJECT_LIST = []
+OPENED_PROJECTS = []
 
-def project_by_view(view):
-	return 13
+def get_or_create_project_and_add_view(view):
+	"""
+		Returns the project object associated with the file in view.
+		Does return None if this file is not a .ts file or from other reasons
+	"""
+
+	if (view is None
+		or view.buffer_id() == 0
+		or view.file_name() == ""
+		or view.file_name() is None): # closed
+		return None
+	if is_plugin_temporarily_disabled(view):
+		return None
+	if not is_ts(view):
+		return None
+	if read_file(view.file_name()) is None:
+		return None
+
+	tsconfigdir = find_tsconfigdir(view.file_name())
+	if tsconfigdir is None:
+		Debug('project', "Project without tsconfig.json. Start Wizzard")
+		PWizz = ProjectWizzard(view, lambda: get_or_create_project_and_add_view(view))
+		PWizz.new_tsconfig_wizzard("No tsconfig.json found. Use this wizzard to create one.")
+		return None
+
+	project_with_same_tsconfig = get_first(OPENED_PROJECTS,
+						lambda p: p.tsconfigdir == tsconfigdir)
+
+	if project_with_same_tsconfig is not None:
+		Debug('project+', "Already opened project found.")
+		project_with_same_tsconfig.open(view)
+		return project_with_same_tsconfig
+	else:
+		# New ts project
+		Debug('project', "Create new project: %s" % tsconfigdir)
+		return OpenedProject(view)
+
+allowed_compileroptions = [
+	"target", #?: string;            // 'es3'|'es5' (default) | 'es6'
+    "module", #?: string;            // 'amd'|'commonjs' (default)
+    "declaration", #?: boolean;      // Generates corresponding `.d.ts` file
+    "out", #?: string;               // Concatenate and emit a single file
+    "outDir", #?: string;            // Redirect output structure to this directory
+    "noImplicitAny", #?: boolean;    // Error on inferred `any` type
+    "suppressImplicitAnyIndexErrors",
+    "removeComments", #?: boolean;   // Do not emit comments in output
+    "sourceMap", #?: boolean;        // Generates SourceMaps (.map files)
+    "sourceRoot", #?: string;        // Optionally specifies the location where debugger should locate TypeScript source files after deployment
+    "mapRoot", #?: string; 			 // Optionally Specifies the location where debugger should locate map files after deployment
+    "preserveConstEnums", #?:boolean;	// Do not erase const enum declarations in generated code.
+    "removeComments", #?: boolean;  //  Do not emit comments to output.
+    ]
+
+allowed_settings = [
+	"activate_build_system",     #?:boolean;   default: true
+	"auto_complete",             #?:boolean,   default: true
+	"node_path",                 #?:boolean,   default: null -> nodejs in $PATH
+	"error_on_save_only",        #?:boolean,   default: false
+	"build_on_save",             #?:boolean,   default: false
+	"show_build_file",           #?:boolean,   default: false
+	"pre_processing_commands",   #?:[string]   default: []
+	"post_processing_commands",  #?:[string]   default: []
+]
 
 class OpenedProject(object):
-	""" Manages ErrorViews, OutlineViews, the TSS process
+	"""
+		Manages ErrorViews, OutlineViews, the TSS process
 		and open windows which belong to a Project.
 		This class should replace all current global variables.
-		 """
-	def __init__(self):
-		pass
+	"""
+
+	def __init__(self, startview):
+
+		OPENED_PROJECTS.append(self)
+
+		self.project_file_name = startview.window().project_file_name()
+		self.windows = [] # All windows with .ts files
+		self.error_view = {} #key: window.window_id, value: view
+		self.views = [] # All views with .ts files
+		self.tsconfigdir = find_tsconfigdir(startview.file_name())
+		self.tsconfigfile = os.path.join(self.tsconfigdir, "tsconfig.json")
+
+		self.ArcticTypescript_sublime_settings = sublime.load_settings('ArcticTypescript.sublime-settings')
+
+		self.open(startview)
+
+	def get_compileroption(self, optionkey, use_cache=False):
+		"""
+			Compileroptions are always located in tsconfig.json.
+			allowed_compileroptions define the allowed options
+			Use use_cache if you are making multiple request at once
+		"""
+		if optionkey not in allowed_compileroptions:
+			print("Requested unknown compiler option: %s. Will always be None."
+				  % optionkey)
+		return get_deep(self._get_tsconfigsettings(use_cache),
+						'compilerOptions:' + optionkey)
+
+	def _get_tsconfigsettings(self, use_cache=False):
+		""" No cacheing by default """
+		if use_cache and hasattr(self, 'tsconfigcache'):
+			return self.tsconfigcache
+		if file_exists(self.tsconfigfile):
+			self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
+		else:
+			self.tsconfigcache = {}
+		return self.tsconfigcache
+
+
+	def open(self, view):
+		if view not in self.views:
+			Debug('project+', "View %s added to project %s" % (view.file_name(), self.tsconfigfile))
+			self.views.append(view)
+		if view.window() not in self.windows:
+			Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
+			self.windows.append(view.window())
+
+	def close(self, view):
+		if view in self.views:
+			self.views.pop(view)
+			Debug('project+', "View %s removed from project %s" % (view.file_name(), self.tsconfigfile))
+			self.check_if_window_is_empty(view.window())
+
+	def remove_window_if_not_needed(self, window):
+		if not are_projectviews_opened_in_window(window):
+			self.windows.remove(window)
+			Debug('project+', "Window removed from project %s" % (self.tsconfigfile, ))
+		if len(self.windows) == 0:
+			self.close_project()
+
+	def are_projectviews_opened_in_window(self, window):
+		window_views = window.views()
+		for v in self.views:
+			if v in window_views:
+				return True
+		return False
+
+	def close_project():
+		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
+		print("TODO: Close project %s" % self.tsconfigfile)
+
+	def get_setting(self, settingskey, use_cache=False):
+		"""
+			Allowed settings are defined in allowed_settings.
+			Settings can be located in multiple files with these priorities:
+			A setting in 1. overrides a setting in 3.
+			1.  *   tsconfig.json['ArcticTypescript'][KEY]
+			2.      Sublime-Settings: http://www.sublimetext.com/docs/3/settings.html
+			2.0       Distraction Free Settings
+			2.1       Packages/User/<syntax=TypeScript>.sublime-settings['ArcticTypescript'][KEY]
+			2.2       Packages/<syntax=TypeScript>/<syntax=TypeScript>.sublime-settings['ArcticTypescript'][KEY]
+			2.3 *     <ProjectSettings>.sublime-settings['settings']['ArcticTypescript'][KEY]
+			2.4 *     Packages/User/Preferences.sublime-settings['ArcticTypescript'][KEY]
+                      You can open this file via Menu -> Preferences -> "Settings - User"
+			2.5       Packages/Default/Preferences (<platform>).sublime-settings['ArcticTypescript'][KEY]
+			2.6       Packages/Default/Preferences.sublime-settings['ArcticTypescript'][KEY]
+			3.      Sublime config dir/Packages/User/ArcticTypescript.sublime-settings[KEY]
+				    You can open this file via Menu
+				    -> Preferences -> Package Settings -> ArcticTypescript -> "Settings - User"
+
+
+			Where should i put the settings? (recommendation):
+				* Use 2.4. or 3. for personal settings across all typescript projects
+				* Use 2.3 for personal, project specific settings
+				* Use 1. if you are not part of a team
+				         or for settings for everyone
+				         or for project specific settings if you don't have created a sublime project
+
+		"""
+		if settingskey not in allowed_settings:
+			print("Requested unknown setting: %s. Will always be None."
+				  % optionkey)
+			return None
+
+		# 1. tsconfig.json['ArcticTypescript'][KEY]
+		try:
+			return get_deep(self._get_tsconfigsettings(use_cache),
+						'ArcticTypescript:' + settingskey)
+		except KeyError:
+			pass
+
+		# 2.  Sublime-Settings: http://www.sublimetext.com/docs/3/settings.html
+		#     <ProjectSettings>.sublime-settings['settings']['ArcticTypescript'][KEY]
+		try:
+			return get_deep(self.views[0].settings('ArcticTypescript'), settingskey)
+		except KeyError:
+			pass
+
+		# 3.  Sublime config dir/Packages/User/ArcticTypescript.sublime-settings[KEY]
+		# Sublime will merge the defaults from the package file
+		try:
+			settingskeys = settingskey.split(':')
+			firstkey = settingskeys.pop(0)
+			if not self.ArcticTypescript_sublime_settings.has(firstkey):
+				raise KeyError()
+			setting = self.ArcticTypescript_sublime_settings.get(firstkey)
+			return get_deep(setting, settingskeys)
+		except KeyError:
+			pass
+
+		Debug('project', "No default setting for %s could not be found for project %s." % (settingskey, self.tsconfigfile, ))
+		raise Exception("Arctic Typescript Bug: Valid setting requested, but default value can not be found.")
+
+
 
 
 
@@ -56,233 +252,3 @@ class ProjectSettings(object):
 		return sublime.load_settings('ArcticTypescript.sublime-settings').get(token)
 
 
-# ------------------------------------- PROJECT ERROR ----------------------------------------- #
-
-class ProjectError(object):
-
-	num_root_files = 1
-	root_files_name = []
-	create_project_type = ""
-	project_name = ""
-	folder_name = ""
-
-	def __init__(self, kind, message, path):
-		super(ProjectError, self).__init__()
-		self.window = sublime.active_window()
-		self.path = path
-		self.kind = kind
-
-		self.show(message,kind)
-
-
-	def show(self,message,kind):
-		self.messages = []
-		self.messages.append(message)
-		self.window.run_command("hide_overlay")
-
-		if self.kind == 'sublime_ts':
-			self.messages.append(['Open your .sublimets and Edit it','Click here to open the file'])
-			self.messages.append(['Show me a .sublimets example','Click here to open the example file'])
-			self.window.show_quick_panel(self.messages,self._on_done)
-		elif self.kind == 'sublime_project':
-			self.messages.append(['Open your project-file and Edit it','Click here to open the file'])
-			self.messages.append(['Show me a project-file example','Click here to open the example file'])
-			self.window.show_quick_panel(self.messages,self._on_done)
-		elif self.kind == 'no_project':
-			self.messages.append(['Create a sublime project-file (one or multiple root files)','Click here and follow the instructions'])
-			self.messages.append(['Create a .sublimets project file (one root file only)','Click here and follow the instructions'])
-			self.messages.append(['I don\'t understand please show me the README file','Click here to open the README.md file'])
-			self.messages.append(['I don\'t want to create a typescript project now' ,'Ignore typescript project error for this session'])
-			self.window.show_quick_panel(self.messages,self._on_create_project)
-
-
-	def _on_done(self,index):
-		if index==-1 or index==0:
-			self.window.run_command("hide_overlay")
-			return
-		elif index == 1 :
-			self.window.open_file(self.path)
-		else:
-			if self.kind == 'sublime_ts':
-				self.window.open_file(dirname+'/examples/sublimets/.sublimets')
-			elif self.kind == 'sublime_project':
-				self.window.open_file(dirname+'/examples/sublimeproject/project.sublime-project')
-
-
-	# BEGIN CREATING PROJECT
-	def _on_create_project(self,index):
-		if index == -1 or index == 0:
-			self.window.run_command("hide_overlay")
-			return
-		elif index == 1:
-			self.create_project_type = 'sublime_project'
-			self.window.show_input_panel("Enter a name for your project file", "", self._set_project_name, None, None)
-		elif index == 2:
-			self.create_project_type = 'sublime_ts'
-			self.window.show_input_panel("Enter the root file name", "", self._set_root_file_name, None, None)
-			pass
-		elif index == 3:
-			self.window.open_file(dirname+'/README.md')
-		elif index == 4:
-			errorSetting["ignore"] = True
-
-
-	# SET PROJECT NAME
-	def _set_project_name(self,name):
-		self.project_name = name
-		self.window.show_input_panel("Enter the number of root files you want to include", "", self._set_num_root_file, None, None)
-
-
-	# SET ROOT FILE NUMBER
-	def _set_num_root_file(self,number):
-		self.num_root_files = int(number)
-		self.window.show_input_panel("Enter the first root file path (from top folder to your file)", "", self._set_root_file_name, None, None)
-
-
-	# SET ROOT FILE
-	def _set_root_file_name(self,name):
-		self.root_files_name.append(name)
-
-		if self.num_root_files == 1:
-			if self.create_project_type == 'sublime_project':
-				self.window.show_input_panel("Do you want to add project settings : yes | no", "", self._add_project_settings, None, None)
-			else:
-				(path, name) =  os.path.split(sublime.active_window().active_view().file_name())
-				self.folder_name = path
-				self.window.show_input_panel("Enter the folder path of your root file", path, self._set_folder_path, None, None)
-		else:
-			self.window.show_input_panel("Enter the next root file path (from top folder to your file)", "", self._set_root_file_name, None, None)
-
-		self.num_root_files = self.num_root_files-1
-
-
-	# SET FOLDER NAME
-	def _set_folder_path(self,folder):
-		if not os.path.isdir(folder):
-			self.window.run_command("hide_overlay")
-			sublime.status_message('the folder doesn\'t exist, try again')
-			self.window.show_input_panel("Enter the folder path of your root file", self.folder_name, self._set_folder_path, None, None)
-			return
-
-		self.folder_name = folder
-		self.window.show_input_panel("Do you want to add project settings : yes | no ", "", self._add_project_settings, None, None)
-
-
-	# ADD PROJECTS SETTINGS
-	def _add_project_settings(self,settings):
-		settings = True if settings == 'yes' else False
-		if self.create_project_type == 'sublime_project':
-			self._create_sublime_project(settings)
-		else:
-			self._create_sublimets(settings)
-
-
-	# CREATE SUBLIMETS
-	def _create_sublimets(self,settings):
-		if settings:
-			content = json.dumps({"root":self.root_files_name[0],"settings":self._get_settings()}, sort_keys=True, indent=4)
-		else:
-			content = json.dumps({"root":self.root_files_name[0]}, sort_keys=False, indent=4)
-
-		path = os.path.abspath(self.folder_name+'/.sublimets')
-		self._create_project_file(content,path)
-		self.window.open_file(path)
-		self.window.run_command("hide_overlay")
-
-
-	# CREATE SUBLIME-PROJECT
-	def _create_sublime_project(self,settings):
-		if settings:
-			content = json.dumps({"folders":self._get_project_folders(),"settings":{"typescript":{"roots":self.root_files_name,"settings":self._get_settings()}}}, sort_keys=True, indent=4)
-		else:
-			content = json.dumps({"folders":self._get_project_folders(),"settings":{"typescript":{"roots":self.root_files_name}}}, sort_keys=False, indent=4)
-
-		path =  os.path.abspath(self._get_top_folder(os.path.dirname(self.window.active_view().file_name())) +'/'+ self.project_name + '.sublime-project')
-		self._create_project_file(content,path)
-		self.window.open_file(path)
-		self.window.run_command("hide_overlay")
-		self._open_project(path)
-
-
-	# CREATE PROJECT FILE
-	def _create_project_file(self,content,path):
-		file_ref = open(path, "w")
-		file_ref.write(content);
-		file_ref.close()
-
-
-	# OPEN PROJECT
-	def _open_project(self,path):
-		if sys.platform == 'win32':
-			# /S: only the outer quotes are removed, all other quotes are preserved
-			subprocess.call('cmd /S /C "'+ os.path.join(os.getcwd(), 'sublime_text.exe') + ' --project "' + path + '" "', shell=True)
-		elif sys.platform == 'darwin':
-			path = path.replace(" ", "\\ ")
-			subprocess.call(""+ os.path.join(os.getcwd(), 'subl') + ' --project ' + path + '', shell=True)
-		else:
-			#Restarting ST3 on linux
-			path = path.replace(" ", "\\ ")
-			print("Open project ..: " + ""+ os.path.join(os.getcwd(), 'sublime_text') + ' --project ' + path + '')
-			subprocess.call(""+ os.path.join(os.getcwd(), 'sublime_text') + ' --project ' + path + '', shell=True)
-
-
-		# kwargs = get_kwargs()
-		# if os.name == 'nt':
-		# 	os.chdir(self._get_sublime_path())
-		# 	Popen(['sublime_text.exe','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
-		# else:
-		# 	print("Open project ..: " + self._get_sublime_path())
-		# 	Popen([''+self._get_sublime_path()+'','--project',path], stdin=PIPE, stdout=PIPE, **kwargs)
-
-
-	# GET PROJECT FOLDERS
-	def _get_project_folders(self):
-		folders = sublime.active_window().folders()
-		folders.append(".")
-
-		result = []
-		for folder in folders:
-			result.append({"follow_symlinks": True,"path":folder})
-
-		return result
-
-
-	# GET TOP FOLDER
-	def _get_top_folder(self,current_folder):
-		top_folder = None
-		open_folders = sublime.active_window().folders()
-		for folder in open_folders:
-			if current_folder.lower().startswith(folder.lower()):
-				top_folder = folder
-				break
-
-		if top_folder != None:
-			return top_folder
-
-		return current_folder
-
-
-	# PARSE SETTINGS
-	def _get_settings(self):
-		settings = sublime.load_settings('ArcticTypescript.sublime-settings')
-		return {
-			"auto_complete" : settings.get('auto_complete'),
-			"node_path" : settings.get('node_path'),
-			"error_on_save_only" : settings.get('error_on_save_only'),
-			"build_on_save" : settings.get('build_on_save'),
-			"show_build_file" : settings.get('show_build_file'),
-			"build_parameters" : settings.get('build_parameters')
-		}
-
-
-	# GET SUBLIME PATH
-	def _get_sublime_path(self):
-		if sublime.platform() == 'osx':
-			if ST3:
-				return '/Applications/Sublime Text 3.app/Contents/SharedSupport/bin/subl'
-			else:
-				return '/Applications/Sublime Text 2.app/Contents/SharedSupport/bin/subl'
-		elif sublime.platform() == 'linux':
-			return open('/proc/self/cmdline').read().split(chr(0))[0]
-		else:
-			return os.path.abspath(os.path.join(dirname,'..','..','..'))

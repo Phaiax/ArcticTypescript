@@ -177,7 +177,7 @@ You can create a <code>.sublimets</code> file in the folder containing the types
 			"root":"root_file_name.ts"
 	}
 
-And also add (optionnal) your project settings :
+And also add (optional) your project settings :
 
 	{
 		"root":"root_file_name.ts",

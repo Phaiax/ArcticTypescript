@@ -12,10 +12,11 @@ from .system.Files import FILES
 from .system.Liste import LISTE, get_root
 from .system.Processes import PROCESSES
 from .system.Settings import SETTINGS
+from .system.Project import OpenedProject, get_or_create_project_and_add_view
 from .Tss import TSS
 from .Utils import debounce, is_ts, is_dts, read_file, get_file_infos, ST3, \
-				   Debug, max_calls, run_command_on_any_ts_view, file_exists, \
-				   is_plugin_temporary_disabled
+				   Debug, max_calls, run_command_on_any_ts_view, file_exists
+
 
 
 # ------------------------------------------- INIT ------------------------------------------ #
@@ -28,12 +29,8 @@ def init(view):
 	if c[0] == 10:
 		pass #import spdb ; spdb.start()
 
-	if is_plugin_temporary_disabled():
-		return
-	if not is_ts(view) or is_dts(view):
-		return
-	if read_file(view.file_name()) is None:
-		return
+	get_or_create_project_and_add_view(view)
+	return
 
 	root = SETTINGS.get_root(view)
 	if root == 'no_ts' or root == None: return

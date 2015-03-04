@@ -14,7 +14,7 @@ import time
 
 from .Settings import SETTINGS
 from ..display.Message import MESSAGE
-from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporary_disabled, find_tsconfigdir
+from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporarily_disabled, find_tsconfigdir
 
 
 #    PROCESSES = global Processes() instance
@@ -105,7 +105,7 @@ class Processes(object):
 		if self.initialisation_error(root):
 			sublime.error_message('Typescript initializion error for root file : %s\n >>> %s\n ArcticTypescript is disabled until you restart sublime.'
 						 % (os.path.basename(root), self.initialisation_error(root)))
-			set_plugin_temporary_disabled()
+			set_plugin_temporarily_disabled()
 			return
 		if not self.is_initialized(root):
 			(i, dir) = self._display_animated_init_message(i, dir)

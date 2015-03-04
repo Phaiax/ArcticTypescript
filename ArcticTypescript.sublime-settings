@@ -21,5 +21,8 @@
 		"remove_comments_from_output":false,
 		"generate_source_map":false,
 		"ecmascript_target":"ES3"
-	}
+	},
+	"test" : "fos",
+	"omas" : "werwerwer"
+
 }

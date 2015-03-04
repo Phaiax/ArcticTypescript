@@ -12,7 +12,7 @@ if int(sublime.version()) >= 3000:
 
 		# Testing (Only executes if we have opened the TDDTesting project)
 		# Use filepattern to select tests. Examples: '*foo*', 'test_foo.py'
-		#run_tests(filepattern='') # *settings*
+		run_tests(filepattern='*utils*') #
 
 
 	def plugin_unloaded():
