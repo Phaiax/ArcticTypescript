@@ -8,13 +8,15 @@ except ImportError:
 	from Queue import Queue, Empty
 
 import sublime
-import os, os.path
+import os
 import time
 
-
-from .Settings import SETTINGS
 from ..display.Message import MESSAGE
-from ..Utils import get_tss, get_kwargs, encode, ST3, Debug, set_plugin_temporarily_disabled, find_tsconfigdir
+
+from ..utils import encode, Debug
+from ..utils.pathutils import get_tss_path, find_tsconfigdir, default_node_path
+from ..utils.osutils import get_kwargs
+from ..utils.disabling import set_plugin_temporarily_disabled
 
 
 #    PROCESSES = global Processes() instance
@@ -40,81 +42,68 @@ class Processes(object):
         Process FAST is for fast reacting commands eg. for autocompletion or type.
 	"""
 
-	SLOW = 0
-	FAST = 1
+	def __init__(self, project):
+		""" starts the two processes """
+		self.project = project
+		self.start_tss_processes_for()
+		self.slow = None
+		self.fast = None
 
-	roots = {} # { 'rootfilename aka project' : (p_slow, p_fast) }
 
-	def get(self, root, type=SLOW):
-		""" Returns corresponding process for project root and type=SLOW or FAST. """
-		if root in self.roots:
-			return self.roots[root][type]
-		return None
-
-	def is_initialized(self, root):
+	def is_initialized(self):
 		""" Returns True if both processes (SLOW and FAST) have been started. """
-		return root in self.roots \
-			and self.roots[root] is not None \
-			and self.roots[root][Processes.SLOW].started \
-			and self.roots[root][Processes.FAST].started
+		return self.slow.started and self.fast.started
 
-	def initialisation_error(self, root):
-		""" Returns Errormessage if initializing has failed for root otherwise false"""
-		if root in self.roots and self.roots[root] is not None:
-			if self.roots[root][Processes.SLOW].error:
-				return self.roots[root][Processes.SLOW].error
-			if self.roots[root][Processes.FAST].error:
-				return self.roots[root][Processes.FAST].error
+	def get_initialisation_error_message(self):
+		""" Returns Errormessage if initializing has failed, otherwise false"""
+		if self.slow.error:
+			return self.slow.error
+		if self.fast.error:
+			return self.fast.error
 		return False
 
-	def initialisation_started(self, root):
-		""" Returns True if start_tss_processes_for() has been called with root """
-		return root in self.roots
-
-	def start_tss_processes_for(self, root, init_finished_callback):
+	def start_tss_processes_for(self):
 		"""
-			If not allready started, start tss.js (2 times) for project root.
-			Displays message to user while starting and calls tss_notify_callback('init', root) afterwards
+			Start tss.js (2 times).
+			Displays message to user while starting and calls project.on_services_started() afterwards
 		"""
-		if self.initialisation_started(root):
-			return
+		print('Typescript initializing ' + self.project.tsconfigfile)
 
-		print('Typescript initializing ' + root)
+		self.slow = TssJsStarterThread(self.project)
+		self.slow.start()
 
-		process_slow = TssJsStarterThread(root)
-		process_slow.start()
+		self.fast = TssJsStarterThread(self.project)
+		self.fast.start()
 
-		process_fast = TssJsStarterThread(root)
-		process_fast.start()
+		self._wait_for_finish_and_notify_user()
 
-		self.roots[root] = ( process_slow, process_fast )
-
-		self._wait_for_finish_and_notify_user(root, init_finished_callback)
-
-	def kill_and_remove(self, root):
+	def kill(self):
 		""" Trigger killing of adapter, tss.js and queue. """
-		if root in self.roots:
-			Debug('tss+', "Killing tss.js process and adapter thread (for slow and fast lane) (Closing project %s)" % root)
-			self.get(root, Processes.SLOW).kill_tssjs_queue_and_adapter()
-			self.get(root, Processes.FAST).kill_tssjs_queue_and_adapter()
-			del self.roots[root]
+
+		Debug('tss+', "Killing tss.js process and adapter thread (for slow and fast lane) (Closing project %s)"
+				 % self.project.tsconfigfile)
+		self.slow.kill_tssjs_queue_and_adapter()
+		self.fast.kill_tssjs_queue_and_adapter()
 
 
-	def _wait_for_finish_and_notify_user(self, root, init_finished_callback, i=1, dir=-1):
+
+	def _wait_for_finish_and_notify_user(self, i=1, dir=-1):
 		""" Displays animated Message as long as TSS is initing. Is recoursive function. """
-		if self.initialisation_error(root):
-			sublime.error_message('Typescript initializion error for root file : %s\n >>> %s\n ArcticTypescript is disabled until you restart sublime.'
-						 % (os.path.basename(root), self.initialisation_error(root)))
+
+		if self.get_initialisation_error_message():
+			sublime.error_message('Typescript initializion error for : %s\n >>> %s\n ArcticTypescript is disabled until you restart sublime.'
+						 % (self.project.tsconfigfile, self.get_initialisation_error_message()))
 			set_plugin_temporarily_disabled()
 			return
-		if not self.is_initialized(root):
+
+		if not self.is_initialized():
 			(i, dir) = self._display_animated_init_message(i, dir)
-			# recoursive:
-			sublime.set_timeout(lambda: self._wait_for_finish_and_notify_user(root, init_finished_callback, i, dir), 100)
+			# recursive:
+			sublime.set_timeout(lambda: self._wait_for_finish_and_notify_user(i, dir), 100)
 		else:
 			# starting finished ->
-			MESSAGE.show('Typescript project intialized for root file : %s' % os.path.basename(root), True)
-			init_finished_callback()
+			MESSAGE.show('Typescript project intialized for file : %s' % self.project.tsconfigfile, True)
+			self.project.on_services_started()
 
 	def _display_animated_init_message(self, i, dir):
 		if i in [1, 8]:
@@ -122,11 +111,7 @@ class Processes(object):
 		i += dir
 		anim_message = ' Typescript project is initializing [%s]' % '='.rjust(i).ljust(8)
 
-		if not ST3:
-			MESSAGE.repeat('Typescript project is initializing')
-			sublime.status_message(anim_message)
-		else:
-			MESSAGE.repeat(anim_message)
+		MESSAGE.repeat(anim_message)
 
 		return (i, dir)
 
@@ -143,45 +128,32 @@ class TssJsStarterThread(Thread):
 
 		tss.js from: https://github.com/clausreinke/typescript-tools
 	"""
-	def __init__(self,root):
-		""" init for project <root> """
-		self.root = root
+	def __init__(self, project):
+		""" init for project <project> """
+		self.project = project
 		self.started = False
 		self.error = False
 		Thread.__init__(self)
+
 
 	def run(self):
 		"""
 			Starts the tss.js typescript services server process and the adapter thread.
 		"""
-		node = SETTINGS.get_node(self.root)
-		tss = get_tss()
-		cwd =  os.path.abspath(os.path.dirname(self.root))
-		tsconfigdir = find_tsconfigdir(cwd)
+
+		node_path, cwd, cmdline = self._make_commandline()
 		kwargs = get_kwargs(stderr=False)
 
-		if tsconfigdir is None:
-			self.error = "\n".join(["Announcement:", "",
-				"   Configuration for compiler options will change its location from .sublimets or abcdef.sublime-project to tsconfig.json", "",
-				"   Currently the ArcticTypescript build system will use the old config, and the ArcticTypescript services like the error list and autocompletion will use the new tsconfig.json file.",
-				"   In the next versions of ArcticTypescript, the build system will switch to the new config too, but for now, you need both.",
-				"",
-				"   What to do now:", "",
-				" - Create a tsconfig.json file inside of your source root folder or some parent folder.",
-				" - Configure using this file. Example:",
-				'{ "compilerOptions" : { "target" : "es5", "module" : "commonjs" } }',
-				" - For more options, refer to ",
-				"     https://www.npmjs.com/package/tsconfig",
-				"     (filesGlob are not available for now)", "", ""
-				])
-			return
-
 		try:
-			self.tss_process = Popen([node, tss, "--project", tsconfigdir, self.root], stdin=PIPE, stdout=PIPE, stderr=PIPE, cwd=cwd, **kwargs)
-			Debug('tss', 'STARTED tss with: %s' % ' '.join([node, tss, self.root]))
+			self.tss_process = Popen(cmdline,
+									 stdin=PIPE, stdout=PIPE, stderr=PIPE,
+									 cwd=cwd, **kwargs)
+
+			Debug('tss', 'STARTED tss with: %s' % ' '.join(cmdline))
+
 		except FileNotFoundError:
 			self.error = "\n".join(["Could not find nodejs.",
-					"I have tried this path: %s" % node,
+					"I have tried this path: %s" % node_path,
 					"Please install nodejs and/or set node_path in the project or plugin settings to the actual executable.",
 					"If you are on windows and just have installed node, you first need to logout and login again."])
 			return
@@ -202,6 +174,18 @@ class TssJsStarterThread(Thread):
 
 		self.started = True
 
+
+	def _make_commandline(self):
+		""" generates the commandline to start either tss.js or tsserver.js,
+			depending on the project settings """
+		node_path = default_node_path(self.project.get_setting('node_path'))
+		tss_path = get_tss_path()
+
+		cwd = os.path.abspath(project.tsconfigdir)
+		rootfile = self.project.get_first_file_of_tsconfigjson()
+		cmdline = [node_path, tss_path, "--project", cwd, rootfile]
+
+		return node_path, cwd, cmdline
 
 	def send_async_command(self, async_command):
 		""" Send a AsyncCommand() instance to the adapter thread. """
@@ -423,7 +407,3 @@ class TssAdapterThread(Thread):
 			self.check_process_health()
 
 
-
-# -------------------------------------------- INIT ------------------------------------------ #
-
-PROCESSES = Processes()

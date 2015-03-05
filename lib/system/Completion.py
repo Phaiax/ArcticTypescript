@@ -3,8 +3,27 @@
 import re
 import json
 import sublime
-from ..Utils import get_prefix, is_member_completion, \
-	 get_file_infos, Debug, get_col_after_last_dot, get_content_of_line_at
+
+from ..utils import Debug
+from ..utils.uiutils import get_prefix
+from ..utils.viewutils import get_file_infos, get_content_of_line_at
+
+
+# IS AN OBJECT MEMBER
+# TRUE: line=Instance. or line=Instance.fooba or line=Instance.foobar.alic
+# FALSE: line=Inst
+js_id_re = re.compile(u'^[_$a-zA-Z\u00FF-\uFFFF][_$a-zA-Z0-9\u00FF-\uFFFF]*')
+def is_member_completion(line_text):
+	def partial_completion():
+		sp = line_text.split(".")
+		if len(sp) > 1:
+			return js_id_re.match(sp[-1]) is not None
+		return False
+	return line_text.endswith(".") or partial_completion()
+
+
+def get_col_after_last_dot(line_text):
+	return line_text.rfind(".") + 1
 
 
 class Completion(object):
@@ -190,3 +209,5 @@ class Completion(object):
 
 
 COMPLETION = Completion()
+
+

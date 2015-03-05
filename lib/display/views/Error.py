@@ -5,7 +5,7 @@ import time
 import re
 
 from .Base import Base
-from ...Utils import Debug, max_calls, ST3
+from ...utils import Debug, max_calls
 
 class Error(Base):
 
@@ -69,7 +69,7 @@ class Error(Base):
 			Debug('focus', "show_at_center, Region @pos %i, (%s -> %s)" % (region.begin(), point[0], point[1]))
 			view.show_at_center(region)
 
-			draw = sublime.DRAW_NO_FILL if ST3 else sublime.DRAW_OUTLINED
+			draw = sublime.DRAW_NO_FILL
 			view.add_regions('typescript-error-hint', [region], 'invalid', 'dot')
 
 			# redraw region in 50ms because selection modification will remove it

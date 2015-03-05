@@ -1,17 +1,23 @@
 # coding=utf8
 
-from subprocess import Popen, PIPE
-
 import sublime
-import os, sys, subprocess
-import json
+import os
 
-from ..Utils import dirname, read_and_decode_json_file, get_kwargs, ST3, find_tsconfigdir, file_exists, is_plugin_temporarily_disabled, is_ts, is_dts, read_file, get_deep, Debug, get_first
+from ..utils.fileutils import read_and_decode_json_file, file_exists, is_ts, is_dts, read_file
+from ..utils.pathutils import find_tsconfigdir
+from ..utils.disabling import is_plugin_temporarily_disabled
+from ..utils import get_deep, get_first, Debug
 
 from .ProjectWizzard import ProjectWizzard
+from .ErrorsHighlighter import ErrorsHighlighter
+from .Errors import Errors
+from .Completion import Completion
+
+from ..server.Processes import Processes
+
+from .globals import OPENED_PROJECTS
 
 
-OPENED_PROJECTS = []
 
 def get_or_create_project_and_add_view(view):
 	"""
@@ -23,6 +29,8 @@ def get_or_create_project_and_add_view(view):
 		or view.buffer_id() == 0
 		or view.file_name() == ""
 		or view.file_name() is None): # closed
+		return None
+	if view.is_loading():
 		return None
 	if is_plugin_temporarily_disabled(view):
 		return None
@@ -38,17 +46,18 @@ def get_or_create_project_and_add_view(view):
 		PWizz.new_tsconfig_wizzard("No tsconfig.json found. Use this wizzard to create one.")
 		return None
 
-	project_with_same_tsconfig = get_first(OPENED_PROJECTS,
+	opened_project_with_same_tsconfig = get_first(OPENED_PROJECTS,
 						lambda p: p.tsconfigdir == tsconfigdir)
 
-	if project_with_same_tsconfig is not None:
+	if opened_project_with_same_tsconfig is not None:
 		Debug('project+', "Already opened project found.")
-		project_with_same_tsconfig.open(view)
-		return project_with_same_tsconfig
+		opened_project_with_same_tsconfig.open(view)
+		return opened_project_with_same_tsconfig
 	else:
 		# New ts project
-		Debug('project', "Create new project: %s" % tsconfigdir)
+		Debug('project', "Open project: %s" % tsconfigdir)
 		return OpenedProject(view)
+
 
 allowed_compileroptions = [
 	"target", #?: string;            // 'es3'|'es5' (default) | 'es6'
@@ -66,6 +75,7 @@ allowed_compileroptions = [
     "removeComments", #?: boolean;  //  Do not emit comments to output.
     ]
 
+
 allowed_settings = [
 	"activate_build_system",     #?:boolean;   default: true
 	"auto_complete",             #?:boolean,   default: true
@@ -76,6 +86,7 @@ allowed_settings = [
 	"pre_processing_commands",   #?:[string]   default: []
 	"post_processing_commands",  #?:[string]   default: []
 ]
+
 
 class OpenedProject(object):
 	"""
@@ -99,6 +110,88 @@ class OpenedProject(object):
 
 		self.open(startview)
 
+		self._initialize_project()
+
+
+	# ###############################################    INIT   ################
+
+
+	def _initialize_project(self):
+		self._start_typescript_services()
+		self.TSS = None
+
+
+	def _start_typescript_services(self):
+		self.processes = Processes(self) ## INIT SERVICES
+
+
+	def on_services_started(self):
+		self.errors = Errors(self)
+		self.completion = Completion(self)
+		self.hightlighter = ErrorsHightlighter(self)
+
+
+	# ###############################################    OPEN/CLOSE   ##########
+
+
+	def open(self, view):
+		""" Should be called if a new view is opened, and this view belongs
+			to the same tsconfig.json file """
+		if view not in self.views:
+			Debug('project+', "View %s added to project %s" % (view.file_name(), self.tsconfigfile))
+			self.views.append(view)
+			view.settings().set('auto_complete', self.get_setting("auto_complete"))
+			view.settings().set('extensions', ['ts'])
+
+
+		if view.window() not in self.windows:
+			Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
+			self.windows.append(view.window())
+
+
+	def close(self, view):
+		""" Should be called if a view has been closed. Also accepts views which do not
+			belong to this project
+			Closes project if no more windows are open. """
+		if view in self.views:
+			self.views.pop(view)
+			Debug('project+', "View %s removed from project %s" % (view.file_name(), self.tsconfigfile))
+			self._remove_window_if_not_needed(view.window())
+
+
+	# ###############################################    KILL   ################
+
+
+	def _remove_window_if_not_needed(self, window):
+		""" Removes window from this projects window list,
+			if this window does not contain any opened ts file.
+			Closes project if no more windows are open.
+			TODO: what happenes if the user moves views from one window to another """
+		if not _are_projectviews_opened_in_window(window):
+			self.windows.remove(window)
+			Debug('project+', "Window removed from project %s" % (self.tsconfigfile, ))
+		if len(self.windows) == 0:
+			self.close_project()
+
+
+	def _are_projectviews_opened_in_window(self, window):
+		""" checks if any views from this projects ts files are opened in window """
+		window_views = window.views()
+		for v in self.views:
+			if v in window_views:
+				return True
+		return False
+
+
+	def close_project(self):
+		""" Closes project, kills tsserver processes, removes all highlights, ... """
+		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
+		print("TODO: Close project %s" % self.tsconfigfile)
+
+
+	# ###############################################    SETTINGS   ############
+
+
 	def get_compileroption(self, optionkey, use_cache=False):
 		"""
 			Compileroptions are always located in tsconfig.json.
@@ -111,6 +204,14 @@ class OpenedProject(object):
 		return get_deep(self._get_tsconfigsettings(use_cache),
 						'compilerOptions:' + optionkey)
 
+
+	def get_first_file_of_tsconfigjson(self, use_cache=False):
+		try:
+			return get_deep(self._get_tsconfigsettings(use_cache), 'files:0')
+		except KeyError:
+			return None
+
+
 	def _get_tsconfigsettings(self, use_cache=False):
 		""" No cacheing by default """
 		if use_cache and hasattr(self, 'tsconfigcache'):
@@ -121,38 +222,6 @@ class OpenedProject(object):
 			self.tsconfigcache = {}
 		return self.tsconfigcache
 
-
-	def open(self, view):
-		if view not in self.views:
-			Debug('project+', "View %s added to project %s" % (view.file_name(), self.tsconfigfile))
-			self.views.append(view)
-		if view.window() not in self.windows:
-			Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
-			self.windows.append(view.window())
-
-	def close(self, view):
-		if view in self.views:
-			self.views.pop(view)
-			Debug('project+', "View %s removed from project %s" % (view.file_name(), self.tsconfigfile))
-			self.check_if_window_is_empty(view.window())
-
-	def remove_window_if_not_needed(self, window):
-		if not are_projectviews_opened_in_window(window):
-			self.windows.remove(window)
-			Debug('project+', "Window removed from project %s" % (self.tsconfigfile, ))
-		if len(self.windows) == 0:
-			self.close_project()
-
-	def are_projectviews_opened_in_window(self, window):
-		window_views = window.views()
-		for v in self.views:
-			if v in window_views:
-				return True
-		return False
-
-	def close_project():
-		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
-		print("TODO: Close project %s" % self.tsconfigfile)
 
 	def get_setting(self, settingskey, use_cache=False):
 		"""
@@ -213,42 +282,7 @@ class OpenedProject(object):
 		except KeyError:
 			pass
 
+
 		Debug('project', "No default setting for %s could not be found for project %s." % (settingskey, self.tsconfigfile, ))
 		raise Exception("Arctic Typescript Bug: Valid setting requested, but default value can not be found.")
-
-
-
-
-
-errorSetting = {"ignore": False};
-
-# ------------------------------------- PROJECT SETTINGS ---------------------------------------- #
-
-class ProjectSettings(object):
-
-	def __init__(self,type,file=None):
-		super(ProjectSettings, self).__init__()
-		self.type = type
-		self.file =  file
-
-	def get(self,view,token):
-		if self.file != None:
-			config_data = read_and_decode_json_file(self.file)
-			if 'settings' in config_data:
-				return config_data['settings'][token]
-			else:
-				return self._default(token)
-		else:
-			ts = view.settings().get('typescript')
-			if 'settings' in ts:
-				if token in ts['settings']:
-					return ts['settings'][token]
-				print('Missing setting ["typescript"]["settings"]["%s"] in your config. Using Default: %s'
-						% (token, str(self._default(token)) ) )
-
-			return self._default(token)
-
-	def _default(self,token):
-		return sublime.load_settings('ArcticTypescript.sublime-settings').get(token)
-
 

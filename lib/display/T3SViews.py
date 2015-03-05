@@ -8,7 +8,7 @@ from .Layout import Layout
 from .views.Outline import Outline
 from .views.Error import Error
 from .views.Compile import Compile
-from ..Utils import Debug, max_calls
+from ..utils import Debug, max_calls
 
 class T3SViews (object):
 	""" This class manages the 3 views:
@@ -22,14 +22,14 @@ class T3SViews (object):
 		self.ERROR = Error(self)
 		self.COMPILE = Compile(self)
 		self.OUTLINE = Outline(self)
-		
+
 		# remembers group and window so we can delete the group if all windows are closed
 		self.group = None
 		self.window = None
-		
+
 		self.layout = Layout()
 
-					
+
 	# HAS VIEWS *
 	def has_open_views(self):
 		return self.get_an_open_t3sview() is not None
@@ -37,7 +37,7 @@ class T3SViews (object):
 	# GET WINDOW & VIEW GROUP FOR NEW T3S VIEWS *
 	def get_window_and_group_for_new_views(self):
 		"""
-			determines the sublime window and the sublime group in which the first 
+			determines the sublime window and the sublime group in which the first
 			open T3S view is located (or should be inserted)
 		"""
 

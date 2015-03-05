@@ -2,7 +2,8 @@
 
 import sublime
 from .Base import Base
-from ...Utils import Debug, ST3, get_prefix
+from ...utils import Debug
+from ...utils.uiutils import get_prefix
 
 class Outline(Base):
 
@@ -22,7 +23,7 @@ class Outline(Base):
 		self.ts_view = ts_view
 		if type(members) == list:
 			self._tssjs_2_outline_format(members)
-		elif type(members) == str or (not ST3 and type(members) == unicode):
+		elif type(members) == str:
 			self.text = members
 
 		super(Outline, self).set_text(edit_token, self.text)
@@ -81,7 +82,7 @@ class Outline(Base):
 			Debug('focus', 'Outline.on_click: is just focusing other view > ignore')
 			return
 		if line in self.regions:
-			draw = sublime.DRAW_NO_FILL if ST3 else sublime.DRAW_OUTLINED
+			draw = sublime.DRAW_NO_FILL
 			self.ts_view.add_regions('typescript-definition', [self.regions[line]], 'comment', 'dot', draw)
 			self._focus_member_in_view(self.regions[line])
 

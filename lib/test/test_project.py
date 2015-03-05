@@ -1,3 +1,5 @@
+# coding=utf8
+
 import sublime, sys, os
 from ArcticTypescript.lib.ArcticTestCase import ArcticTestCase
 from sublime_unittest import TestCase

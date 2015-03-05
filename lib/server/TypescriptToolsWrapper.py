@@ -4,18 +4,21 @@ import sublime
 import json
 import hashlib
 
-from .display.Completion import COMPLETION
-from .display.Message import MESSAGE
-from .display.T3SViews import T3SVIEWS
-from .system.Processes import PROCESSES
-from .system.AsyncCommand import AsyncCommand
-from .system.Liste import get_root
-from .Utils import is_dts, encode, CancelCommand, Debug, fn2l, max_calls
+from ..display.Message import MESSAGE
+from ..display.T3SViews import T3SVIEWS
+
+from .AsyncCommand import AsyncCommand
+
+from ..utils import encode, Debug, max_calls
+from ..utils.fileutils import is_dts, fn2l
+from ..utils.CancelCommand import CancelCommand
 
 
-# --------------------------------------- TSS -------------------------------------- #
+# --------------------------- TypescriptToolsWrapper ------------------------------------ #
 
-class Tss(object):
+class TypescriptToolsWrapper(object):
+	""" This Class translates the available commands to the corresponding string
+		command for the typescript-tools from clausreinke   """
 
 	# INITIALISATION FINISHED
 	def assert_initialisation_finished(self, filename):
@@ -185,7 +188,7 @@ class Tss(object):
 	def on_file_contents_have_changed(self):
 		"""
 			Every command that wants to only be executed when file changes have been made
-			can use self.executed_with_most_recent_file_contents to remember a previous execution. 
+			can use self.executed_with_most_recent_file_contents to remember a previous execution.
 			After any change, this array will be cleared
 		"""
 		self.executed_with_most_recent_file_contents = []
@@ -220,7 +223,7 @@ class Tss(object):
 			.set_executing_callback(lambda filename: T3SVIEWS.ERROR.on_calculation_executing()) \
 			.set_replaced_callback(lambda by, filename: T3SVIEWS.ERROR.on_calculation_replaced()) \
 			.append_to_slow_queue()
-	
+
 
 	# KILL PROCESS (if no more files in editor)
 	@max_calls()
@@ -234,16 +237,16 @@ class Tss(object):
 		def async_react_files(files):
 			def kill_and_remove(_async_command=None):
 				# Dont execute this twice (this fct will be called 3 times)
-				if self.is_killed: 
+				if self.is_killed:
 					Debug('tss+', "ALREADY closed ts project")
 					return
 				self.is_killed = True
-				
+
 				root = get_root(filename)
 				PROCESSES.kill_and_remove(root)
 				MESSAGE.show('TypeScript project will close', True)
 				self.notify('kill', root)
-				
+
 			def still_used_ts_files_open_in_window(files):
 				views = sublime.active_window().views()
 				for v in views:
@@ -258,7 +261,7 @@ class Tss(object):
 
 			if not files: # TODO: why?
 				return
-				
+
 			# don't quit tss if an added *.ts file is still open in an editor view
 			if still_used_ts_files_open_in_window(files):
 				return
@@ -274,50 +277,12 @@ class Tss(object):
 
 			# if the tss process has hang up (previous lambda will not be executed)
 			# , force kill after 5 sek
-			sublime.set_timeout(kill_and_remove,10000) 
-			
+			sublime.set_timeout(kill_and_remove,10000)
+
 
 		sublime.active_window().run_command('save_all')
 		self.get_tss_indexed_files(filename, async_react_files)
-		
-
-		
-		
-		
-	listeners = {}
-	# LIST OF EVENT TYPES:
-	# kill
-
-	# NOTIFY LISTENERS
-	def notify(self, event_type, root):
-		if root not in self.listeners: return
-		for f in self.listeners[root][event_type]:
-			f(root)
 
 
-	# ADD EVENT LISTENER
-	def addEventListener(self, event_type, root, callback):
-		if root not in self.listeners:
-			self.listeners[root] = {}
-		if type not in self.listeners[root]:
-			self.listeners[root][event_type] = []
-		self.listeners[root][event_type].append(callback)
 
 
-	# REMOVE EVENT LISTENER
-	def removeEventListener(self, event_type, root, callback):
-		if root not in self.listeners: return
-		if type not in self.listeners[root]: return
-
-		to_delete = []
-		for f in self.listeners[root][event_type]:
-			if f == callback:
-				to_delete.append(f)
-
-		for f in to_delete:
-			self.listeners[root][event_type].remove(f)
-
-
-# --------------------------------------- INITIALISATION -------------------------------------- #
-
-TSS = Tss()

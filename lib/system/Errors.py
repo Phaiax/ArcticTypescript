@@ -3,10 +3,8 @@
 import sublime
 import json
 
-from .ErrorsHighlighter import ERRORSHIGHLIGHTER
-from ..Tss import TSS
-from ..Utils import max_calls
-from ..system.Liste import get_root
+from ..utils import max_calls
+
 
 # --------------------------------------- ERRORS -------------------------------------- #
 

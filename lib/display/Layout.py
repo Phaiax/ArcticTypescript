@@ -2,7 +2,7 @@
 # delete code taken from sublime origami : https://github.com/SublimeText/Origami
 
 import sublime
-from ..Utils import ST3, max_calls, Debug
+from ..utils import max_calls, Debug
 
 XMIN, YMIN, XMAX, YMAX = list(range(4))
 
@@ -18,7 +18,7 @@ class Layout(object):
 	def update(self,window,group):
 		Debug('layout', 'UPDATE: group: %i' % group)
 		views = window.views_in_group(group)
-		if len(views) == 0: 
+		if len(views) == 0:
 			self.delete(window,group)
 			return True
 
@@ -39,8 +39,7 @@ class Layout(object):
 	# SET LAYOUT
 	def set_layout(self,window,layout,delete=False):
 		if delete:
-			if ST3: window.set_layout(layout)
-			else: sublime.set_timeout(lambda:window.set_layout(layout),1)
+			window.set_layout(layout)
 		else:
 			window.set_layout(layout)
 
@@ -62,7 +61,7 @@ class Layout(object):
 			rows, cols, cells = self.get_layout(window)
 			if rows is None:
 				return
-			
+
 
 		MAXROWS = len(rows)-1
 		MAXCOLS = len(cols)-1
@@ -93,7 +92,7 @@ class Layout(object):
 		choices["right"] = self.adjacent_cell(window,"right",group)
 		choices["down"] = self.adjacent_cell(window,"down",group)
 		choices["left"] = self.adjacent_cell(window,"left",group)
-		
+
 		target_dir = None
 		for dir,c in choices.items():
 			if not c:
@@ -107,11 +106,11 @@ class Layout(object):
 
 		if not target_dir: return
 
-		
+
 		direction = self.opposite_direction(target_dir)
 		current_group = window.active_group()
 		cell_to_remove = cells[group]
-		
+
 		if cell_to_remove:
 			active_view = window.active_view()
 			group_to_remove = cells.index(cell_to_remove)
@@ -123,7 +122,7 @@ class Layout(object):
 			if active_view:
 				Debug('focus', 'U focus view %i' % active_view.id())
 				window.focus_view(active_view)
-			
+
 			cells.remove(cell_to_remove)
 			if direction == "up":
 				rows.pop(cell_to_remove[YMAX])
@@ -159,19 +158,19 @@ class Layout(object):
 		current_cell = cells[group]
 		adjacent_cells = self.cells_adjacent_to_cell_in_direction(cells,current_cell,direction)
 		rows, cols, _ = self.get_layout(window)
-		
+
 		if direction in ["left", "right"]:
 				MIN, MAX, fields = YMIN, YMAX, rows
 		else: #up or down
 				MIN, MAX, fields = XMIN, XMAX, cols
-		
+
 		cell_overlap = []
 		for cell in adjacent_cells:
 				start = max(fields[cell[MIN]], fields[current_cell[MIN]])
 				end = min(fields[cell[MAX]], fields[current_cell[MAX]])
 				overlap = (end - start)
 				cell_overlap.append(overlap)
-		
+
 		if len(cell_overlap) != 0:
 				cell_index = cell_overlap.index(max(cell_overlap))
 				return adjacent_cells[cell_index]

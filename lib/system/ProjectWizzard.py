@@ -1,7 +1,14 @@
+# coding=utf8
+
 import sublime
 import json
 import os
-from ArcticTypescript.lib.Utils import set_plugin_temporarily_disabled, set_plugin_temporarily_enabled, is_plugin_temporarily_disabled, package_path, Debug
+
+from ..utils import package_path, Debug
+from ..utils.disabling import set_plugin_temporarily_disabled, \
+							   set_plugin_temporarily_enabled, \
+							   is_plugin_temporarily_disabled
+
 
 # ------------------------------------- PROJECT WIZZARD ----------------------------------------- #
 
@@ -38,6 +45,7 @@ class ProjectWizzard(object):
 		#Debug('project+', 'Hide Overlay')
 		#self.window.run_command("hide_overlay")
 
+
 	def _show_and_action(self):
 		""" Show quick dialog and execute action """
 		# every message must consist of the same number of lines
@@ -62,6 +70,7 @@ class ProjectWizzard(object):
 				Debug('project+', 'Nr %i selected' % i)
 		self.window.show_quick_panel(self.messages, on_select)
 
+
 	def handle_tsconfig_error(self, message=""):
 		""" User will be asked to create a tsconfig.json file """
 		self._prepare(message)
@@ -73,6 +82,7 @@ class ProjectWizzard(object):
 		self.actions.append(lambda: [self.window.open_file(package_path + '/examples/basicexample/tsconfig.json'), self._cleanup()])
 
 		self._show_and_action()
+
 
 	def new_tsconfig_wizzard(self, message=""):
 		""" User will be asked to create a new tsconfig.json file """
@@ -94,6 +104,7 @@ class ProjectWizzard(object):
 		Debug('project+', 'Show first quickpanel')
 		self._show_and_action()
 
+
 	def _create_tsconfigjson(self):
 		""" Location for the tsconfig.json file """
 		Debug('project+', 'Ask for tsconfig.json location')
@@ -107,6 +118,7 @@ class ProjectWizzard(object):
 											  sublime.message_dialog(
 										"ArcticTypescript disabled for this file's folder")]
 									)
+
 
 	def _set_folder(self, tsconfigfolder):
 		self.tsconfigfolder = tsconfigfolder
@@ -138,6 +150,7 @@ class ProjectWizzard(object):
 		Debug('project+', 'Show compiler behaviour quickpanel')
 		self._show_and_action()
 
+
 	def _set_module(self, module):
 		self.module = module
 
@@ -155,8 +168,10 @@ class ProjectWizzard(object):
 												"ArcticTypescript disabled for this file's folder")]
 									)
 
+
 	def _set_out(self, outfile):
 		self.outfile = outfile
+
 
 	def _ask_output_directory(self, default="built/"):
 		""" For multiple file output, ask for the output directory """
@@ -169,6 +184,7 @@ class ProjectWizzard(object):
 									 		  set_plugin_temporarily_disabled(folder=self.view),
 										 	  sublime.message_dialog(
 												"ArcticTypescript disabled for this file's folder")])
+
 
 	def _set_outdir(self, outdir):
 		self.outdir = outdir
@@ -187,6 +203,7 @@ class ProjectWizzard(object):
 									 lambda file: self._file_entered(file),
 									 None, # on change
 									 lambda: self._file_entered(""))
+
 
 	def _file_entered(self, filename):
 		if filename == "":
@@ -222,9 +239,11 @@ class ProjectWizzard(object):
 
 		self._cleanup()
 
+
 	def _cleanup(self):
 		Debug('project+', 'Enable ArcticTypescript again')
 		set_plugin_temporarily_enabled()
+
 
 	def write_json_to_tsconfigfile(self, content_obj):
 		""" Write the python object content_obj into tsconfig.json """

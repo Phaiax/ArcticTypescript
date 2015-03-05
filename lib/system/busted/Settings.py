@@ -29,14 +29,6 @@ class Settings(object):
 		return self.projects_type[root].get(get_any_view_with_root(root),token)
 
 
-	def get_node(self, root):
-		node_path = self.get('node_path', root)
-		if node_path == 'none':
-			return '/usr/local/bin/node' if sys.platform == "darwin" else 'node'
-		else:
-			return node_path+'/node'
-
-
 	def get_root(self, view):
 		if view.file_name() == None: return 'no_ts'
 		project_settings = view.settings().get('typescript')

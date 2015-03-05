@@ -1,7 +1,7 @@
 # coding=utf8
 
 import sublime
-from ...Utils import Debug, max_calls
+from ...utils import Debug, max_calls
 
 class Base(object):
 	"""

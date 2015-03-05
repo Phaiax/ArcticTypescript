@@ -1,5 +1,7 @@
+# coding=utf8
+
 import sublime
-from ..Utils import debounce, ST3
+from ..utils.debounce import debounce
 
 class Message(object):
 
@@ -26,13 +28,11 @@ class Message(object):
 		window = sublime.active_window()
 
 		if self.previous == message:
-			if ST3: 
-				window.run_command("hide_overlay")
-				window.show_quick_panel(self.messages,self.hide)
+			window.run_command("hide_overlay")
+			window.show_quick_panel(self.messages,self.hide)
 		else:
-			if ST3: 
-				window.run_command("hide_overlay")
-			
+			window.run_command("hide_overlay")
+
 			window.show_quick_panel(self.messages,self.hide)
 
 		sublime.status_message(message)
@@ -41,7 +41,7 @@ class Message(object):
 
 	def hide(self,index=None):
 		sublime.active_window().run_command("hide_overlay")
-		sublime.status_message('')		
+		sublime.status_message('')
 
 # --------------------------------------- INITIALISATION -------------------------------------- #
 

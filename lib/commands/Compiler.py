@@ -1,3 +1,5 @@
+# coding=utf8
+
 from subprocess import Popen, PIPE
 from threading import Thread
 try:
@@ -9,9 +11,10 @@ import sublime
 import os
 import json
 
-from ..Utils import dirname, get_kwargs, ST3, Debug
+from ..utils import package_path, Debug
+from ..utils.osutils import get_kwargs
+
 from ..display.Panel import PANEL
-from ..system.Settings import SETTINGS
 
 # ----------------------------------------- UTILS --------------------------------------- #
 
@@ -43,13 +46,9 @@ class Compiler(Thread):
 		kwargs = get_kwargs()
 		settings = json.dumps(SETTINGS.get('build_parameters', self.root))
 
-		if ST3:
-			clear_panel(self.window)
-		else:
-			sublime.set_timeout(lambda: clear_panel(self.window),0)
+		clear_panel(self.window)
 
-
-		cmd = [node, os.path.join(dirname,'bin','build.js'), settings, self.root, self.filename]
+		cmd = [node, os.path.join(package_path,'bin','build.js'), settings, self.root, self.filename]
 		Debug('build', 'EXECUTE: %s' % str(cmd))
 		p = Popen(cmd, stdin=PIPE, stdout=PIPE, **kwargs)
 
@@ -78,15 +77,9 @@ class CompilerReader(Thread):
 				print('ArcticTypescript: compiler error')
 				break
 			if 'output' in line:
-				if ST3:
-					show_output(self.window,line)
-				else:
-					sublime.set_timeout(lambda:show_output(self.window,line),0)
+				show_output(self.window,line)
 			elif 'filename' in line:
-				if ST3:
-					show_view(self.window,line)
-				else:
-					sublime.set_timeout(lambda:show_view(self.window,line),0)
+				show_view(self.window,line)
 			else:
 				print('ArcticTypescript: compiler error')
 		Debug('build+', 'BUILD RESULTS READER THREAD finished')

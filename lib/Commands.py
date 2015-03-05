@@ -7,97 +7,107 @@ import os
 import re
 import traceback
 
-from .commands.Compiler import Compiler
-from .commands.Refactor import Refactor
+# from .commands.Compiler import Compiler
+# from .commands.Refactor import Refactor
 from .display.T3SViews import T3SVIEWS
-from .display.Errors import ERRORS
 from .display.Message import MESSAGE
-from .display.Completion import COMPLETION
-from .system.Liste import LISTE, get_root
-from .system.Settings import SETTINGS
-from .Tss import TSS
-from .Utils import read_file, get_file_infos, get_prefix, debounce, ST3, catch_CancelCommand, CancelCommand, Debug, max_calls
+
+from .system.Project import get_or_create_project_and_add_view
+
+from .utils.fileutils import read_file
+from .utils.viewutils import get_file_infos
+from .utils.uiutils import get_prefix
+from .utils.CancelCommand import catch_CancelCommand, CancelCommand
+from .utils import Debug, max_calls
 
 
-# AUTO COMPLETION
+# ################################# AUTO COMPLETION ############################
+
 class TypescriptCompletion(sublime_plugin.TextCommand):
-
 	def run(self, edit):
-		COMPLETION.trigger(self.view, TSS, force_enable=True)
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			COMPLETION.trigger(self.view, TSS, force_enable=True)
 
 
-# RELOAD PROJECT
+# ################################# RELOAD #####################################
+
 class TypescriptReloadProject(sublime_plugin.TextCommand):
 
 	def run(self, edit):
-		sublime.active_window().run_command('save_all')
-		MESSAGE.show('Reloading project')
-		TSS.reload(self.view.file_name(), lambda: MESSAGE.show('Reloading finished', True))
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			sublime.active_window().run_command('save_all')
+			MESSAGE.show('Reloading project')
+			TSS.reload(self.view.file_name(), lambda: MESSAGE.show('Reloading finished', True))
 
 
-# SHOW INFOS
+# ################################# SHOW INFS ##################################
+
 class TypescriptType(sublime_plugin.TextCommand):
 
 	@catch_CancelCommand
 	def run(self, edit):
-		TSS.assert_initialisation_finished(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			TSS.assert_initialisation_finished(self.view.file_name())
 
-		if not ST3: return
+			pos = self.view.sel()[0].begin()
+			(_line, _col) = self.view.rowcol(pos)
+			_view = self.view
 
-		pos = self.view.sel()[0].begin()
-		(_line, _col) = self.view.rowcol(pos)
-		_view = self.view
+			def async_react(types, filename, line, col):
+				if types == None: return
+				if 'kind' not in types: return
 
-		def async_react(types, filename, line, col):
-			if types == None: return
-			if 'kind' not in types: return
+				# Only display type if cursor has not moved
+				view = sublime.active_window().active_view()
+				pos = view.sel()[0].begin()
+				(_line, _col) = view.rowcol(pos)
+				if col != _col or line != _line: return
+				if view != _view: return
 
-			# Only display type if cursor has not moved
-			view = sublime.active_window().active_view()
-			pos = view.sel()[0].begin()
-			(_line, _col) = view.rowcol(pos)
-			if col != _col or line != _line: return
-			if view != _view: return
+				kind = get_prefix(types['kind'])
+				if types['docComment'] != '':
+					liste = types['docComment'].split('\n')+[types['type']]
+				else:
+					liste = [types['type']]
 
-			kind = get_prefix(types['kind'])
-			if types['docComment'] != '':
-				liste = types['docComment'].split('\n')+[types['type']]
-			else:
-				liste = [types['type']]
+				view.show_popup_menu(liste, None)
 
-			view.show_popup_menu(liste, None)
-
-		# start async request
-		TSS.type(self.view.file_name(), _line, _col, callback=async_react)
+			# start async request
+			TSS.type(self.view.file_name(), _line, _col, callback=async_react)
 
 
+# ################################# GO TO DEFINITION ###########################
 
-# GO TO DEFINITION
 class TypescriptDefinition(sublime_plugin.TextCommand):
 
 	@catch_CancelCommand
 	def run(self, edit):
-		TSS.assert_initialisation_finished(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			TSS.assert_initialisation_finished(self.view.file_name())
 
-		pos = self.view.sel()[0].begin()
-		(_line, _col) = self.view.rowcol(pos)
-		_view = self.view
+			pos = self.view.sel()[0].begin()
+			(_line, _col) = self.view.rowcol(pos)
+			_view = self.view
 
-		def async_react(definition, filename, line, col):
-			if definition == None: return
-			if 'file' not in definition: return
+			def async_react(definition, filename, line, col):
+				if definition == None: return
+				if 'file' not in definition: return
 
-			# Only display type if cursor has not moved
-			view = sublime.active_window().active_view()
-			pos = view.sel()[0].begin()
-			(_line, _col) = view.rowcol(pos)
-			if col != _col or line != _line: return
-			if view != _view: return
+				# Only display type if cursor has not moved
+				view = sublime.active_window().active_view()
+				pos = view.sel()[0].begin()
+				(_line, _col) = view.rowcol(pos)
+				if col != _col or line != _line: return
+				if view != _view: return
 
-			view = sublime.active_window().open_file(definition['file'])
-			self.open_view(view, definition)
+				view = sublime.active_window().open_file(definition['file'])
+				self.open_view(view, definition)
 
-		TSS.definition(self.view.file_name(), _line, _col, callback=async_react)
+			TSS.definition(self.view.file_name(), _line, _col, callback=async_react)
 
 	def open_view(self,view,definition):
 		if view.is_loading():
@@ -117,45 +127,48 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 			sublime.active_window().focus_view(view)
 			view.show_at_center(region)
 
-			draw = sublime.DRAW_NO_FILL if ST3 else sublime.DRAW_OUTLINED
+			draw = sublime.DRAW_NO_FILL
 			view.add_regions('typescript-definition', [region], 'comment', 'dot', draw)
 
 
-# BASIC REFACTORING
+# ################################# REFACTORING ############################
+
 class TypescriptReferences(sublime_plugin.TextCommand):
 
 	@catch_CancelCommand
 	def run(self, edit):
-		TSS.assert_initialisation_finished(self.view.file_name())
-		self.root = get_root(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			TSS.assert_initialisation_finished(self.view.file_name())
+			self.root = get_root(self.view.file_name())
 
-		pos = self.view.sel()[0].begin()
-		(line, col) = self.view.rowcol(pos)
-		_view = self.view
+			pos = self.view.sel()[0].begin()
+			(line, col) = self.view.rowcol(pos)
+			_view = self.view
 
-		def async_react(refs, filename, line, col):
-			self.refs = refs
-			self.window = sublime.active_window()
+			def async_react(refs, filename, line, col):
+				self.refs = refs
+				self.window = sublime.active_window()
 
-			if refs == None: return
+				if refs == None: return
 
-			view = sublime.active_window().active_view()
-			pos = view.sel()[0].begin()
-			(_line, _col) = view.rowcol(pos)
-			if col != _col or line != _line: return
-			if view != _view: return
+				view = sublime.active_window().active_view()
+				pos = view.sel()[0].begin()
+				(_line, _col) = view.rowcol(pos)
+				if col != _col or line != _line: return
+				if view != _view: return
 
-			refactor_member = ""
-			try :
-				for ref in refs:
-					if ref['file'].replace('/',os.sep).lower() == self.view.file_name().lower():
-						refactor_member = self.view.substr(self.get_region(self.view, ref['min'], ref['lim']))
-				if(refactor_member):
-					self.window.show_input_panel('Refactoring', refactor_member, self.on_done, None, None)
-			except (Exception) as ref:
-				sublime.status_message("error panel : plugin not yet intialize please retry after initialisation")
+				refactor_member = ""
+				try :
+					for ref in refs:
+						if ref['file'].replace('/',os.sep).lower() == self.view.file_name().lower():
+							refactor_member = self.view.substr(self.get_region(self.view, ref['min'], ref['lim']))
+					if(refactor_member):
+						self.window.show_input_panel('Refactoring', refactor_member, self.on_done, None, None)
+				except (Exception) as ref:
+					sublime.status_message("error panel : plugin not yet intialize please retry after initialisation")
 
-		TSS.references(self.view.file_name(), line, col, callback=async_react)
+			TSS.references(self.view.file_name(), line, col, callback=async_react)
 
 	def get_region(self,view,min,lim):
 		start_line = min['line']
@@ -168,33 +181,41 @@ class TypescriptReferences(sublime_plugin.TextCommand):
 		return sublime.Region(a,b)
 
 	def on_done(self,name):
+		return # TODO
 		refactor = Refactor(self.window, name, self.refs, self.root)
 		refactor.daemon = True
 		refactor.start()
 
 
-# OPEN OUTLINE PANEL (via shortkey / public command)
+# ################################# OPEN OUTLINE PANEL #########################
+
+# (via shortkey / public command)
 class TypescriptStructure(sublime_plugin.TextCommand):
 	""" this command opens and focus the structure/outline view """
 	@catch_CancelCommand
 	@max_calls(name='TypescriptStructure')
 	def run(self, edit_token):
-		return # typescript tools dropped support for this
-		Debug('structure', 'open view if not already open')
-		TSS.assert_initialisation_finished(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			return # typescript tools dropped support for this
+			Debug('structure', 'open view if not already open')
+			TSS.assert_initialisation_finished(self.view.file_name())
 
-		T3SVIEWS.OUTLINE.enable()
-		T3SVIEWS.OUTLINE.bring_to_top(back_to=self.view)
+			T3SVIEWS.OUTLINE.enable()
+			T3SVIEWS.OUTLINE.bring_to_top(back_to=self.view)
 
-		self.view.run_command('typescript_update_structure', {"force": True})
+			self.view.run_command('typescript_update_structure', {"force": True})
 
 
-# REFRESH OUTLINE VIEW to match CURRENT VIEW
+# ################################# REFRESH OUTLINE ############################
+
 class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 	@catch_CancelCommand
 	@max_calls(name='TypescriptUpdateStructure')
 	def run(self, edit_token, force=False):
-		typescript_update_structure(self.view, force)
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			typescript_update_structure(self.view, force)
 
 
 def typescript_update_structure(view, force):
@@ -230,20 +251,25 @@ class TypescriptOutlineViewSetText(sublime_plugin.TextCommand):
 			print("Outline panel: %s" % e)
 
 
+# ################################# ERROR PANEL ############################
+
 # OPEN ERROR PANEL (via shortkey / public command)
 class TypescriptErrorPanel(sublime_plugin.TextCommand):
 
 	@catch_CancelCommand
 	@max_calls(name='TypescriptErrorPanel')
 	def run(self, edit_token):
-		TSS.assert_initialisation_finished(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			TSS.assert_initialisation_finished(self.view.file_name())
 
-		T3SVIEWS.ERROR.enable(edit_token)
-		T3SVIEWS.ERROR.bring_to_top(back_to=self.view)
+			T3SVIEWS.ERROR.enable(edit_token)
+			T3SVIEWS.ERROR.bring_to_top(back_to=self.view)
 
-		self.view.run_command('typescript_recalculate_errors')
+			self.view.run_command('typescript_recalculate_errors')
 
 
+# ################################# REFRESH ERRORS ############################
 
 
 # REFRESH ERRORS (eg after typing characters, if not automatically done)
@@ -252,57 +278,70 @@ class TypescriptRecalculateErrors(sublime_plugin.TextCommand):
 	@catch_CancelCommand
 	@max_calls(name='TypescriptRecalculateErrors')
 	def run(self, edit_token):
-		TSS.assert_initialisation_finished(self.view.file_name())
-		TSS.update(*get_file_infos(self.view))
-		ERRORS.start_recalculation(self.view.file_name())
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			TSS.assert_initialisation_finished(self.view.file_name())
+			TSS.update(*get_file_infos(self.view))
+			ERRORS.start_recalculation(self.view.file_name())
 
 
 class TypescriptErrorGoto(sublime_plugin.TextCommand):
 	@max_calls(name='TypescriptErrorGoto')
 	def run(self, edit_token, n):
-		Debug('goto', "%i" % n)
-		T3SVIEWS.ERROR.goto_error(n)
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			Debug('goto', "%i" % n)
+			T3SVIEWS.ERROR.goto_error(n)
 
 
 class TypescriptErrorPanelSetText(sublime_plugin.TextCommand):
 	@max_calls(name='TypescriptErrorPanelSetText')
 	def run(self, edit_token, errors):
-		try:
-			T3SVIEWS.ERROR.set_text(edit_token, errors)
-		except (Exception) as e:
-			sublime.status_message("Error panel : %s" % e)
-			print("Error panel: %s" % e)
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			try:
+				T3SVIEWS.ERROR.set_text(edit_token, errors)
+			except (Exception) as e:
+				sublime.status_message("Error panel : %s" % e)
+				print("Error panel: %s" % e)
 
 
 class TypescriptSetErrorCalculationStatusMessage(sublime_plugin.TextCommand):
 	@max_calls(name='TypescriptSetErrorCalculationStatusMessage')
 	def run(self, edit_token, message):
-		T3SVIEWS.ERROR.set_error_calculation_status_message(edit_token, message)
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			T3SVIEWS.ERROR.set_error_calculation_status_message(edit_token, message)
 
 
-# COMPILE VIEW
+# ################################# COMPILE ####################################
+
 class TypescriptBuild(sublime_plugin.TextCommand):
 
 	@catch_CancelCommand
 	def run(self, edit, characters):
-		filename = self.view.file_name()
+		project = get_or_create_project_and_add_view(self.view)
+		if project:
+			filename = self.view.file_name()
 
-		if not SETTINGS.get('activate_build_system', get_root(filename)):
-			print("ArcticTypescript: build_system_disabled")
-			return
+			if not SETTINGS.get('activate_build_system', get_root(filename)):
+				print("ArcticTypescript: build_system_disabled")
+				return
 
-		TSS.assert_initialisation_finished(filename)
+			TSS.assert_initialisation_finished(filename)
 
-		self.window = sublime.active_window()
-		if characters != False:
-			self.window.run_command('save')
+			self.window = sublime.active_window()
+			if characters != False:
+				self.window.run_command('save')
 
-		compiler = Compiler(self.window, get_root(filename), filename)
-		compiler.daemon = True
-		compiler.start()
+			return #TODO
+			compiler = Compiler(self.window, get_root(filename), filename)
+			compiler.daemon = True
+			compiler.start()
 
-		sublime.status_message('Compiling : ' + filename)
+			sublime.status_message('Compiling : ' + filename)
 
+# ################################# COMPILE RESULT VIEW ########################
 
 class TypescriptBuildView(sublime_plugin.TextCommand):
 

@@ -1,3 +1,5 @@
+# coding=utf8
+
 import sublime, sys
 from sublime_unittest import TestCase
 

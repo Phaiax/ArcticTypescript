@@ -6,30 +6,35 @@ import sublime
 import os
 import json
 
-from ..Tss import TSS
-from ..Utils import dirname, fn2k, is_ts, max_calls
+from ..utils import package_path, max_calls
+from ..utils.fileutils import fn2k, is_ts
 
-# --------------------------------------- ERRORS -------------------------------------- #
+# ----------------------------------- ERROR HIGHTLIGHTER -------------------------------------- #
 
 class ErrorsHighlighter(object):
 
-	errors = {}
-
+	# Constants
 	underline = sublime.DRAW_SQUIGGLY_UNDERLINE | sublime.DRAW_NO_FILL | sublime.DRAW_NO_OUTLINE | sublime.DRAW_EMPTY_AS_OVERWRITE
 
-	def __init__(self):
-		if os.name == 'nt':
-			self.error_icon = ".."+os.path.join(dirname.split('Packages')[1], 'icons', 'bright-illegal')
-			self.warning_icon = ".."+os.path.join(dirname.split('Packages')[1], 'icons', 'bright-warning')
-		else:
-			self.error_icon = "Packages"+os.path.join(dirname.split('Packages')[1], 'icons', 'bright-illegal.png')
-			self.warning_icon = "Packages"+os.path.join(dirname.split('Packages')[1], 'icons', 'bright-warning.png')
 
+	def __init__(self, project):
+		self.project = project
+		self._icon_paths()
+
+
+	def _icon_paths(self):
+		""" defines paths for icons """
+		if os.name == 'nt':
+			self.error_icon = ".."+os.path.join(package_path.split('Packages')[1], 'icons', 'bright-illegal')
+			self.warning_icon = ".."+os.path.join(package_path.split('Packages')[1], 'icons', 'bright-warning')
+		else:
+			self.error_icon = "Packages"+os.path.join(package_path.split('Packages')[1], 'icons', 'bright-illegal.png')
+			self.warning_icon = "Packages"+os.path.join(package_path.split('Packages')[1], 'icons', 'bright-warning.png')
 
 
 	@max_calls(name='Errors.highlight')
-	def highlight(self, errors):
-		""" update hightlights (red underline) in all files """
+	def highlight(self):
+		""" update hightlights (red underline) in all files, using the errors in project """
 
 		self.errors = {}
 
@@ -92,8 +97,3 @@ class ErrorsHighlighter(object):
 		return None
 
 
-
-
-# --------------------------------------- INIT -------------------------------------- #
-
-ERRORSHIGHLIGHTER = ErrorsHighlighter()

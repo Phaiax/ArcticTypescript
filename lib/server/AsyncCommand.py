@@ -1,16 +1,19 @@
+# coding=utf8
+
 import uuid
 import time
 import sublime
 import json
 
-from ..Utils import Debug, DEFAULT_DEBOUNCE_DELAY
-from .Processes import PROCESSES
+from ..utils import Debug
+from ..utils.debounce import DEFAULT_DEBOUNCE_DELAY
 
 # ----------------------------------------- ASYNC COMMAND ---------------------------------- #
 
 class AsyncCommand(object):
 	"""
-		Represents a command wich can be executed by typescript services server tss.js
+		Represents a command wich can be executed by typescript services tss.js (clausreinke)
+		or tsserver.js (Microsoft/Typescript)
 		This class provices a chainable interface for config and can add itself to the
 		async execution queue via the append_to_***_queue*() commands.
 
@@ -25,7 +28,7 @@ class AsyncCommand(object):
 			.append_to_slow_queue()
 
 		The id is used to identify brother commands which do the same thing (maybe on the same file).
-		If an id is given, all pending commands with the same id will 
+		If an id is given, all pending commands with the same id will
 		be merged into one command. By default, the command will be executed, when
 		it's first brother is on the turn. Use procastinate() to reverse this behaviour:
 		Then it will be deffered until the last aka newest brother is on turn.
@@ -91,7 +94,7 @@ class AsyncCommand(object):
 
 	def set_replaced_callback(self, replaced_callback=None):
 		"""
-			Will be called as replaced_callback(now_used_command, **callback_kwargs) 
+			Will be called as replaced_callback(now_used_command, **callback_kwargs)
 			when this command has been deleted from queue without execution.
 		"""
 		self.replaced_callback = replaced_callback
@@ -121,10 +124,10 @@ class AsyncCommand(object):
 	def _append_to_queue(self, process_type):
 		if not PROCESSES.is_initialized(self.root):
 			return False
-			
+
 		self.time_queue = time.time()
 		self.time_last_bounce = self.time_queue
-			
+
 		process = PROCESSES.get(self.root, process_type)
 		process.send_async_command(self)
 		return True
@@ -136,9 +139,9 @@ class AsyncCommand(object):
 		by.time_last_bounce = max(self.time_last_bounce, by.time_last_bounce)
 		if self.replaced_callback is not None:
 			sublime.set_timeout(lambda:self.replaced_callback(by, **self.callback_kwargs),000)
-			
+
 		Debug('command+', "CMD replaced after %fs [ %s ]" % (time.time() - self.time_queue, self.id))
-		
+
 	def on_result(self, tss_answer):
 		""" calls callback by using sublime.set_timeout """
 		self.is_executed = True
@@ -146,7 +149,7 @@ class AsyncCommand(object):
 			if self.json_decode_tss_answer:
 				tss_answer = json.loads(tss_answer)
 			sublime.set_timeout(lambda:self.result_callback(tss_answer, **self.callback_kwargs),000)
-			
+
 		self.time_finish = time.time()
 		Debug('command', "CMD %fs = %fs + %fs to execute %s" % (
 			self.time_finish - self.time_queue,
@@ -181,7 +184,7 @@ class AsyncCommand(object):
 	def time_until_execution(self):
 		""" Returns 0 or time until execution is allowed (debouncing) """
 		if self.debounce_time:
-			return self.debounce_time - (time.time() - self.time_last_bounce)  
+			return self.debounce_time - (time.time() - self.time_last_bounce)
 		else:
 			return 0 # debounce not activated
 

@@ -1,3 +1,5 @@
+# coding=utf8
+
 from subprocess import Popen, PIPE
 from threading import Thread
 try:
@@ -13,7 +15,7 @@ from ..Tss import TSS
 from ..display.Panel import PANEL
 from ..display.Errors import ERRORS
 from ..system.Settings import SETTINGS
-from ..Utils import debounce, dirname, read_file, get_kwargs, ST3
+from ..Utils import debounce, dirname, read_file, get_kwargs
 
 
 # ----------------------------------------- UTILS --------------------------------------- #
@@ -38,12 +40,11 @@ class Refactor(Thread):
 		Thread.__init__(self)
 
 	def run(self):
-		if ST3:clear_panel(self.window)
-		else: sublime.set_timeout(lambda:clear_panel(self.window),0)
+		clear_panel(self.window)
 
 		node = SETTINGS.get_node(self.root)
 		kwargs = get_kwargs()
-		p = Popen([node, os.path.join(dirname,'bin','refactor.js'), self.member, json.dumps(self.refs)], stdin=PIPE, stdout=PIPE, **kwargs)	 
+		p = Popen([node, os.path.join(dirname,'bin','refactor.js'), self.member, json.dumps(self.refs)], stdin=PIPE, stdout=PIPE, **kwargs)
 		reader = RefactorReader(self.window,p.stdout,Queue())
 		reader.daemon = True
 		reader.start()
@@ -63,8 +64,7 @@ class RefactorReader(Thread):
 		for line in iter(self.stdout.readline, b''):
 			line = json.loads(line.decode('UTF-8'))
 			if 'output' in line:
-				if ST3: show_output(self.window,line)
-				else: sublime.set_timeout(lambda:show_output(self.window,line),0)
+				show_output(self.window,line)
 			elif 'file' in line:
 				filename = line['file']
 				content = read_file(filename)
@@ -77,7 +77,7 @@ class RefactorReader(Thread):
 			else:
 				print('refactor error')
 
-		
+
 		self.stdout.close()
 
 	def send(self,filename,lines,content,delay):
@@ -86,6 +86,6 @@ class RefactorReader(Thread):
 	def update(self,filename,lines,content):
 		TSS.update(filename, lines, content)
 		ERRORS.start_recalculation(filename_or_root)
-		
-		
-		
+
+
+

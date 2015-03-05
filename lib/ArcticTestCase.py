@@ -1,6 +1,10 @@
+# coding=utf8
+
+
 from sublime_unittest import TestCase
 import sublime
 import os
+
 
 class ArcticTestCase(TestCase):
     def assert_no_typescript_project_settings(self):
