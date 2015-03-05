@@ -3,6 +3,7 @@
 import os
 import sys
 
+from .fileutils import file_exists
 
 # PACKAGE PATH
 package_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))

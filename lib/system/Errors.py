@@ -9,7 +9,8 @@ from ..utils import max_calls
 # --------------------------------------- ERRORS -------------------------------------- #
 
 class Errors(object):
-	def __init__(self):
+	def __init__(self, project):
+		self.project = project
 		pass
 
 	@max_calls()
@@ -43,6 +44,3 @@ class Errors(object):
 		pass
 
 
-# --------------------------------------- INIT -------------------------------------- #
-
-ERRORS = Errors()

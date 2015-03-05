@@ -45,9 +45,9 @@ class Processes(object):
 	def __init__(self, project):
 		""" starts the two processes """
 		self.project = project
-		self.start_tss_processes_for()
 		self.slow = None
 		self.fast = None
+		self.start_tss_processes()
 
 
 	def is_initialized(self):
@@ -62,13 +62,12 @@ class Processes(object):
 			return self.fast.error
 		return False
 
-	def start_tss_processes_for(self):
+	def start_tss_processes(self):
 		"""
 			Start tss.js (2 times).
 			Displays message to user while starting and calls project.on_services_started() afterwards
 		"""
 		print('Typescript initializing ' + self.project.tsconfigfile)
-
 		self.slow = TssJsStarterThread(self.project)
 		self.slow.start()
 
@@ -181,7 +180,7 @@ class TssJsStarterThread(Thread):
 		node_path = default_node_path(self.project.get_setting('node_path'))
 		tss_path = get_tss_path()
 
-		cwd = os.path.abspath(project.tsconfigdir)
+		cwd = os.path.abspath(self.project.tsconfigdir)
 		rootfile = self.project.get_first_file_of_tsconfigjson()
 		cmdline = [node_path, tss_path, "--project", cwd, rootfile]
 

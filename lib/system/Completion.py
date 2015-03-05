@@ -34,6 +34,9 @@ class Completion(object):
 	enabled_for_col_reference = '' 	# 'dot' or 'cursor'
 	enabled_for = {'line': 0, 'col': 0, 'viewid': -1}
 
+	def __init__(self, project):
+		self.project = project
+
 	# PREPARE LISTE
 	def prepare_list(self, tss_result_json):
 		del self.completion_list[:]
@@ -206,8 +209,5 @@ class Completion(object):
 
 		args.append(arg)
 		return args
-
-
-COMPLETION = Completion()
 
 

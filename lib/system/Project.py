@@ -19,7 +19,7 @@ from .globals import OPENED_PROJECTS
 
 
 
-def get_or_create_project_and_add_view(view):
+def get_or_create_project_and_add_view(view, wizzard=True):
 	"""
 		Returns the project object associated with the file in view.
 		Does return None if this file is not a .ts file or from other reasons
@@ -41,13 +41,14 @@ def get_or_create_project_and_add_view(view):
 
 	tsconfigdir = find_tsconfigdir(view.file_name())
 	if tsconfigdir is None:
-		Debug('project', "Project without tsconfig.json. Start Wizzard")
-		PWizz = ProjectWizzard(view, lambda: get_or_create_project_and_add_view(view))
-		PWizz.new_tsconfig_wizzard("No tsconfig.json found. Use this wizzard to create one.")
+		if wizzard:
+			Debug('project', "Project without tsconfig.json. Start Wizzard")
+			PWizz = ProjectWizzard(view, lambda: get_or_create_project_and_add_view(view))
+			PWizz.new_tsconfig_wizzard("No tsconfig.json found. Use this wizzard to create one.")
 		return None
 
-	opened_project_with_same_tsconfig = get_first(OPENED_PROJECTS,
-						lambda p: p.tsconfigdir == tsconfigdir)
+	opened_project_with_same_tsconfig = \
+		 get_first(OPENED_PROJECTS, lambda p: p.tsconfigdir == tsconfigdir)
 
 	if opened_project_with_same_tsconfig is not None:
 		Debug('project+', "Already opened project found.")
@@ -128,7 +129,7 @@ class OpenedProject(object):
 	def on_services_started(self):
 		self.errors = Errors(self)
 		self.completion = Completion(self)
-		self.hightlighter = ErrorsHightlighter(self)
+		self.hightlighter = ErrorsHighlighter(self)
 
 
 	# ###############################################    OPEN/CLOSE   ##########
@@ -154,7 +155,7 @@ class OpenedProject(object):
 			belong to this project
 			Closes project if no more windows are open. """
 		if view in self.views:
-			self.views.pop(view)
+			self.views.remove(view)
 			Debug('project+', "View %s removed from project %s" % (view.file_name(), self.tsconfigfile))
 			self._remove_window_if_not_needed(view.window())
 
@@ -266,7 +267,7 @@ class OpenedProject(object):
 		# 2.  Sublime-Settings: http://www.sublimetext.com/docs/3/settings.html
 		#     <ProjectSettings>.sublime-settings['settings']['ArcticTypescript'][KEY]
 		try:
-			return get_deep(self.views[0].settings('ArcticTypescript'), settingskey)
+			return get_deep(self.views[0].settings().get('ArcticTypescript'), settingskey)
 		except KeyError:
 			pass
 

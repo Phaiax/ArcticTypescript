@@ -17,22 +17,25 @@ from .utils.fileutils import file_exists
 
 @max_calls()
 def on_init(root):
-	TSS.removeEventListener('init', root, on_init)
-	FILES.init(root, on_files_loaded)
+	pass
+	#TSS.removeEventListener('init', root, on_init)
+	#FILES.init(root, on_files_loaded)
 
 @max_calls()
 def on_files_loaded():
+	pass
 	# we don't know if a ts view is activated, start conditions
-	run_command_on_any_ts_view('typescript_update_structure', {"force": True})
-	run_command_on_any_ts_view('typescript_recalculate_errors')
+	#run_command_on_any_ts_view('typescript_update_structure', {"force": True})
+	#run_command_on_any_ts_view('typescript_recalculate_errors')
 
 
 @max_calls()
 def on_kill(root):
-	TSS.removeEventListener('kill', root, on_kill)
-	FILES.remove_by_root(root)
-	ERRORS.on_close_typescript_project(root)
-	T3SVIEWS.hide_all()
+	pass
+	#TSS.removeEventListener('kill', root, on_kill)
+	#FILES.remove_by_root(root)
+	#ERRORS.on_close_typescript_project(root)
+	#T3SVIEWS.hide_all()
 
 
 
@@ -44,7 +47,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	# CLOSE FILE
 	@max_calls(name='Listener.on_close')
 	def on_close(self, view):
-		project = get_or_create_project_and_add_view(view)
+		project = get_or_create_project_and_add_view(view, wizzard=False)
 		if project:
 			project.close(view)
 
@@ -64,6 +67,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	# ON SAVE
 	@max_calls()
 	def on_post_save(self, view):
+		return
 		project = get_or_create_project_and_add_view(view)
 		if project:
 			# TODO
@@ -82,6 +86,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	# ON CLICK
 	@max_calls(name='listener.on_selection_modified')
 	def on_selection_modified(self, view):
+		return
 		project = get_or_create_project_and_add_view(view)
 		if project:
 
@@ -93,6 +98,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	# ON VIEW MODIFIED
 	@max_calls()
 	def on_modified(self, view):
+		return
 		project = get_or_create_project_and_add_view(view)
 		if project:
 
@@ -111,6 +117,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# ON QUERY COMPLETION
 	def on_query_completions(self, view, prefix, locations):
+		return
 		project = get_or_create_project_and_add_view(view)
 		if project:
 			pos = view.sel()[0].begin()
@@ -124,6 +131,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# ON QUERY CONTEXT (execute commandy only on .ts files)
 	def on_query_context(self, view, key, operator, operand, match_all):
+		return
 		if key == "ArcticTypescript":
 			project = get_or_create_project_and_add_view(view)
 			if project:
