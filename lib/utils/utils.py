@@ -32,10 +32,13 @@ def replace_variables(value, variables):
 	if hasattr(sublime, 'expand_variables'): # ST3, Build 3068
 		return sublime.expand_variables(value, variables)
 	else:
-		for k, v in variables.items():
+		# sort keys after length, to get $file_path before $file
+		keys = list(variables.keys())
+		keys.sort(key=len, reverse=True)
+		for k in keys:
 			key = "$%s" % k
 			if key in value:
-				value = value.replace(key, str(v))
+				value = value.replace(key, str(variables[k]))
 	return value
 
 

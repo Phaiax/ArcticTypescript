@@ -158,6 +158,7 @@ class Compiler(Thread):
 				Debug('build+', 'BUILD RESULTS: %s' % line)
 				try:
 					line = line.decode('UTF-8')
+					line = line.replace('\r', '')
 				except ValueError as v:
 					break
 				self._show_output(line)

@@ -16,7 +16,7 @@ class Panel(object):
 
 	def update(self,output):
 		self.panel.run_command('append', {'characters': output})
-
+		self.panel.show(self.panel.size()-1)
 		self.window.run_command("show_panel", {"panel": "output.typescript_output"})
 
 	def clear(self,window):

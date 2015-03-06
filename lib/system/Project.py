@@ -394,18 +394,16 @@ class OpenedProject(object):
 		variables = {
 			#The directory of the current file, e.g., C:\Files.
 			"file_path": os.path.dirname(file_name),
-			#The full path to the current file, e.g., C:\Files\Chapter1.txt.
-			"file": file_name,
 			#The name portion of the current file, e.g., Chapter1.txt.
 			"file_name": os.path.basename(file_name),
 			#The extension portion of the current file, e.g., txt.
 			"file_extension": ext[0] if ext else "",
 			#The name-only portion of the current file, e.g., Document.
 			"file_base_name": os.path.basename(file_name).split('.', 1)[0],
+			#The full path to the current file, e.g., C:\Files\Chapter1.txt.
+			"file": file_name,
 			#The full path to the Packages folder.
 			"packages": sublime.packages_path(),
-			#The full path to the current project file.
-			"project": project_file,
 			#The directory of the current project file.
 			"project_path": os.path.dirname(project_file),
 			#The name portion of the current project file.
@@ -414,11 +412,13 @@ class OpenedProject(object):
 			"project_extension": project_ext[0] if ext else "",
 			#The name-only portion of the current project file.
 			"project_base_name": os.path.basename(project_file).split('.', 1)[0],
+			#The full path to the current project file.
+			"project": project_file,
 			# linux, darwin, nt
 			"platform": sys.platform,
 			# tsconfig dir
-			"tsconfig": self.tsconfigfile,
-			"tsconfig_path": self.tsconfigdir
+			"tsconfig_path": self.tsconfigdir,
+			"tsconfig": self.tsconfigfile
 		}
 
 		variables.update(self._get_tsconfigsettings(use_cache)['compilerOptions'])
