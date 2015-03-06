@@ -16,7 +16,7 @@ var s = {
 };
 
 
-s.yours.his.match("Owen")
+s.yosurs.his.match("Owen")
 
 
 var z;

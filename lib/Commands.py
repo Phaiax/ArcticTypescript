@@ -307,9 +307,7 @@ class TypescriptErrorPanelSetText(sublime_plugin.TextCommand):
 class TypescriptSetErrorCalculationStatusMessage(sublime_plugin.TextCommand):
 	@max_calls(name='TypescriptSetErrorCalculationStatusMessage')
 	def run(self, edit_token, message):
-		project = get_or_create_project_and_add_view(self.view)
-		if project:
-			T3SVIEWS.ERROR.set_error_calculation_status_message(edit_token, message)
+		T3SVIEWS.ERROR.set_error_calculation_status_message(edit_token, message)
 
 
 # ################################# COMPILE ####################################

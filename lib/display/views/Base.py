@@ -66,7 +66,7 @@ class Base(object):
 		return self.get_view() is not None
 
 	def get_view(self):
-		if self._view_reference is not None and self._view_reference.is_valid and self._view_reference.buffer_id() != 0:
+		if self._view_reference is not None and self._view_reference.is_valid() and self._view_reference.buffer_id() != 0:
 			return self._view_reference
 		if self._view_reference is not None:
 			return None
