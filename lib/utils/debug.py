@@ -6,7 +6,7 @@ from functools import wraps
 
 # ####################### DEFINE LIST OF DISPLAYED DEBUG MESSAGES ##############
 
-print_classifications = ['project', 'project+']
+print_classifications = ['build', 'build+']
 
 
 # ####################### Possible classifications #############################

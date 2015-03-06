@@ -10,6 +10,7 @@ from .system.Project import OpenedProject, get_or_create_project_and_add_view
 from .utils import Debug, max_calls
 from .utils.viewutils import run_command_on_any_ts_view
 from .utils.fileutils import file_exists
+from .utils.CancelCommand import catch_CancelCommand, CancelCommand
 
 
 # ------------------------------------------- EVENTS ------------------------------------------ #
@@ -54,18 +55,21 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# FILE ACTIVATED
 	@max_calls()
+	@catch_CancelCommand
 	def on_activated(self, view):
 		get_or_create_project_and_add_view(view)
 
 
 	# ON CLONED FILE
 	@max_calls()
+	@catch_CancelCommand
 	def on_clone(self, view):
 		get_or_create_project_and_add_view(view)
 
 
 	# ON SAVE
 	@max_calls()
+	@catch_CancelCommand
 	def on_post_save(self, view):
 		project = get_or_create_project_and_add_view(view)
 		if project:
@@ -87,9 +91,10 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# ON CLICK
 	@max_calls(name='listener.on_selection_modified')
+	@catch_CancelCommand
 	def on_selection_modified(self, view):
 		project = get_or_create_project_and_add_view(view)
-		if project:
+		if project and project.is_initialized():
 			project.highlighter.display_error_in_status_if_cursor(view)
 			view.erase_regions('typescript-definition')
 			view.erase_regions('typescript-error-hint')
@@ -97,6 +102,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 	# ON VIEW MODIFIED
 	@max_calls()
+	@catch_CancelCommand
 	def on_modified(self, view):
 		project = get_or_create_project_and_add_view(view)
 		if project:
@@ -120,6 +126,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 
 	# ON QUERY COMPLETION
+	@catch_CancelCommand
 	def on_query_completions(self, view, prefix, locations):
 		project = get_or_create_project_and_add_view(view)
 		if project:
@@ -133,6 +140,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 
 	# ON QUERY CONTEXT (execute commandy only on opened .ts files)
+	@catch_CancelCommand
 	def on_query_context(self, view, key, operator, operand, match_all):
 		if key == "ArcticTypescript":
 			project = get_or_create_project_and_add_view(view)

@@ -18,8 +18,8 @@ def catch_CancelCommand(func):
 		if is_plugin_temporarily_disabled():
 			return # do not execute command
 		try:
-			func(*kargs, **kwargs)
+			return func(*kargs, **kwargs)
 		except CancelCommand:
 			Debug('command', "A COMMAND WAS CANCELED")
-			pass
+			return False
 	return catcher

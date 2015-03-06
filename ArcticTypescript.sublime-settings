@@ -2,6 +2,7 @@
 	"activate_build_system" : true,
 	"auto_complete" : true,
 	"node_path" : null,
+	"tsc_path" : null,
 	"error_on_save_only" : false,
 	"build_on_save" : true,
 	"show_build_file" : false,

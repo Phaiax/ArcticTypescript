@@ -11,7 +11,7 @@ import hashlib
 version = int(sublime.version())
 
 
-# ##################################################### BYTE utils #########
+# ##################################################### BYTE/STRING utils ##
 
 
 def encode(message):
@@ -26,6 +26,18 @@ def make_hash(value):
 def random_str():
 	""" Returns a random string, made out of the current time """
 	return make_hash(str(time.time()))
+
+
+def replace_variables(value, variables):
+	if hasattr(sublime, 'expand_variables'): # ST3, Build 3068
+		return sublime.expand_variables(value, variables)
+	else:
+		for k, v in variables.items():
+			key = "$%s" % k
+			if key in value:
+				value = value.replace(key, str(v))
+	return value
+
 
 # ##################################################### LIST utils #########
 

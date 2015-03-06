@@ -2,10 +2,13 @@
 
 import sublime
 import os
+import sys
 
-from ..utils.fileutils import read_and_decode_json_file, file_exists, is_ts, is_dts, read_file
+from ..utils.fileutils import read_and_decode_json_file, file_exists, \
+							  is_ts, is_dts, read_file
 from ..utils.pathutils import find_tsconfigdir
 from ..utils.disabling import is_plugin_temporarily_disabled
+from ..utils.CancelCommand import CancelCommand
 from ..utils import get_deep, get_first, random_str, Debug
 
 from .ProjectWizzard import ProjectWizzard
@@ -15,6 +18,8 @@ from .Completion import Completion
 
 from ..server.Processes import Processes
 from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
+
+from ..commands.Compiler import Compiler
 
 from .globals import OPENED_PROJECTS
 
@@ -57,8 +62,17 @@ def get_or_create_project_and_add_view(view, wizzard=True):
 		return opened_project_with_same_tsconfig
 	else:
 		# New ts project
-		Debug('project', "Open project: %s" % tsconfigdir)
-		return OpenedProject(view)
+		try:
+			Debug('project', "Open project: %s" % tsconfigdir)
+			return OpenedProject(view)
+		except CancelCommand:
+			if get_or_create_project_and_add_view(view):
+				get_or_create_project_and_add_view(view).close_project()
+			return None
+
+def close_all_projects():
+	for p in OPENED_PROJECTS.copy().values():
+		p.close_project()
 
 
 def project_by_id(project_id):
@@ -86,7 +100,8 @@ allowed_compileroptions = [
 allowed_settings = [
 	"activate_build_system",     #?:boolean;   default: true
 	"auto_complete",             #?:boolean,   default: true
-	"node_path",                 #?:boolean,   default: null -> nodejs in $PATH
+	"node_path",                 #?:string,    default: null -> nodejs in $PATH
+	"tsc_path",                  #?:string,    default: null -> search a node_modules dir with tsc or use ArcticTypescript's tsc
 	"error_on_save_only",        #?:boolean,   default: false
 	"build_on_save",             #?:boolean,   default: false
 	"show_build_file",           #?:boolean,   default: false
@@ -114,6 +129,11 @@ class OpenedProject(object):
 		self.views = [] # All views with .ts files
 		self.tsconfigdir = find_tsconfigdir(startview.file_name())
 		self.tsconfigfile = os.path.join(self.tsconfigdir, "tsconfig.json")
+		self.processes = None
+		self.is_compiling = False
+		self.compiler = None
+		self.authorized_commands = []
+		self.forbidden_commands = []
 
 		self.ArcticTypescript_sublime_settings = sublime.load_settings('ArcticTypescript.sublime-settings')
 
@@ -142,10 +162,14 @@ class OpenedProject(object):
 		self.highlighter = ErrorsHighlighter(self)
 
 
+	def is_initialized(self):
+		return self.processes and self.processes.is_initialized()
+
+
 	def assert_initialisation_finished(self):
 		""" Raises CancelCommand if initializion is not finished.
 			Use decorator @catch_CancelCommand for easy use """
-		if not self.processes.is_initialized():
+		if not self.is_initialized():
 			sublime.status_message('You must wait for the initialisation to finish (%s)' % filename)
 			raise CancelCommand()
 
@@ -206,7 +230,12 @@ class OpenedProject(object):
 	def close_project(self):
 		""" Closes project, kills tsserver processes, removes all highlights, ... """
 		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
-		print("TODO: Close project %s" % self.tsconfigfile)
+		print("Close project %s" % self.tsconfigfile)
+		if self.compiler:
+			self.compiler.kill()
+		OPENED_PROJECTS.pop(self.id)
+
+
 
 
 	# ###############################################    SETTINGS   ############
@@ -237,7 +266,11 @@ class OpenedProject(object):
 		if use_cache and hasattr(self, 'tsconfigcache'):
 			return self.tsconfigcache
 		if file_exists(self.tsconfigfile):
-			self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
+			try:
+				self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
+			except Exception as e:
+				print("Error reading tsconfig.json: %s" % e)
+				raise CancelCommand
 		else:
 			self.tsconfigcache = {}
 		return self.tsconfigcache
@@ -273,7 +306,7 @@ class OpenedProject(object):
 		"""
 		if settingskey not in allowed_settings:
 			print("Requested unknown setting: %s. Will always be None."
-				  % optionkey)
+				  % settingskey)
 			return None
 
 		# 1. tsconfig.json['ArcticTypescript'][KEY]
@@ -312,8 +345,64 @@ class OpenedProject(object):
 
 	def compile_once(self, window_for_panel):
 
-		compiler = Compiler(self, window_for_panel)
-		compiler.daemon = True
-		compiler.start()
+		if self.is_compiling and self.compiler is not None:
+			if self.compiler.is_alive():
+				sublime.status_message('Still compiling. Use Goto Anything > "ArcticTypescript: Terminate All Builds" to cancel.')
+				self.compiler._show_output("")
+			else:
+				self.is_compiling = False
 
-		sublime.status_message('Compiling : ' + filename)
+		if not self.is_compiling:
+			self.is_compiling = True
+			self.compiler = Compiler(self, window_for_panel)
+			self.compiler.daemon = True
+
+			sublime.status_message('Compiling')
+			self.compiler.start()
+
+
+	def extract_variables(self, use_cache=False):
+		file_name = sublime.active_window().active_view().file_name()
+		ext = os.path.basename(file_name).split('.', 1)[1:]
+		project_file = self.project_file_name
+		for window in self.windows:
+			if window.project_file_name():
+				project_file = window.project_file_name()
+		project_ext = os.path.basename(project_file).split('.', 1)[1:]
+
+		variables = {
+			#The directory of the current file, e.g., C:\Files.
+			"file_path": os.path.dirname(file_name),
+			#The full path to the current file, e.g., C:\Files\Chapter1.txt.
+			"file": file_name,
+			#The name portion of the current file, e.g., Chapter1.txt.
+			"file_name": os.path.basename(file_name),
+			#The extension portion of the current file, e.g., txt.
+			"file_extension": ext[0] if ext else "",
+			#The name-only portion of the current file, e.g., Document.
+			"file_base_name": os.path.basename(file_name).split('.', 1)[0],
+			#The full path to the Packages folder.
+			"packages": sublime.packages_path(),
+			#The full path to the current project file.
+			"project": project_file,
+			#The directory of the current project file.
+			"project_path": os.path.dirname(project_file),
+			#The name portion of the current project file.
+			"project_name": os.path.basename(project_file),
+			#The extension portion of the current project file.
+			"project_extension": project_ext[0] if ext else "",
+			#The name-only portion of the current project file.
+			"project_base_name": os.path.basename(project_file).split('.', 1)[0],
+			# linux, darwin, nt
+			"platform": sys.platform,
+			# tsconfig dir
+			"tsconfig": self.tsconfigfile,
+			"tsconfig_path": self.tsconfigdir
+		}
+
+		variables.update(self._get_tsconfigsettings(use_cache)['compilerOptions'])
+
+		for key in allowed_settings:
+			variables[key] = self.get_setting(key, use_cache=True)
+
+		return variables

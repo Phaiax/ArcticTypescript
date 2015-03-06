@@ -1,57 +1,62 @@
 [
 	{
-		"caption": "Typescript: Errors view",
+		"caption": "ArcticTypescript: Errors view",
 		"command": "typescript_error_panel",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: Go to first error",
+		"caption": "ArcticTypescript: Go to first error",
 		"command": "typescript_error_goto",
 		"context": [ {"key": "ArcticTypescript"} ],
 		"args": { "n" : 0 }
 	},
 	{
-		"caption": "Typescript: Go to second error",
+		"caption": "ArcticTypescript: Go to second error",
 		"command": "typescript_error_goto",
 		"context": [ {"key": "ArcticTypescript"} ],
 		"args": { "n" : 1 }
 	},
 	{
-		"caption": "Typescript: Go to third error",
+		"caption": "ArcticTypescript: Go to third error",
 		"command": "typescript_error_goto",
 		"context": [ {"key": "ArcticTypescript"} ],
 		"args": { "n" : 2 }
 	},
 	{
-		"caption": "Typescript: Go to fourth error",
+		"caption": "ArcticTypescript: Go to fourth error",
 		"command": "typescript_error_goto",
 		"context": [ {"key": "ArcticTypescript"} ],
 		"args": { "n" : 3 }
 	},
 	{
-		"caption": "Typescript: Go to definition",
+		"caption": "ArcticTypescript: Go to definition",
 		"command": "typescript_definition",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: Reload Project",
+		"caption": "ArcticTypescript: Reload Project",
 		"command": "typescript_reload_project",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: View member type",
+		"caption": "ArcticTypescript: View member type",
 		"command": "typescript_type",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: Refactoring (DO NOT USE, Test only)",
+		"caption": "ArcticTypescript: Refactoring (DO NOT USE, Test only)",
 		"command": "typescript_references",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "Typescript: Build",
+		"caption": "ArcticTypescript: Build",
 		"command": "typescript_build",
 		"args": {"characters": ""},
 		"context": [ {"key": "ArcticTypescript"} ]
+	},
+	{
+		"caption": "ArcticTypescript: Terminate All Builds",
+		"command": "typescript_terminate_builds"
 	}
+
 ]

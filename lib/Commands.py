@@ -13,6 +13,7 @@ from .display.T3SViews import T3SVIEWS
 from .display.Message import MESSAGE
 
 from .system.Project import get_or_create_project_and_add_view, project_by_id
+from .system.globals import OPENED_PROJECTS
 
 from .utils.fileutils import read_file
 from .utils.viewutils import get_file_infos
@@ -219,6 +220,7 @@ class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 
 
 def typescript_update_structure(view, force):
+	return
 	project.assert_initialisation_finished()
 
 	def async_react(members, filename, sender_view_id):
@@ -324,7 +326,16 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 			if characters != False:
 				self.window.run_command('save')
 
-			project.compile_once(window_for_panel)
+			project.compile_once(self.window)
+
+
+class TypescriptTerminateBuilds(sublime_plugin.TextCommand):
+
+	@catch_CancelCommand
+	def run(self, edit):
+		for project in OPENED_PROJECTS.values():
+			if project.compiler is not None:
+				project.compiler.kill()
 
 
 # ################################# COMPILE RESULT VIEW ########################
