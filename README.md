@@ -14,22 +14,103 @@ ArcticTypescript
 Commands and Shortcuts
 ----------------------------------------------------------------------------
 
- * `ctrl + space` 			Trigger code completion.
- * `alt + shift + e` 		Open a view listing all the **errors** across all the files of the project.
- * `alt + shift + e, h` 	Goto first error in error list.
- * `alt + shift + e, j` 	Goto second error in error list.
- * `alt+shift+e, k` 		Goto third error in error list.
- * `alt+shift+e, l` 		Goto 4th error in error list.
- * `f1` Click on a property, a class, a method etc... then press f1 to have **details** about it.
- * `f2` Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk).
- * `f4` Click on a property, a class, a method etc... then press f4 to go to the **definition**.
- * `f5` **Reload** the current project.
- * `f8` or <code>ctrl+b</code> Build the project.
+ * `ctrl + space`           trigger code completion.
+ * `alt + shift + e e`      error view
+ * `alt + shift + e h`      jump to 1st error
+ * `alt + shift + e j`      jump to 2nd error
+ * `alt + shift + e k`      jump to 3rd error
+ * `alt + shift + e l`      jump to 4th error
+ * `F1`                     show details about type under cursor
+ * `F4`                     jump to definition
+ * `F5`                     reload (to this if autocompletion is missing something)
+ * `F8` or `ctrl + b`       Build the project.
 
 
 
 Settings
 ----------------------------------------------------------------------------
+
+
+You need to configure typescript using a `tsconfig.json` file. Place this
+file in your project folder or at least in some parent folder of your source
+files.
+
+Minimal Example `tsconfig.json`:
+
+    {
+        "compilerOptions": {
+            "out": "out.js",
+            "sourceMap": true,
+            "target": "es5"
+        },
+        "files": [
+            "main.ts"
+        ],
+    }
+
+More `compilerOptions`:
+ * `target`              (string) 'es3'|'es5' (default) | 'es6'
+ * `module`              (string) 'amd'|'commonjs' (default)
+ * `declaration`         (boolean) Generates corresponding `.d.ts` file
+ * `out`                 (filepath) Concatenate and emit a single file
+ * `outDir`              (folderpath) Redirect output structure to this directory
+ * `noImplicitAny`       (boolean) Error on inferred `any` type
+ * `removeComments`      (boolean) Do not emit comments in output
+ * `sourceMap`           (boolean) Generates SourceMaps (.map files)
+ * `removeComments`      (boolean)  Do not emit comments to output.
+ * `sourceRoot`          (folder) Optionally specifies the location where debugger
+                         should locate TypeScript source files after deployment
+ * `mapRoot`             (folder) Optionally Specifies the location where debugger
+                         should locate map files after deployment
+ * `preserveConstEnums`  (boolean) Do not erase const enum
+                         declarations in generated code.
+ * `suppressImplicitAnyIndexErrors` (boolean) Suppress noImplicitAny errors for
+                        indexing objects lacking index signatures.
+
+All pathes are relative to `tsconfig.json`. These are exactly the options for
+the typescript compiler: Refer to `tsc --help`.
+
+
+
+`"files" : []` : Define the files which should be compiled. **At least 1 file is
+                 required.** You only need to specify the file from the top / root
+                 of your internal reference tree (your main.ts). But it does no
+                 harm to specify more files.
+
+
+### ArcticTypescript settings
+
+
+You can configure ArcticTypescript as well (type, default):
+
+ * `activate_build_system`     (boolean, true)
+ * `auto_complete`             (boolean, true)
+ * `node_path`                 (string, null) If null, then nodejs must be in $PATH
+ * `tsc_path`                  (string, null) If null, it will search a
+                                              `node_modules` dir with `tsc` or
+                                              use ArcticTypescript's `tsc`
+ * `error_on_save_only`        (boolean, false)
+ * `build_on_save`             (boolean, false)
+ * `show_build_file`           (boolean, false) show the compiled output after build
+ * `pre_processing_commands`   ([string], [])
+ * `post_processing_commands`  ([string], [])
+
+
+Where to store these settings:
+
+ * For personal settings across all typescript projects:
+    - `<sublime config dir>/Packages/User/Preferences.sublime-settings['ArcticTypescript'][KEY]`
+    - `<sublime config dir>/Packages/User/ArcticTypescript.sublime-settings[KEY]`
+        - You can open this file via Menu -> Preferences -> Package Settings ->
+          ArcticTypescript -> "Settings - User"
+ * For personal, project specific settings
+    - `<ProjectSettings>.sublime-settings['settings']['ArcticTypescript'][KEY]`
+        - You can open this file via Menu -> Preferences -> "Settings - User"
+ * If you are not part of a team or for settings for everyone or for project
+   specific settings if you don't have created a sublime project
+    - tsconfig.json['ArcticTypescript'][KEY]
+
+
 
 
 Installation
