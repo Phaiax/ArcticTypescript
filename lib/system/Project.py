@@ -64,7 +64,9 @@ def get_or_create_project_and_add_view(view, wizzard=True):
 		# New ts project
 		try:
 			Debug('project', "Open project: %s" % tsconfigdir)
-			return OpenedProject(view)
+			new_project = OpenedProject(view)
+			if not hasattr(new_project, 'id'):
+				return None
 		except CancelCommand:
 			if get_or_create_project_and_add_view(view):
 				get_or_create_project_and_add_view(view).close_project()

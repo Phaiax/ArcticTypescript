@@ -200,7 +200,10 @@ class TssJsStarterThread(Thread):
 		self.tss_queue.put("stop!") # setinel value to stop queue
 		self.tss_process.terminate()
 		self.tss_process.kill()
-		self.tss_process.communicate() # release readline() block
+		try:
+			self.tss_process.communicate() # release readline() block
+		except Exception:
+			pass
 
 	def check_process_health(self):
 		if self.tss_process.poll() is not None:

@@ -1,5 +1,5 @@
 // Copyright (c) Claus Reinke. All rights reserved.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Apache License, Version 2.0. 
 // See LICENSE.txt in the project root for complete license information.
 ///<reference path='typings/node/node.d.ts'/>
 ///<reference path='node_modules/typescript/bin/typescript.d.ts'/>
@@ -125,7 +125,7 @@ var TSS = (function () {
                 ts.sys.standardError.Write(diagnostic.fileName() + "(" + (lineCol.line + 1) + "," + (lineCol.character + 1) + "): ");
             }
         }
-
+  
         ts.sys.standardError.WriteLine(diagnostic.message());
     }
     */
@@ -298,7 +298,12 @@ var TSS = (function () {
                 }
                 else if (m = match(cmd, /^navigateToItems (.*)$/)) {
                     pattern = m[1];
-                    _this.output(_this.ls.getNavigateToItems(pattern));
+                    info = _this.ls.getNavigateToItems(pattern).map(function (item) {
+                        item['min'] = _this.positionToLineCol(item.fileName, item.textSpan.start);
+                        item['lim'] = _this.positionToLineCol(item.fileName, item.textSpan.start + item.textSpan.length);
+                        return item;
+                    });
+                    _this.output(info);
                 }
                 else if (m = match(cmd, /^completions(-brief)?( true| false)? (\d+) (\d+) (.*)$/)) {
                     brief = m[1];
