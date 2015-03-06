@@ -3,7 +3,7 @@
 /// <reference path="lib/sinon-chai/sinon-chai.d.ts" />
 
 
-import utilstest = require('tests/utilstest');
+import utilstest = require('./tests/utilstest');
 
 mocha.setup('bdd');
 

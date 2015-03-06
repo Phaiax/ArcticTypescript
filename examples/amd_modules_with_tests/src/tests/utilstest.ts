@@ -7,7 +7,7 @@
 
 var expect = chai.expect;
 
-import U = require("utils/utils");
+import U = require("../utils/utils");
 
 export var declare = function() {
 

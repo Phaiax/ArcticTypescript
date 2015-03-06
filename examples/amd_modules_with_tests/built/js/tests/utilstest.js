@@ -2,7 +2,7 @@
 /// <reference path="../lib/chai/chai.d.ts" />
 /// <reference path="../lib/sinon/sinon.d.ts" />
 /// <reference path="../lib/sinon-chai/sinon-chai.d.ts" />
-define(["require", "exports", "utils/utils"], function (require, exports, U) {
+define(["require", "exports", "../utils/utils"], function (require, exports, U) {
     var expect = chai.expect;
     exports.declare = function () {
         describe('Utils tests (TotalBasicUtils)', function () {

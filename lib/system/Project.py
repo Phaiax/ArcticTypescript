@@ -119,7 +119,7 @@ class OpenedProject(object):
 
 	def __init__(self, startview):
 
-		if not startview.is_valid():
+		if not startview.is_valid() or startview.window() is None:
 			return
 
 		self.id = random_str()
@@ -188,8 +188,11 @@ class OpenedProject(object):
 			view.settings().set('auto_complete', self.get_setting("auto_complete"))
 			view.settings().set('extensions', ['ts'])
 
-
-		if view.window() not in self.windows:
+		window = view.window()
+		if window is None:
+			print("ArcticTypescript: Window is None, why??")
+			return
+		if window not in self.windows:
 			Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
 			self.windows.append(view.window())
 

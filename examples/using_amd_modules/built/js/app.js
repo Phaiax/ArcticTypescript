@@ -1,4 +1,4 @@
-define(["require", "exports", 'utils/utils'], function (require, exports, U) {
+define(["require", "exports", './utils/utils'], function (require, exports, U) {
     U.TotalBasicUtils.a();
     (new U.TotalBasicUtils()).b();
 });

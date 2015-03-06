@@ -1,5 +1,5 @@
 
-import U = require('utils/utils');
+import U = require('./utils/utils');
 
 U.TotalBasicUtils.a();
 
@@ -8,3 +8,4 @@ U.TotalBasicUtils.a();
 setTimeout(function(){
 	document.getElementById("dyn").innerHTML = "Dynamic!"
 }, 1000);
+
