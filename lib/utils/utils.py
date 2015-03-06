@@ -1,7 +1,8 @@
 # coding=utf8
 
 import sublime
-
+import time
+import hashlib
 
 
 # ##################################################### VERSION ############
@@ -16,6 +17,15 @@ version = int(sublime.version())
 def encode(message):
 	return bytes(message,'UTF-8')
 
+
+def make_hash(value):
+	""" Returns md5 hash of <value>. """
+	return hashlib.md5(encode(value)).hexdigest()
+
+
+def random_str():
+	""" Returns a random string, made out of the current time """
+	return make_hash(str(time.time()))
 
 # ##################################################### LIST utils #########
 

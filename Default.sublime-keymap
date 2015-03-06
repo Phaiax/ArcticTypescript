@@ -6,7 +6,7 @@
 	},
 	{
 		"command": "typescript_error_panel",
-		"keys": ["alt+shift+e"],
+		"keys": ["alt+shift+e", "alt+shift+e"],
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{

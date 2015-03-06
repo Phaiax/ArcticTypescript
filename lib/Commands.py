@@ -12,7 +12,7 @@ import traceback
 from .display.T3SViews import T3SVIEWS
 from .display.Message import MESSAGE
 
-from .system.Project import get_or_create_project_and_add_view
+from .system.Project import get_or_create_project_and_add_view, project_by_id
 
 from .utils.fileutils import read_file
 from .utils.viewutils import get_file_infos
@@ -27,7 +27,7 @@ class TypescriptCompletion(sublime_plugin.TextCommand):
 	def run(self, edit):
 		project = get_or_create_project_and_add_view(self.view)
 		if project:
-			COMPLETION.trigger(self.view, TSS, force_enable=True)
+			project.completion.trigger(self.view, force_enable=True)
 
 
 # ################################# RELOAD #####################################
@@ -50,7 +50,7 @@ class TypescriptType(sublime_plugin.TextCommand):
 	def run(self, edit):
 		project = get_or_create_project_and_add_view(self.view)
 		if project:
-			TSS.assert_initialisation_finished(self.view.file_name())
+			project.assert_initialisation_finished()
 
 			pos = self.view.sel()[0].begin()
 			(_line, _col) = self.view.rowcol(pos)
@@ -87,7 +87,7 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 	def run(self, edit):
 		project = get_or_create_project_and_add_view(self.view)
 		if project:
-			TSS.assert_initialisation_finished(self.view.file_name())
+			project.assert_initialisation_finished()
 
 			pos = self.view.sel()[0].begin()
 			(_line, _col) = self.view.rowcol(pos)
@@ -139,7 +139,7 @@ class TypescriptReferences(sublime_plugin.TextCommand):
 	def run(self, edit):
 		project = get_or_create_project_and_add_view(self.view)
 		if project:
-			TSS.assert_initialisation_finished(self.view.file_name())
+			project.assert_initialisation_finished()
 			self.root = get_root(self.view.file_name())
 
 			pos = self.view.sel()[0].begin()
@@ -199,7 +199,7 @@ class TypescriptStructure(sublime_plugin.TextCommand):
 		if project:
 			return # typescript tools dropped support for this
 			Debug('structure', 'open view if not already open')
-			TSS.assert_initialisation_finished(self.view.file_name())
+			project.assert_initialisation_finished()
 
 			T3SVIEWS.OUTLINE.enable()
 			T3SVIEWS.OUTLINE.bring_to_top(back_to=self.view)
@@ -219,7 +219,7 @@ class TypescriptUpdateStructure(sublime_plugin.TextCommand):
 
 
 def typescript_update_structure(view, force):
-	TSS.assert_initialisation_finished(view.file_name())
+	project.assert_initialisation_finished()
 
 	def async_react(members, filename, sender_view_id):
 		## members is the already json-decoded tss.js answer
@@ -261,28 +261,15 @@ class TypescriptErrorPanel(sublime_plugin.TextCommand):
 	def run(self, edit_token):
 		project = get_or_create_project_and_add_view(self.view)
 		if project:
-			TSS.assert_initialisation_finished(self.view.file_name())
+			project.assert_initialisation_finished()
 
 			T3SVIEWS.ERROR.enable(edit_token)
 			T3SVIEWS.ERROR.bring_to_top(back_to=self.view)
 
-			self.view.run_command('typescript_recalculate_errors')
+			project.errors.start_recalculation()
 
 
 # ################################# REFRESH ERRORS ############################
-
-
-# REFRESH ERRORS (eg after typing characters, if not automatically done)
-class TypescriptRecalculateErrors(sublime_plugin.TextCommand):
-
-	@catch_CancelCommand
-	@max_calls(name='TypescriptRecalculateErrors')
-	def run(self, edit_token):
-		project = get_or_create_project_and_add_view(self.view)
-		if project:
-			TSS.assert_initialisation_finished(self.view.file_name())
-			TSS.update(*get_file_infos(self.view))
-			ERRORS.start_recalculation(self.view.file_name())
 
 
 class TypescriptErrorGoto(sublime_plugin.TextCommand):
@@ -296,14 +283,17 @@ class TypescriptErrorGoto(sublime_plugin.TextCommand):
 
 class TypescriptErrorPanelSetText(sublime_plugin.TextCommand):
 	@max_calls(name='TypescriptErrorPanelSetText')
-	def run(self, edit_token, errors):
-		project = get_or_create_project_and_add_view(self.view)
-		if project:
+	def run(self, edit_token, project_id=None, text=None):
+		if project_by_id(project_id):
 			try:
-				T3SVIEWS.ERROR.set_text(edit_token, errors)
+				T3SVIEWS.ERROR.set_text(edit_token,
+										project=project_by_id(project_id))
 			except (Exception) as e:
-				sublime.status_message("Error panel : %s" % e)
-				print("Error panel: %s" % e)
+				msg = "Internal Arctic Typescript error in error panel : %s" % e
+				sublime.status_message(msg)
+				print(msg)
+		else:
+			T3SVIEWS.ERROR.set_text(edit_token, text=text)
 
 
 class TypescriptSetErrorCalculationStatusMessage(sublime_plugin.TextCommand):
@@ -324,22 +314,18 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 		if project:
 			filename = self.view.file_name()
 
-			if not SETTINGS.get('activate_build_system', get_root(filename)):
+			if not project.get_setting('activate_build_system'):
 				print("ArcticTypescript: build_system_disabled")
 				return
 
-			TSS.assert_initialisation_finished(filename)
+			project.assert_initialisation_finished()
 
 			self.window = sublime.active_window()
 			if characters != False:
 				self.window.run_command('save')
 
-			return #TODO
-			compiler = Compiler(self.window, get_root(filename), filename)
-			compiler.daemon = True
-			compiler.start()
+			project.compile_once(window_for_panel)
 
-			sublime.status_message('Compiling : ' + filename)
 
 # ################################# COMPILE RESULT VIEW ########################
 

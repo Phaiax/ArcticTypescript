@@ -1,6 +1,7 @@
 # coding=utf8
 
 from .debug import Debug
+from .disabling import is_plugin_temporarily_disabled
 
 # CANCEL COMMAND EXCEPTION
 class CancelCommand(Exception):

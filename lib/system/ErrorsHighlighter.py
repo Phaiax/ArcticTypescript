@@ -33,7 +33,7 @@ class ErrorsHighlighter(object):
 
 
 	@max_calls(name='Errors.highlight')
-	def highlight(self):
+	def highlight_all_open_files(self):
 		""" update hightlights (red underline) in all files, using the errors in project """
 
 		self.errors = {}
@@ -42,24 +42,10 @@ class ErrorsHighlighter(object):
 		for window in sublime.windows():
 			for view in window.views():
 				if is_ts(view):
-					error_regions = []
-					warning_regions = []
+					error_regions, warning_regions, error_texts = \
+						self.project.errors.tssjs_to_highlighter(view)
 
-					key = fn2k(view.file_name())
-					self.errors[key] = {}
-
-					for e in errors:
-						if fn2k(e['file']) == key:
-
-							a = view.text_point(e['start']['line']-1, e['start']['character']-1)
-							b = view.text_point(e['end']['line']-1, e['end']['character']-1)
-
-							self.errors[key][(a,b)] = e['text']
-
-							if e['category'] == 'Error':
-								error_regions.append(sublime.Region(a,b))
-							else:
-								warning_regions.append(sublime.Region(a,b))
+					self.errors[fn2k(view.file_name())] = error_texts
 
 					# apply regions, even if empty (that will remove every highlight in that file)
 					view.add_regions('typescript-error' , error_regions , 'invalid' , self.error_icon, self.underline)
@@ -69,14 +55,14 @@ class ErrorsHighlighter(object):
 	previously_error_under_cursor = False
 
 	@max_calls(name='ErrorHighlighter.display_error_in_status_if_cursor')
-	def display_error_in_status_if_cursor(self,view):
+	def display_error_in_status_if_cursor(self, view):
 		"""
 			Displays the error message in the sublime status
 			line if the cursor is above an error (in source code).
 			For the click on the error list, see T3SVIEWS.ERROR.on_click()
 		"""
 		try:
-			error = self._get_error_at(view.sel()[0].begin(),view.file_name())
+			error = self._get_error_at(view.sel()[0].begin(), view.file_name())
 		except:
 			# no selection in view
 			return
@@ -88,11 +74,12 @@ class ErrorsHighlighter(object):
 			self.previously_error_under_cursor = False
 
 
-	def _get_error_at(self,pos,filename):
+	def _get_error_at(self, pos, filename):
+		""" Returns the error at pos in filename """
 		if fn2k(filename) in self.errors:
-			for (l, h), e in self.errors[fn2k(filename)].items():
-				if pos >= l and pos <= h:
-					return e
+			for (start, end), error_msg in self.errors[fn2k(filename)].items():
+				if pos >= start and pos <= end:
+					return error_msg
 
 		return None
 

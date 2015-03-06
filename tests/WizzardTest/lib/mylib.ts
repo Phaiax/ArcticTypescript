@@ -1,4 +1,6 @@
 
-export function lol() {
-	return 1;
+module LIB {
+	export function lol() {
+		return 1;
+	}
 }

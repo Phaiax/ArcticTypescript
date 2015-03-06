@@ -66,7 +66,7 @@ class Completion(object):
 
 
 	# TYPESCRIPT COMPLETION ?
-	def trigger(self, view, TSS, force_enable=False):
+	def trigger(self, view, force_enable=False):
 
 		cursor_pos = view.sel()[0].begin() # cursor pos as int
 		(cursor_line, cursor_col) = view.rowcol(cursor_pos)
@@ -104,12 +104,12 @@ class Completion(object):
 			self.enabled_for['col'] = autocomplete_col
 
 			Debug('autocomplete', " -> push current file contents as update to tss.js")
-			TSS.update(*get_file_infos(view))
+			self.project.tsserver.update(view)
 
 			def async_react_completions_available(tss_result_json, filename, line, col, is_member_str):
 				Debug('autocomplete', "Autocompletion results available for line %i , %i" % (line+1, col+1) )
 
-				i = COMPLETION.prepare_list(tss_result_json)
+				i = self.prepare_list(tss_result_json)
 				Debug('autocomplete', " -> prepare List (%i items)" % i )
 
 				# view or line changed
@@ -148,7 +148,7 @@ class Completion(object):
 				})
 				Debug('autocomplete', " -> (sublime cmd finished)" )
 
-			TSS.complete(view.file_name(), cursor_line, autocomplete_col, is_member_str, async_react_completions_available)
+			self.project.tsserver.complete(view.file_name(), cursor_line, autocomplete_col, is_member_str, async_react_completions_available)
 
 
 

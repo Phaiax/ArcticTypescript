@@ -12,9 +12,10 @@ class Error(Base):
 
 	def __init__(self, t3sviews):
 		super(Error, self).__init__('Typescript : Errors List', t3sviews)
-		self.files = {}
-		self.points = {}
+		self.line_to_file = {}
+		self.line_to_pos = {}
 		self.text = ""
+
 
 	# enable
 	def enable(self, edit_token=None):
@@ -24,35 +25,46 @@ class Error(Base):
 			super(Error, self).set_text(edit_token, self.text)
 			self.update_message()
 
+
 	# SET TEXT
-	def set_text(self, edit_token, errors):
+	def set_text(self, edit_token, project=None, text=None):
 		"""
-			This function takes the tss.js errors structure instead of a string.
+			Sets the text to the text saved in project.errors.
 		"""
 		# this will process the errors, even if the view is closed
-		if type(errors) == list:
-			self._tssjs_2_errorview_format(errors)
-		else:
-			self.text = "\n\n\n%s" % errors
-			self.points = {}
-			self.files = {}
+		if project is not None:
+			if not project.errors.failure:
+				self.text = self.create_message()[1] + \
+					project.errors.text
+				self.line_to_pos = project.errors.line_to_pos
+				self.line_to_file = project.errors.line_to_file
+			else:
+				self.text = "\n\n\n%s" % project.errors.failure
+				self.line_to_pos = {}
+				self.line_to_file = {}
+		elif text is not None:
+			self.text = text
+			self.line_to_pos = {}
+			self.line_to_file = {}
 		super(Error, self).set_text(edit_token, self.text)
+
 
 	# ON CLICK
 	@max_calls(name='Error.on_click')
 	def on_click(self,line):
-		if line in self.points and line in self.files:
-			view = sublime.active_window().open_file(self.files[line])
-			self._focus_error_in_view(view, self.points[line])
+		if line in self.line_to_pos and line in self.line_to_file:
+			view = sublime.active_window().open_file(self.line_to_file[line])
+			self._focus_error_in_view(view, self.line_to_pos[line])
 
 
 	def goto_error(self, n):
 		try:
-			line = list(self.files.items())[n][0]
+			line = list(self.line_to_file.items())[n][0]
 		except:
 			return
-		view = sublime.active_window().open_file(self.files[line])
-		self._focus_error_in_view(view, self.points[line], set_cursor=True)
+		view = sublime.active_window().open_file(self.line_to_file[line])
+		self._focus_error_in_view(view, self.line_to_pos[line], set_cursor=True)
+
 
 	def _focus_error_in_view(self, view, point, set_cursor=False):
 		if view.is_loading():
@@ -80,45 +92,11 @@ class Error(Base):
 				sel.clear()
 				sel.add(sublime.Region(a,a))
 
-	def _tssjs_2_errorview_format(self, errors):
-		"""
-			Takes the de-jsoned output of the tss.js error command and creates the content for the error view.
-			It also creates a relation between each line in the error view and the file and position of the error.
-			Results are available in self.files, self.points and self.text
-		"""
-		self.files = {}
-		self.points = {}
-
-		text = [self.create_message()[1]]
-		previous_file = ''
-		line = 0
-
-		for e in errors:
-			filename = e['file'].split('/')[-1]
-			if previous_file != filename:
-				text.append("\n\nOn File : %s \n" % filename)
-				line += 3
-				previous_file = filename
-
-			text.append("\n%i >" % e['start']['line'])
-			text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
-			line += 1
-
-			a = (e['start']['line']-1, e['start']['character']-1)
-			b = (e['end']['line']-1, e['end']['character']-1)
-			self.points[line] = (a,b)
-			self.files[line] = e['file']
-
-
-		if len(errors) == 0:
-			text.append("\n\nno errors")
-
-		text.append('\n')
-		self.text = ''.join(text)
 
 	def on_overtook_existing_view(self):
 		""" empty view on plugin start """
-		self._view_reference.run_command("typescript_error_panel_set_text", {"errors": []} )
+		self._view_reference.run_command("typescript_error_panel_set_text",
+										 {"text": ""} )
 		pass
 
 
@@ -130,21 +108,25 @@ class Error(Base):
 	finished_time = 0
 	last_execution_duration = 0
 
+
 	def on_calculation_initiated(self):
 		Debug('errorpanel', "Calc init")
 		self.last_bounce_time = time.time()
 		self.update_message()
+
 
 	def on_calculation_replaced(self):
 		Debug('errorpanel', "Calc replaced")
 		self.last_bounce_time = time.time()
 		self.update_message()
 
+
 	def on_calculation_executing(self):
 		Debug('errorpanel', "Calc executing")
 		self.execution_started_time = time.time()
 		self.calculation_is_running = True
 		self.update_message()
+
 
 	def on_calculation_finished(self):
 		Debug('errorpanel', "Calc finished")
@@ -153,8 +135,10 @@ class Error(Base):
 		self.calculation_is_running = False
 		self.update_message()
 
+
 	def is_unstarted_calculation_pending(self):
 		return self.last_bounce_time > self.execution_started_time
+
 
 	@max_calls()
 	def update_message(self):
@@ -166,6 +150,7 @@ class Error(Base):
 		if self._is_view_still_open():
 			Debug('errorpanel', "Error view: %s %a: %s" % (self._view_reference.name(), self._view_reference.file_name(), msg[0:20]))
 			self._view_reference.run_command('typescript_set_error_calculation_status_message', {"message": msg})
+
 
 	def create_message(self):
 		""" returns (need_recall, msg) """
@@ -194,6 +179,7 @@ class Error(Base):
 		if self.is_unstarted_calculation_pending():
 			msg += " ..."
 		return (need_recall, msg)
+
 
 	def set_error_calculation_status_message(self, edit_token, message):
 		if not self._is_view_still_open():

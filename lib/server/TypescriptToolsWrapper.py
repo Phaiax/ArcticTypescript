@@ -2,15 +2,15 @@
 
 import sublime
 import json
-import hashlib
 
 from ..display.Message import MESSAGE
 from ..display.T3SViews import T3SVIEWS
 
 from .AsyncCommand import AsyncCommand
 
-from ..utils import encode, Debug, max_calls
+from ..utils import make_hash, Debug, max_calls
 from ..utils.fileutils import is_dts, fn2l
+from ..utils.viewutils import get_file_infos
 from ..utils.CancelCommand import CancelCommand
 
 
@@ -20,19 +20,10 @@ class TypescriptToolsWrapper(object):
 	""" This Class translates the available commands to the corresponding string
 		command for the typescript-tools from clausreinke   """
 
-	# INITIALISATION FINISHED
-	def assert_initialisation_finished(self, filename):
-		if not PROCESSES.is_initialized(get_root( filename )):
-			sublime.status_message('You must wait for the initialisation to finish (%s)' % filename)
-			raise CancelCommand()
 
-
-	# INIT ROOT FILE
-	@max_calls(name='Tss.init()')
-	def init(self, root):
-		PROCESSES.start_tss_processes_for(root,
-				  init_finished_callback=lambda: self.notify('init', root) )
-		self.added_files = {} # added_files[filename] = hash # TODO remove to FILES
+	def __init__(self, project):
+		self.project = project
+		self.added_files = {} # added_files[filename] = hash
 		self.executed_with_most_recent_file_contents = []
 		self.is_killed = False
 
@@ -44,7 +35,8 @@ class TypescriptToolsWrapper(object):
 			.set_id('reload') \
 			.set_result_callback(lambda r: callback is None or callback()) \
 			.append_to_both_queues()
-		sublime.active_window().run_command('typescript_recalculate_errors')
+		self.project.errors.start_recalculation()
+
 
 	# GET INDEXED FILES
 	@max_calls()
@@ -130,7 +122,7 @@ class TypescriptToolsWrapper(object):
 
 		Debug('autocomplete', "Send async completion command for line %i , %i" % (line+1, col+1))
 
-		AsyncCommand(completions_command, get_root(filename)) \
+		AsyncCommand(completions_command, self.project) \
 			.set_id("completions_command") \
 			.procrastinate() \
 			.set_result_callback(callback) \
@@ -140,13 +132,15 @@ class TypescriptToolsWrapper(object):
 
 	# UPDATE FILE
 	@max_calls()
-	def update(self, filename, lines, content):
+	def update(self, view):
+		""" updates the view.buffer's content to the buffer in tss.js """
 
 		# only update if the file contents have changed since last update call on this file
+		filename, lines, content = get_file_infos(view)
 		if self.need_update(filename, content):
 			update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(filename), content)
 
-			AsyncCommand(update_command, get_root(filename)) \
+			AsyncCommand(update_command, self.project) \
 				.set_id('update %s' % filename) \
 				.append_to_both_queues()
 
@@ -170,8 +164,8 @@ class TypescriptToolsWrapper(object):
 	@max_calls()
 	def need_update(self, filename, unsaved_content):
 		""" Returns True if <unsaved_content> has changed since last call to need_update(). """
-		newhash = self.make_hash(unsaved_content)
-		oldhash = self.added_files[filename] if filename in self.added_files else "wre"
+		newhash = make_hash(unsaved_content)
+		oldhash = self.added_files[filename] if filename in self.added_files else "nohash"
 		if newhash == oldhash:
 			Debug('tss+', "NO UPDATE needed for file : %s" % filename)
 			return False
@@ -179,10 +173,6 @@ class TypescriptToolsWrapper(object):
 			Debug('tss+', "UPDATE needed for file %s : %s" % (newhash, filename) )
 			self.added_files[filename] = newhash
 			return True
-
-	def make_hash(self, value):
-		""" Returns md5 hash of <value>. """
-		return hashlib.md5(encode(value)).hexdigest()
 
 
 	def on_file_contents_have_changed(self):
@@ -206,22 +196,22 @@ class TypescriptToolsWrapper(object):
 
 	# ERRORS
 	@max_calls()
-	def errors(self, filename_or_root, callback=None):
-		""" callback format: callback(result, filename=) """
+	def errors(self, callback=None):
+		""" callback format: callback(result) """
 
+		# TODO: this may prevent initial error display or if user triggers manually
 		if not self.files_changed_after_last_call('errors'):
 			return
 
 		T3SVIEWS.ERROR.on_calculation_initiated()
 
-		AsyncCommand('showErrors', get_root(filename_or_root)) \
+		AsyncCommand('showErrors', self.project) \
 			.set_id('showErrors') \
 			.procrastinate() \
 			.activate_debounce() \
-			.set_callback_kwargs(filename=filename_or_root) \
-			.set_result_callback(lambda errors, filename: [callback(errors, filename), T3SVIEWS.ERROR.on_calculation_finished()] ) \
-			.set_executing_callback(lambda filename: T3SVIEWS.ERROR.on_calculation_executing()) \
-			.set_replaced_callback(lambda by, filename: T3SVIEWS.ERROR.on_calculation_replaced()) \
+			.set_result_callback(lambda errors: [callback(errors), T3SVIEWS.ERROR.on_calculation_finished()] ) \
+			.set_executing_callback(lambda: T3SVIEWS.ERROR.on_calculation_executing()) \
+			.set_replaced_callback(lambda by: T3SVIEWS.ERROR.on_calculation_replaced()) \
 			.append_to_slow_queue()
 
 

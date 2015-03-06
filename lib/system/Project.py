@@ -6,7 +6,7 @@ import os
 from ..utils.fileutils import read_and_decode_json_file, file_exists, is_ts, is_dts, read_file
 from ..utils.pathutils import find_tsconfigdir
 from ..utils.disabling import is_plugin_temporarily_disabled
-from ..utils import get_deep, get_first, Debug
+from ..utils import get_deep, get_first, random_str, Debug
 
 from .ProjectWizzard import ProjectWizzard
 from .ErrorsHighlighter import ErrorsHighlighter
@@ -14,6 +14,7 @@ from .Errors import Errors
 from .Completion import Completion
 
 from ..server.Processes import Processes
+from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
 
 from .globals import OPENED_PROJECTS
 
@@ -48,7 +49,7 @@ def get_or_create_project_and_add_view(view, wizzard=True):
 		return None
 
 	opened_project_with_same_tsconfig = \
-		 get_first(OPENED_PROJECTS, lambda p: p.tsconfigdir == tsconfigdir)
+		 get_first(OPENED_PROJECTS.values(), lambda p: p.tsconfigdir == tsconfigdir)
 
 	if opened_project_with_same_tsconfig is not None:
 		Debug('project+', "Already opened project found.")
@@ -59,6 +60,11 @@ def get_or_create_project_and_add_view(view, wizzard=True):
 		Debug('project', "Open project: %s" % tsconfigdir)
 		return OpenedProject(view)
 
+
+def project_by_id(project_id):
+	if project_id in OPENED_PROJECTS:
+		return OPENED_PROJECTS[project_id]
+	return None
 
 allowed_compileroptions = [
 	"target", #?: string;            // 'es3'|'es5' (default) | 'es6'
@@ -98,7 +104,9 @@ class OpenedProject(object):
 
 	def __init__(self, startview):
 
-		OPENED_PROJECTS.append(self)
+
+		self.id = random_str()
+		OPENED_PROJECTS[self.id] = self
 
 		self.project_file_name = startview.window().project_file_name()
 		self.windows = [] # All windows with .ts files
@@ -127,9 +135,19 @@ class OpenedProject(object):
 
 
 	def on_services_started(self):
+		""" Will be called if self.processes has started the services """
+		self.tsserver = TypescriptToolsWrapper(self)
 		self.errors = Errors(self)
 		self.completion = Completion(self)
-		self.hightlighter = ErrorsHighlighter(self)
+		self.highlighter = ErrorsHighlighter(self)
+
+
+	def assert_initialisation_finished(self):
+		""" Raises CancelCommand if initializion is not finished.
+			Use decorator @catch_CancelCommand for easy use """
+		if not self.processes.is_initialized():
+			sublime.status_message('You must wait for the initialisation to finish (%s)' % filename)
+			raise CancelCommand()
 
 
 	# ###############################################    OPEN/CLOSE   ##########
@@ -157,7 +175,8 @@ class OpenedProject(object):
 		if view in self.views:
 			self.views.remove(view)
 			Debug('project+', "View %s removed from project %s" % (view.file_name(), self.tsconfigfile))
-			self._remove_window_if_not_needed(view.window())
+			for window in self.windows: # view.window() = None, so iterate all
+				self._remove_window_if_not_needed(window)
 
 
 	# ###############################################    KILL   ################
@@ -168,7 +187,7 @@ class OpenedProject(object):
 			if this window does not contain any opened ts file.
 			Closes project if no more windows are open.
 			TODO: what happenes if the user moves views from one window to another """
-		if not _are_projectviews_opened_in_window(window):
+		if not self._are_projectviews_opened_in_window(window):
 			self.windows.remove(window)
 			Debug('project+', "Window removed from project %s" % (self.tsconfigfile, ))
 		if len(self.windows) == 0:
@@ -287,3 +306,14 @@ class OpenedProject(object):
 		Debug('project', "No default setting for %s could not be found for project %s." % (settingskey, self.tsconfigfile, ))
 		raise Exception("Arctic Typescript Bug: Valid setting requested, but default value can not be found.")
 
+
+	# ###############################################    COMPILE   #############
+
+
+	def compile_once(self, window_for_panel):
+
+		compiler = Compiler(self, window_for_panel)
+		compiler.daemon = True
+		compiler.start()
+
+		sublime.status_message('Compiling : ' + filename)

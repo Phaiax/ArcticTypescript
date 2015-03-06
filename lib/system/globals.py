@@ -3,7 +3,7 @@
 
 # ############## system/Project.py #########################################
 
-OPENED_PROJECTS = []
+OPENED_PROJECTS = {}
 
 # ############## Allows Disabling of ArcticTypescript ######################
 

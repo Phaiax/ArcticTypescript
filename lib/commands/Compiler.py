@@ -13,6 +13,7 @@ import json
 
 from ..utils import package_path, Debug
 from ..utils.osutils import get_kwargs
+from ..utils.pathutils import get_tsc_path
 
 from ..display.Panel import PANEL
 
@@ -26,42 +27,55 @@ def show_output(window,line):
 def show_view(window,line):
 	window.run_command('typescript_build_view',{"filename":line['filename'].replace('\n','')})
 
-def clear_panel(window):
-	PANEL.clear(window)
 
 
 # --------------------------------------- COMPILER -------------------------------------- #
 
 class Compiler(Thread):
 
-	def __init__(self, window, root, filename):
-		self.window = window
-		self.root = root
-		self.filename = filename
+	def __init__(self, project, window_for_panel):
+		window_for_panel = window
+		self.project = project
 		Thread.__init__(self)
 
 	def run(self):
 		Debug('build', 'BUILD INITIALIZED')
-		node = SETTINGS.get_node(self.root)
+
+		node_path, cwd, cmdline = self._make_commandline()
 		kwargs = get_kwargs()
-		settings = json.dumps(SETTINGS.get('build_parameters', self.root))
 
-		clear_panel(self.window)
+		PANEL.clear(window_for_panel)
 
-		cmd = [node, os.path.join(package_path,'bin','build.js'), settings, self.root, self.filename]
+
 		Debug('build', 'EXECUTE: %s' % str(cmd))
 		p = Popen(cmd, stdin=PIPE, stdout=PIPE, **kwargs)
 
 
-		reader = CompilerReader(self.window,p.stdout,Queue())
+		reader = CompilerReader(window_for_panel, p.stdout, Queue())
 		reader.daemon = True
 		reader.start()
+
+
+	def _make_commandline(self):
+		""" generates the commandline to start either tss.js or tsserver.js,
+			depending on the project settings """
+		node_path = default_node_path(self.project.get_setting('node_path'))
+		tsc_path = get_tsc_path()
+
+		cwd = os.path.abspath(self.project.tsconfigdir)
+		rootfile = self.project.get_first_file_of_tsconfigjson()
+		cmd = [node, os.path.join(package_path,'bin','build.js'), settings, self.root, self.filename]
+
+		cmdline = [node_path, tss_path, "--project", cwd, rootfile]
+
+		return node_path, cwd, cmdline
+
 
 
 class CompilerReader(Thread):
 
 	def __init__(self,window,stdout,queue):
-		self.window = window
+		window_for_panel = window
 		self.stdout = stdout
 		self.queue = queue
 		Thread.__init__(self)
@@ -77,9 +91,9 @@ class CompilerReader(Thread):
 				print('ArcticTypescript: compiler error')
 				break
 			if 'output' in line:
-				show_output(self.window,line)
+				show_output(window_for_panel,line)
 			elif 'filename' in line:
-				show_view(self.window,line)
+				show_view(window_for_panel,line)
 			else:
 				print('ArcticTypescript: compiler error')
 		Debug('build+', 'BUILD RESULTS READER THREAD finished')

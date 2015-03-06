@@ -18,7 +18,7 @@ class AsyncCommand(object):
 		async execution queue via the append_to_***_queue*() commands.
 
 		Example for use and execution:
-		AsyncCommand('errors', root aka project) \
+		AsyncCommand('errors', project) \
 			.activate_debounce() \
 			.set_callback_kwargs(bar="foo", abc="def") \
 			.set_result_callback(rc) \
@@ -39,9 +39,9 @@ class AsyncCommand(object):
 	MERGE_IMMEDIATE = 2
 
 
-	def __init__(self, command, root):
+	def __init__(self, command, project):
 		self.command = command
-		self.root = root
+		self.project = project
 
 		self.id = "%s-rnd%s" % (command[:6][:-1], uuid.uuid4().hex[0:5])
 		self.result_callback = None
@@ -111,25 +111,27 @@ class AsyncCommand(object):
 
 	def append_to_fast_queue(self):
 		Debug('command', "CMD queued @FAST: %s" % self.id)
-		return self._append_to_queue(PROCESSES.FAST)
+		return self._append_to_queue('fast')
 
 	def append_to_slow_queue(self):
 		Debug('command', "CMD queued @SLOW: %s" % self.id)
-		return self._append_to_queue(PROCESSES.SLOW)
+		return self._append_to_queue('slow')
 
 	def append_to_both_queues(self):
 		return self.append_to_slow_queue() \
 		   and self.append_to_fast_queue()
 
 	def _append_to_queue(self, process_type):
-		if not PROCESSES.is_initialized(self.root):
+		if not self.project.processes.is_initialized():
 			return False
 
 		self.time_queue = time.time()
 		self.time_last_bounce = self.time_queue
 
-		process = PROCESSES.get(self.root, process_type)
-		process.send_async_command(self)
+		if process_type == 'fast':
+			self.project.processes.fast.send_async_command(self)
+		elif process_type == 'slow':
+			self.project.processes.slow.send_async_command(self)
 		return True
 
 	# ------------------------- call callbacks ---------------------------------- #
@@ -168,7 +170,7 @@ class AsyncCommand(object):
 		"""
 			Creates an AsyncCommand instance which then can be added to queue without having any effect.
 		"""
-		return AsyncCommand("!trigger!", self.root).set_id("trigger")
+		return AsyncCommand("!trigger!", self.project).set_id("trigger")
 
 	def is_only_a_queue_trigger_command(self):
 		""" Returns True if this is a command without effect. """
