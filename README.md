@@ -99,13 +99,14 @@ You can configure ArcticTypescript as well (type, default):
 Where to store these settings:
 
  * For personal settings across all typescript projects:
-    - `<sublime config dir>/Packages/User/Preferences.sublime-settings['ArcticTypescript'][KEY]`
-    - `<sublime config dir>/Packages/User/ArcticTypescript.sublime-settings[KEY]`
-        - You can open this file via Menu -> Preferences -> Package Settings ->
+    - `<sublime config dir>/Packages/User/Preferences.sublime-settings ['ArcticTypescript'][KEY]`
+      GUI: Menu -> Preferences -> "Settings - User"
+    - `<sublime config dir>/Packages/User/ArcticTypescript.sublime-settings [KEY]`
+        - GUI Menu -> Preferences -> Package Settings ->
           ArcticTypescript -> "Settings - User"
  * For personal, project specific settings
-    - `<ProjectSettings>.sublime-settings['settings']['ArcticTypescript'][KEY]`
-        - You can open this file via Menu -> Preferences -> "Settings - User"
+    - `<ProjectSettings>.sublime-settings ['settings']['ArcticTypescript'][KEY]`
+        - GUI: Menu -> Project -> "Edit Project"
  * If you are not part of a team or for settings for everyone or for project
    specific settings if you don't have created a sublime project
     - tsconfig.json['ArcticTypescript'][KEY]
