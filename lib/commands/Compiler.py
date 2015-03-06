@@ -174,7 +174,7 @@ class Compiler(Thread):
 				self.p.terminate()
 				self.p.kill()
 				self._show_output("<<< Process has been terminated. Waiting for Compiler Thread to finish\n")
-				self.p.communicate()
+				self.p.communicate() # release readline() block
 				Debug('build+', 'BUILD: process killed')
 			except Exception as e:
 				print("Failure while killing compiler thread: %s" % e)

@@ -80,8 +80,9 @@ def default_tsc_path(tsc_path=None, project=None):
 def search_node_modules(rootdir):
 	rootdir = os.path.abspath(rootdir)
 	try:
-		if os.path.isdir(os.path.normcase(os.path.join(rootdir, "node_modules"))):
-			return os.path.normcase(rootdir)
+		nodemodulesdir = os.path.normcase(os.path.join(rootdir, "node_modules"))
+		if os.path.isdir(nodemodulesdir):
+			return os.path.normcase(nodemodulesdir)
 	except FileNotFoundError:
 		pass
 

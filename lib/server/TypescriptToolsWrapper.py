@@ -25,7 +25,7 @@ class TypescriptToolsWrapper(object):
 		self.project = project
 		self.added_files = {} # added_files[filename] = hash
 		self.executed_with_most_recent_file_contents = []
-		self.is_killed = False
+		self.is_killing = False
 
 
 	# RELOAD PROCESS
@@ -218,7 +218,28 @@ class TypescriptToolsWrapper(object):
 
 	# KILL PROCESS (if no more files in editor)
 	@max_calls()
-	def kill(self):
+	def kill(self, finished_callback):
+
+		if not self.project.is_initialized() or self.is_killing:
+			return
+
+		self.is_killing = True
+
+
+		def on_quit(msg=""):
+			print(msg)
+			if hasattr(self, 'finished_callback_called'):
+				return
+			self.finished_callback_called = True
+			finished_callback()
+
+		# send quit and kill process afterwards
+		AsyncCommand('quit', self.project) \
+			.set_id('quit') \
+			.set_result_callback(on_quit) \
+			.append_to_both_queues()
+
+		sublime.set_timeout(on_quit, 5000)
 
 		#TODO: this function is old and not updated
 		# - project class should kill processes, but before executing this,
@@ -230,60 +251,4 @@ class TypescriptToolsWrapper(object):
 		#          projcet.views using tsserver.get_tss_indexed_files
 
 
-		if not self.project.is_initialized() or self.is_killed:
-			return
-
-		self.is_killed = False
-
-		def async_react_files(files):
-			def kill_and_remove(_async_command=None):
-				# Dont execute this twice (this fct will be called 3 times)
-				if self.is_killed:
-					Debug('tss+', "ALREADY closed ts project")
-					return
-				self.is_killed = True
-
-				root = get_root(filename)
-				PROCESSES.kill_and_remove(root)
-				MESSAGE.show('TypeScript project will close', True)
-				self.notify('kill', root)
-
-			def still_used_ts_files_open_in_window(files):
-				views = sublime.active_window().views()
-				for v in views:
-					if v.file_name() == None:
-						continue
-					for f in files:
-						if v.file_name().replace('\\','/').lower() == f.lower() and not is_dts(v):
-							Debug('tss+', "KILL? STILL MORE TS FILES open -> do nothing")
-							return True
-				Debug('tss', "NO MORE TS FILES -> kill TSS process")
-				return False
-
-			if not files: # TODO: why?
-				return
-
-			# don't quit tss if an added *.ts file is still open in an editor view
-			if still_used_ts_files_open_in_window(files):
-				return
-
-			Debug('tss+', "No .ts files for rootfile left open => closing project %s" % get_root(filename))
-
-			# send quit and kill process afterwards
-			AsyncCommand('quit', self.project) \
-				.set_id('quit') \
-				.set_result_callback(kill_and_remove) \
-				.append_to_both_queues()
-
-
-			# if the tss process has hang up (previous lambda will not be executed)
-			# , force kill after 5 sek
-			sublime.set_timeout(kill_and_remove,10000)
-
-
-		sublime.active_window().run_command('save_all')
-		self.get_tss_indexed_files(filename, async_react_files)
-
-
-
-
+		# removed

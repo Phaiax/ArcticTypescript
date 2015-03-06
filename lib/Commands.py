@@ -40,7 +40,11 @@ class TypescriptReloadProject(sublime_plugin.TextCommand):
 		if project:
 			sublime.active_window().run_command('save_all')
 			MESSAGE.show('Reloading project')
-			project.tsserver.reload(lambda: MESSAGE.show('Reloading finished', True))
+			def reopen():
+				get_or_create_project_and_add_view(self.view)
+				MESSAGE.show('Reloading finished', True)
+			project.close_project(lambda: reopen())
+			#project.tsserver.reload(lambda: )
 
 
 # ################################# SHOW INFS ##################################

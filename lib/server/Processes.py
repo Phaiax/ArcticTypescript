@@ -182,7 +182,9 @@ class TssJsStarterThread(Thread):
 
 		cwd = os.path.abspath(self.project.tsconfigdir)
 		rootfile = self.project.get_first_file_of_tsconfigjson()
-		cmdline = [node_path, tss_path, "--project", ".", rootfile]
+		if rootfile is None:
+			print("ArcticTypescript: Please specify your files in tsconfig.json")
+		cmdline = [node_path, tss_path, "--project", ".", str(rootfile)]
 
 		return node_path, cwd, cmdline
 
@@ -196,7 +198,9 @@ class TssJsStarterThread(Thread):
 			and kills the tss.js process.
 		"""
 		self.tss_queue.put("stop!") # setinel value to stop queue
+		self.tss_process.terminate()
 		self.tss_process.kill()
+		self.tss_process.communicate() # release readline() block
 
 	def check_process_health(self):
 		if self.tss_process.poll() is not None:

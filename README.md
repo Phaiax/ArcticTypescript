@@ -4,7 +4,7 @@ ArcticTypescript
  * TypeScript language auto completion
  * TypeScript language syntax highlighting
  * TypeScript language error highlighting
- * A build System
+ * A build System *for Typescript 1.5*
  * Fast access to errors via shortcuts and clicks
  * Goto definition
  * View type
@@ -24,7 +24,8 @@ Commands and Shortcuts
  * `alt + shift + e l`      jump to 4th error
  * `F1`                     show details about type under cursor
  * `F4`                     jump to definition
- * `F5`                     reload (to this if autocompletion is missing something)
+ * `shift+F5`               reload (to this if autocompletion is missing
+                            something or after tsconfig.json changes)
  * `F8` or `ctrl + b`       Build the project.
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
 
@@ -80,13 +81,16 @@ More `compilerOptions`:
 All pathes are relative to `tsconfig.json`. These are exactly the options for
 the typescript compiler: Refer to `tsc --help`.
 
+Decide between:
+ * `out='outfile.js'` : Then use ```/// <reference path="second.ts" />``` to
+    spread your code. [Example][singleoutexample]
+ * `outDir='built/'` and `module='amd'`: Use ```import s = require('second')```
+   to spread your code. [Example][amdexample]
 
-Either `outDir` `out`.
+[singleoutexample]:
+[amdexample]:
 
-
-
-
-### ArcticTypescript settings
+### ArcticTypescript settings ###
 
 You can configure ArcticTypescript as well (type, default):
 
@@ -216,6 +220,11 @@ Compatibility
 
 Sublime Text 2 is not supported anymore: Use the T3S plugin instead of this
 one for Sublime Text 2 users.
+
+Build system may not work if you have installed typescript < 1.5 your projects
+node_modules / package.json. Workaround until typescript 1.5 is installed: Set
+the dependency in `package.json` to
+`"typescript": "git+ssh://git@github.com:Microsoft/TypeScript.git"`.
 
 
 

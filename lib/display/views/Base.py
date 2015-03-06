@@ -51,7 +51,7 @@ class Base(object):
 	def bring_to_top(self, back_to=None):
 		Debug('focus', 'bring_to_top: focus view %i' % self._view_reference.id())
 		self._view_reference.window().focus_view(self._view_reference)
-		if back_to is not None:
+		if back_to is not None and back_to.window() is not None:
 			Debug('focus', 'bring_to_top: back_to: focus view %i' % back_to.id())
 			back_to.window().focus_view(back_to)
 

@@ -34,7 +34,7 @@
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"caption": "ArcticTypescript: Reload Project",
+		"caption": "ArcticTypescript: Reopen Project (after config changes)",
 		"command": "typescript_reload_project",
 		"context": [ {"key": "ArcticTypescript"} ]
 	},

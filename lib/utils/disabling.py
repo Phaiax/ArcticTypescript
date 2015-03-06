@@ -47,8 +47,9 @@ def set_plugin_temporarily_enabled(folder=None):
 def set_plugin_temporarily_disabled(folder=None):
 	""" Enables the plugin globally or for folder.
 		Folder can be a view """
-	if folder is None and not is_plugin_globally_disabled():
-		plugin_disabled_for_folders.append("*global")
+	if folder is None:
+		if not is_plugin_globally_disabled():
+			plugin_disabled_for_folders.append("*global")
 	else:
 		if isinstance(folder, sublime.View):
 			folder = os.path.dirname(folder.file_name())

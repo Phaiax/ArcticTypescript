@@ -1,0 +1,33 @@
+{
+    "name": "AmdModulesWithTests",
+    "version": "0.1.0",
+    "release": "",
+    "description": "Just an example for mocha, chai, sinon using amd modules",
+    "author": "Phaiax, ArcticTypescript",
+    "logo": "",
+    "homepage": "https://github.com/Phaiax/ArcticTypescript/tree/master/examples",
+    "bugs": "",
+    "license": "Public Domain",
+    "licenseUrl": "",
+    "repository": {
+        "type": "git",
+        "url": ""
+    },
+    "scripts": {
+        "test": "NODE_ENV=test grunt jshint"
+    },
+    "keywords": [
+        "example",
+        "typescript"
+    ],
+    "dependencies": {
+        "typescript": "git+ssh://git@github.com:Microsoft/TypeScript.git",
+        "requirejs": "*",
+        "grunt": "*",
+        "grunt-contrib-copy": "*"
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "chai": "*"
+    }
+}

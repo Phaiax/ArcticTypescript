@@ -119,6 +119,8 @@ class OpenedProject(object):
 
 	def __init__(self, startview):
 
+		if not startview.is_valid():
+			return
 
 		self.id = random_str()
 		OPENED_PROJECTS[self.id] = self
@@ -227,14 +229,30 @@ class OpenedProject(object):
 		return False
 
 
-	def close_project(self):
+	def close_project(self, on_closed=None):
 		""" Closes project, kills tsserver processes, removes all highlights, ... """
 		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
 		print("Close project %s" % self.tsconfigfile)
+		self.on_project_closed = on_closed
+		if self.errors: # remove error highlights
+			self.errors.lasterrors = []
+			self.highlighter.highlight_all_open_files()
 		if self.compiler:
 			self.compiler.kill()
-		OPENED_PROJECTS.pop(self.id)
+		if self.tsserver:
+			self.tsserver.kill(lambda: self._tsserverkilled())
+		else:
+			self._tsserverkilled()
 
+
+	def _tsserverkilled(self):
+		if self.processes:
+			self.processes.kill()
+		self.views = []
+		self.windows = []
+		OPENED_PROJECTS.pop(self.id)
+		if self.on_project_closed:
+			self.on_project_closed()
 
 
 
@@ -366,7 +384,7 @@ class OpenedProject(object):
 		ext = os.path.basename(file_name).split('.', 1)[1:]
 		project_file = self.project_file_name
 		for window in self.windows:
-			if window.project_file_name():
+			if window and window.project_file_name():
 				project_file = window.project_file_name()
 		project_ext = os.path.basename(project_file).split('.', 1)[1:]
 

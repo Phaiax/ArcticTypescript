@@ -35,7 +35,7 @@
 	},
 	{
 		"command": "typescript_reload_project",
-		"keys": ["f5"],
+		"keys": ["shift+f5"],
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
