@@ -191,8 +191,10 @@ You can use variables for the string values:
 Installation
 ----------------------------------------------------------------------------
 
-You need [Sublime Text 3][sublime3], [Package Control for Sublime 3][pc_install], [node.js][nodejs], and
-[Typescript][typescript].
+You need [Sublime Text 3][sublime3],
+[Package Control for Sublime 3][pc_install], [node.js][nodejs],
+and optionally [Typescript][typescript]
+(ArcticTypescript also provides a compiler).
 
 [sublime3]: http://www.sublimetext.com/3
 [pc_install]: https://packagecontrol.io/installation#st3
