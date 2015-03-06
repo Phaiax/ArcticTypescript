@@ -107,7 +107,7 @@ You can configure ArcticTypescript as well (type, default):
 Where to store these settings:
 
  * For personal settings across all typescript projects:
-    + GUI: Menu -> Preferences -> "Settings - User" -> `['ArcticTypescript'][KEY]`
+    + GUI: Menu -> Preferences -> "Settings - User" -> `['ArcticTypescript'][KEY]` \
       `<sublime config dir>/Packages/User/Preferences.sublime-settings ['ArcticTypescript'][KEY]`
     + GUI Menu -> Preferences -> Package Settings ->
       ArcticTypescript -> "Settings - User" -> `[KEY]`
