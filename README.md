@@ -123,7 +123,7 @@ Where to store these settings:
     + `tsconfig.json ['ArcticTypescript'][KEY]`
 
 
-Example Settings in project file `mytyproject.sublime-settings`:
+Example Settings in project file `mytsproject.sublime-settings`:
 
     {
         "folders":
@@ -167,14 +167,19 @@ the [Sublime Variables][sublime_variables] and these:
 Installation
 ----------------------------------------------------------------------------
 
-Install [Package Control][pc_install] for Sublime Text 3, [node.js][nodejs], and
-[Typescript][typescript] via npm: `npm install -g typescript`
+You need [Sublime Text 3][sublime3], [Package Control for Sublime 3][pc_install], [node.js][nodejs], and
+[Typescript][typescript].
 
+[sublime3]: http://www.sublimetext.com/3
 [pc_install]: https://packagecontrol.io/installation#st3
 [nodejs]: http://nodejs.org/
 [typescript]: http://www.typescriptlang.org/
 
-Goto Anything: `Package Control: Install Package` > `ArcticTypescript`
+
+Install ArcticTypescript:
+--> Sublime
+--> Goto Anything
+--> `Package Control: Install Package` > `ArcticTypescript`
 
 
 
