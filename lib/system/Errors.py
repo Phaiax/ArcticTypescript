@@ -45,7 +45,7 @@ class Errors(object):
 	def _provide_better_explanations_for_some_errors(self):
 
 		# do not use : inside of explanation
-		additions = {1148 : '// What to do? Either use /// <references path="x.ts"> instead of import x = require("x");, or switch to external modules (Add the compilerOptions module="amd"|"commonjs" and out="some/builddir" to tsconfig.json). Restart ArcticTypescript or sublime.'}
+		additions = {1148 : '// What to do? Either use /// <reference path="x.ts" /> instead of import x = require("x");, or switch to external modules (Add the compilerOptions module="amd"|"commonjs" and out="some/builddir" to tsconfig.json). Restart ArcticTypescript or sublime.'}
 
 		for e in self.lasterrors:
 			for code, add in additions.items():

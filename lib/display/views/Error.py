@@ -66,9 +66,9 @@ class Error(Base):
 		self._focus_error_in_view(view, self.line_to_pos[line], set_cursor=True)
 
 
-	def _focus_error_in_view(self, view, point, set_cursor=False):
+	def _focus_error_in_view(self, view, point, set_cursor=True):
 		if view.is_loading():
-			sublime.set_timeout(lambda: self._focus_error_in_view(view, point), 100)
+			sublime.set_timeout(lambda: self._focus_error_in_view(view, point, set_cursor), 100)
 			return
 		else:
 			a = view.text_point(*point[0])
@@ -90,7 +90,7 @@ class Error(Base):
 			if set_cursor:
 				sel = view.sel()
 				sel.clear()
-				sel.add(sublime.Region(a,a))
+				sel.add(a)
 
 
 	def on_overtook_existing_view(self):

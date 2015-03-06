@@ -1,9 +1,9 @@
-/// <references path="lib/mylib.ts">
+/// <reference path="lib/mylib.ts" />
 
 //import T = require('lib/mylib');
 
 
-//LIB.lol()
+LIB.lol()
 
 
 //regaerg
@@ -17,3 +17,6 @@ var s = {
 
 
 s.yours.his.match("Owen")
+
+
+var z;

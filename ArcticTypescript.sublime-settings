@@ -1,11 +1,11 @@
 {
-	"activate_build_system" : true,
 	"auto_complete" : true,
+	"error_on_save_only" : false,
+	"activate_build_system" : true,
 	"node_path" : null,
 	"tsc_path" : null,
-	"error_on_save_only" : false,
-	"build_on_save" : true,
-	"show_build_file" : false,
+	"build_on_save" : false,
 	"pre_processing_commands" : [],
 	"post_processing_commands" : [],
+	"show_build_file" : false,
 }

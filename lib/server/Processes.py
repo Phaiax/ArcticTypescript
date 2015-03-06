@@ -182,7 +182,7 @@ class TssJsStarterThread(Thread):
 
 		cwd = os.path.abspath(self.project.tsconfigdir)
 		rootfile = self.project.get_first_file_of_tsconfigjson()
-		cmdline = [node_path, tss_path, "--project", cwd, rootfile]
+		cmdline = [node_path, tss_path, "--project", ".", rootfile]
 
 		return node_path, cwd, cmdline
 

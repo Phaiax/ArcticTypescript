@@ -133,7 +133,7 @@ class ProjectWizzard(object):
 		self.actions.append(None)
 
 		self.messages.append(['> Compile to single file',
-							  'use /// <reference path="ab.ts"> with',
+							  'use /// <reference path="ab.ts" /> with',
 							  '  module { export } to spread code'])
 		self.actions.append(lambda: [self._set_module(None), self._ask_output_file(), Debug('project', 'Single file selected')])
 

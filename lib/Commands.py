@@ -40,7 +40,7 @@ class TypescriptReloadProject(sublime_plugin.TextCommand):
 		if project:
 			sublime.active_window().run_command('save_all')
 			MESSAGE.show('Reloading project')
-			TSS.reload(self.view.file_name(), lambda: MESSAGE.show('Reloading finished', True))
+			project.tsserver.reload(lambda: MESSAGE.show('Reloading finished', True))
 
 
 # ################################# SHOW INFS ##################################
@@ -77,7 +77,7 @@ class TypescriptType(sublime_plugin.TextCommand):
 				view.show_popup_menu(liste, None)
 
 			# start async request
-			TSS.type(self.view.file_name(), _line, _col, callback=async_react)
+			project.tsserver.type(self.view.file_name(), _line, _col, callback=async_react)
 
 
 # ################################# GO TO DEFINITION ###########################
@@ -108,11 +108,13 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 				view = sublime.active_window().open_file(definition['file'])
 				self.open_view(view, definition)
 
-			TSS.definition(self.view.file_name(), _line, _col, callback=async_react)
+			project.tsserver.definition(self.view.file_name(),
+										_line, _col,
+										callback=async_react)
 
-	def open_view(self,view,definition):
+	def open_view(self, view, definition):
 		if view.is_loading():
-			sublime.set_timeout(lambda: self.open_view(view,definition), 100)
+			sublime.set_timeout(lambda: self.open_view(view, definition), 100)
 			return
 		else:
 			start_line = definition['min']['line']
@@ -120,16 +122,20 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 			left = definition['min']['character']
 			right = definition['lim']['character']
 
-			a = view.text_point(start_line-1,left-1)
-			b = view.text_point(end_line-1,right-1)
-			region = sublime.Region(a,b)
+			a = view.text_point(start_line-1, left-1)
+			b = view.text_point(end_line-1, right-1)
+			region = sublime.Region(a, b)
 
 			Debug('focus', 'Z focus view %i' % view.id())
 			sublime.active_window().focus_view(view)
 			view.show_at_center(region)
 
-			draw = sublime.DRAW_NO_FILL
-			view.add_regions('typescript-definition', [region], 'comment', 'dot', draw)
+			sel = view.sel()
+			sel.clear()
+			sel.add(a)
+
+			view.add_regions('typescript-definition', [region],
+							 'comment', 'dot', sublime.DRAW_NO_FILL)
 
 
 # ################################# REFACTORING ############################

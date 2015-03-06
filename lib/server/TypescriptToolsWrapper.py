@@ -30,8 +30,8 @@ class TypescriptToolsWrapper(object):
 
 	# RELOAD PROCESS
 	@max_calls()
-	def reload(self, filename_or_root, callback=None):
-		AsyncCommand('reload', get_root(filename_or_root)) \
+	def reload(self, callback=None):
+		AsyncCommand('reload', self.project) \
 			.set_id('reload') \
 			.set_result_callback(lambda r: callback is None or callback()) \
 			.append_to_both_queues()
@@ -40,8 +40,8 @@ class TypescriptToolsWrapper(object):
 
 	# GET INDEXED FILES
 	@max_calls()
-	def get_tss_indexed_files(self, filename, callback):
-		AsyncCommand('files', get_root(filename)) \
+	def get_tss_indexed_files(self, callback):
+		AsyncCommand('files', self.project) \
 			.do_json_decode_tss_answer() \
 			.set_result_callback(callback) \
 			.append_to_fast_queue()
@@ -50,7 +50,7 @@ class TypescriptToolsWrapper(object):
 	@max_calls()
 	def dump(self, filename, output, callback):
 		dump_command = 'dump {0} {1}'.format( output, fn2l(filename) )
-		AsyncCommand(dump_command, get_root(filename)) \
+		AsyncCommand(dump_command, self.project) \
 			.set_result_callback(callback) \
 			.append_to_fast_queue()
 
@@ -61,7 +61,7 @@ class TypescriptToolsWrapper(object):
 
 		type_command = 'type {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
 
-		AsyncCommand(type_command, get_root(filename)) \
+		AsyncCommand(type_command, self.project) \
 			.set_id("type_command") \
 			.set_callback_kwargs(filename=filename, line=line, col=col) \
 			.do_json_decode_tss_answer() \
@@ -76,7 +76,7 @@ class TypescriptToolsWrapper(object):
 
 		definition_command = 'definition {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
 
-		AsyncCommand(definition_command, get_root(filename)) \
+		AsyncCommand(definition_command, self.project) \
 			.set_id("definition_command") \
 			.set_callback_kwargs(filename=filename, line=line, col=col) \
 			.do_json_decode_tss_answer() \
@@ -91,7 +91,7 @@ class TypescriptToolsWrapper(object):
 
 		references_command = 'references {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
 
-		AsyncCommand(references_command, get_root(filename)) \
+		AsyncCommand(references_command, self.project) \
 			.set_id("references_command") \
 			.set_callback_kwargs(filename=filename, line=line, col=col) \
 			.do_json_decode_tss_answer() \
@@ -102,10 +102,11 @@ class TypescriptToolsWrapper(object):
 	@max_calls()
 	def structure(self, filename, sender_view_id, callback):
 		""" callback({ tss type answer }, filename=, sender_view_id=) """
+		return # structure command has been dropped
 
 		structure_command = 'structure {0}'.format(fn2l(filename))
 
-		AsyncCommand(structure_command, get_root(filename)) \
+		AsyncCommand(structure_command, self.project) \
 			.set_id("structure_command for view %i" % sender_view_id) \
 			.set_callback_kwargs(filename=filename, sender_view_id=sender_view_id) \
 			.do_json_decode_tss_answer() \
@@ -149,11 +150,11 @@ class TypescriptToolsWrapper(object):
 
 	# ADD FILE
 	@max_calls()
-	def add(self, root, filename, lines, content):
+	def add(self, filename, lines, content):
 
 		update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(filename), content)
 
-		AsyncCommand(update_command, root) \
+		AsyncCommand(update_command, self.project) \
 			.set_id('add %s' % filename) \
 			.append_to_both_queues()
 
@@ -217,9 +218,19 @@ class TypescriptToolsWrapper(object):
 
 	# KILL PROCESS (if no more files in editor)
 	@max_calls()
-	def kill(self, filename):
-		if not PROCESSES.is_initialized(get_root(filename)) \
-			or self.is_killed:
+	def kill(self):
+
+		#TODO: this function is old and not updated
+		# - project class should kill processes, but before executing this,
+		#   so a Quit command can be send to tss.js
+		# - maybe: get_tss_indexed_files can be used to prevent project from
+		#          closing, if there are opened views with belonging .ts files,
+		#          but if these views are not in projcet.views.
+		#          But in this case it would be better to add those views to
+		#          projcet.views using tsserver.get_tss_indexed_files
+
+
+		if not self.project.is_initialized() or self.is_killed:
 			return
 
 		self.is_killed = False
@@ -259,7 +270,7 @@ class TypescriptToolsWrapper(object):
 			Debug('tss+', "No .ts files for rootfile left open => closing project %s" % get_root(filename))
 
 			# send quit and kill process afterwards
-			AsyncCommand('quit', get_root(filename)) \
+			AsyncCommand('quit', self.project) \
 				.set_id('quit') \
 				.set_result_callback(kill_and_remove) \
 				.append_to_both_queues()
