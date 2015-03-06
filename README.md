@@ -1,36 +1,8 @@
 ArcticTypescript
-----------------------------------------------------------------------------
-
-TypeScript plugin for Sublime Text 3 using TypeScript tools : https://github.com/clausreinke/typescript-tools
-
-Sublime Text 2 is not supported anymore: Use the T3S plugin instead of this one for Sublime Text 2 users.
-
-### T3S
-
-This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you switch to ArcticTypescript, please:
- - read this readme
- - uninstall T3S
- - only use one root file
- - delete the *.sublime-workspace files in your projects
- - close all file tabs in your old T3S Projects
- - update your key binding overrides, The new key is 'ArcticTypescript'
+================
 
 
-### Important Changes:
 
-v0.5.0:
-- You will need a new config file called tsconfig.json
-- Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
-- Dropped support for Outline view, since typescript-tools has dropped support for this. This feature will come back again with tsserver.
-
-v0.4.0:
-- build system: (relative) paths with spaces are now enclosed in "" automatically
-- > If you used additional "" to workaround the issue, you have to remove them, refer to messages/0.4.0.txt
-
-v0.3.0:
-- relative root files now have a different base directory
-- The default shortcut to switch to the error view changed to: CTRL + ALT + E
-- There are 4 new shortcuts to jump to the first four Errors: CTRL + ALT + E + H (or J, K, L)
 
 
 ### Features
@@ -377,24 +349,56 @@ you can build the current project with <code>F8</code> on a file. if you have ac
 Credits
 ----------------------------------------------------------------------------
 
+TypeScript plugin for Sublime Text 3 using TypeScript tools : https://github.com/clausreinke/typescript-tools
+
 I'm using the same error icons has SublimeLinter.
 I took inspiration from: https://github.com/raph-amiard/sublime-typescript
 
 
 
-### v0.2.0 Changes (updates i make can break some things as i don't always fully check on each OS)
-- On focusing a ts file if no project is found for it; a project creation process begin
-- You need to redo your project settings as i've added the possibility to have settings per project (cf. examples)
-- You need to redo your user settings as the file name have changed to reflect the plugin name
-- Error and Outline panels have been replaced by views (you can click on each line to go to the corresponding place)
-- Build system is integrated to the plugin (you still need <code>tsc</code>) and you can set your node path (settings)
-- You can build on save (settings) and have a the current file resulting javascript file in a split view (settings)
-- When you close all the ts file of a project, the project (and the node corresponding node process) is closed
-- One branch only for Sublime text 2 and 3
-- Completion on <code>:</code> with <code>ctrl+space</code> to have the primitives and interface
-- Quick panel for user message (initialisation,closing project etc...)
-- Todo :
 
-	1. Better layout management
-	2. Tests everything on OSes and ST2/ST3
 
+Notes for Upgraders / People which used T3S before
+----------------------------------------------------------------------------
+
+This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you switch to ArcticTypescript, please:
+ - read this readme
+ - uninstall T3S
+ - only use one root file
+ - delete the *.sublime-workspace files in your projects
+ - close all file tabs in your old T3S Projects
+ - update your key binding overrides, The new key is 'ArcticTypescript'
+
+
+
+
+
+Compatibility
+----------------------------------------------------------------------------
+
+Sublime Text 2 is not supported anymore: Use the T3S plugin instead of this
+one for Sublime Text 2 users.
+
+
+
+
+Important Changes
+----------------------------------------------------------------------------
+
+
+v0.5.0:
+*  You will need a new config file called tsconfig.json
+*  Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
+*  Dropped support for Outline view, since typescript-tools has dropped support
+   for this. This feature will come back again with tsserver.
+
+v0.4.0:
+*  build system: (relative) paths with spaces are now enclosed in "" automatically
+*  > If you used additional "" to workaround the issue, you have to remove them,
+   refer to messages/0.4.0.txt
+
+v0.3.0:
+*  relative root files now have a different base directory
+*  The default shortcut to switch to the error view changed to: CTRL + ALT + E
+*  There are 4 new shortcuts to jump to the first four Errors:
+   CTRL + ALT + E + H (or J, K, L)
