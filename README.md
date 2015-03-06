@@ -107,15 +107,17 @@ You can configure ArcticTypescript as well (type, default):
 Where to store these settings:
 
  * For personal settings across all typescript projects:
-    + GUI: Menu -> Preferences -> "Settings - User" -> `['ArcticTypescript'][KEY]` \
+    + GUI: Menu -> Preferences -> "Settings - User" -> `['ArcticTypescript'][KEY]`
+      This is the file
       `<sublime config dir>/Packages/User/Preferences.sublime-settings ['ArcticTypescript'][KEY]`
     + GUI Menu -> Preferences -> Package Settings ->
       ArcticTypescript -> "Settings - User" -> `[KEY]`
+      This is the file
       `<sublime config dir>/Packages/User/ArcticTypescript.sublime-settings [KEY]`
  * For personal, project specific settings
     + GUI: Menu -> Project -> "Edit Project" -> `['settings']['ArcticTypescript'][KEY]`
-    `<ProjectSettings>.sublime-settings ['settings']['ArcticTypescript'][KEY]`
-
+      This is the file
+      `<ProjectSettings>.sublime-settings ['settings']['ArcticTypescript'][KEY]`
  * If you are not part of a team or for settings for everyone or for project
    specific settings if you don't have created a sublime project
     + `tsconfig.json ['ArcticTypescript'][KEY]`
