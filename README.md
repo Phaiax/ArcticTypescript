@@ -8,7 +8,7 @@ ArcticTypescript
  * Fast access to errors via shortcuts and clicks
  * Goto definition
  * View type
- * Wizzard for project creation
+ * Wizzard for project creation (create .ts file to activate)
 
 
 
@@ -24,10 +24,29 @@ Commands and Shortcuts
  * `alt + shift + e l`      jump to 4th error
  * `F1`                     show details about type under cursor
  * `F4`                     jump to definition
- * `shift+F5`               reload (to this if autocompletion is missing
+ * `shift+F5`               reload (do this if autocompletion is missing
                             something or after tsconfig.json changes)
  * `F8` or `ctrl + b`       Build the project.
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
+
+
+
+Example Projects
+----------------------------------------------------------------------------
+
+ * [Brower example without modules][example_basicbrowser] : compile to single file
+ * [AMD-Modules][example_amd] : only compiling, no example index.html
+ * [AMD-Modules with tests for Browser][example_amdtest] : index.html for app and test.html for tests
+ * [Nodejs][example_commonjs] : only compiling
+ * [Nodejs with test][example_commonjstest] : automatic text execution with mocha after build
+ * [Simplest example][example_singleout] : everything will be compiled to out.js
+
+[example_amdtest]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/amd_modules_with_tests
+[example_basicbrowser]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/basic_browser_project
+[example_commonjstest]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/common_js_modules_with_tests
+[example_singleout]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/single_out_dir
+[example_amd]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/using_amd_modules
+[example_commonjs]: https://github.com/Phaiax/ArcticTypescript/tree/next_big_thing/examples/using_commonjs_modules
 
 
 
@@ -155,12 +174,13 @@ Example Settings in project file `mytsproject.sublime-settings`:
 The working directory for all commands is `$tsconfig_path`. They will be executed
 using `subprocess.Popen(cmd, shell=True)`. shell=True -> You can use pipes, ...
 
-For the string values, you can use variables,
-the [Sublime Variables][sublime_variables] and these:
+You can use variables for the string values:
 
- * `platform` : sys.platform = "linux" | "darwin" | "nt"
- * `tsconfig` : the path to tsconfig.json
- * `tsconfig_path` : the folder of tsconfig.json
+ * [Sublime Variables][sublime_variables]
+ * All your compilerOptions, e.g. `$outDir`
+ * `$platform` : sys.platform = "linux" | "darwin" | "nt"
+ * `$tsconfig` : the path to tsconfig.json
+ * `$tsconfig_path` : the folder of tsconfig.json
 
 
  [sublime_variables]: http://docs.sublimetext.info/en/latest/reference/build_systems/configuration.html?highlight=file_name#build-system-variables
