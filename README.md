@@ -3,31 +3,52 @@ ArcticTypescript
 
 
 
+Features
+----------------------------------------------------------------------------
+
+* TypeScript language auto completion
+* TypeScript language syntax highlighting
+* TypeScript language error highlighting
+* A build System
+* Fast access to errors via shortcuts and clicks
+* Goto definition
+* View type
+
+
+
+Commands and Shortcuts
+----------------------------------------------------------------------------
+
+  *  `ctrl+space` Trigger code completion.
+  *  <code>alt+shift+e</code> Open a <code>view</code> listing all the **errors** across all the files of the project.
+  *  <code>alt+shift+e, h</code> Goto first error in error list.
+  *  <code>alt+shift+e, j</code> Goto second error in error list.
+  *  <code>alt+shift+e, k</code> Goto third error in error list.
+  *  <code>alt+shift+e, l</code> Goto 4th error in error list.
+  *  <code>f1</code> Click on a property, a class, a method etc... then press f1 to have **details** about it.
+  *  <code>f2</code> Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk).
+- <code>f4</code> Click on a property, a class, a method etc... then press f4 to go to the **definition**.
+- <code>f5</code> **Reload** the current project.
+- <code>f8</code> or <code>ctrl+b</code> Build the project.
+
+
+
+Settings
+----------------------------------------------------------------------------
+
+
+Installation
+----------------------------------------------------------------------------
+
 
 
 ### Features
 
-- TypeScript language auto completion
-- TypeScript language error highlighting
-- TypeScript language syntax highlighting
-- A build System
-- Basic refactoring
 
 ### Commands:
 
 Create a project file first (read below).
 
-- <code>ctrl+space</code> Trigger code completion.
-- <code>alt+shift+e</code> Open a <code>view</code> listing all the **errors** across all the files of the project.
-- <code>alt+shift+e, h</code> Goto first error in error list.
-- <code>alt+shift+e, j</code> Goto second error in error list.
-- <code>alt+shift+e, k</code> Goto third error in error list.
-- <code>alt+shift+e, l</code> Goto 4th error in error list.
-- <code>f1</code> Click on a property, a class, a method etc... then press f1 to have **details** about it.
-- <code>f2</code> Click on a property, a class, a method etc... then press f2 to refactor the member (EXPERIMENTAL use at your own risk).
-- <code>f4</code> Click on a property, a class, a method etc... then press f4 to go to the **definition**.
-- <code>f5</code> **Reload** the current project.
-- <code>f8</code> or <code>ctrl+b</code> Build the project.
 
 
 ### Dependencies
