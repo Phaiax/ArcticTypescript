@@ -176,10 +176,10 @@ You need [Sublime Text 3][sublime3], [Package Control for Sublime 3][pc_install]
 [typescript]: http://www.typescriptlang.org/
 
 
-Install ArcticTypescript:
---> Sublime
+Install ArcticTypescript: Open Sublime
 --> Goto Anything
---> `Package Control: Install Package` > `ArcticTypescript`
+--> `Package Control: Install Package`
+--> `ArcticTypescript`
 
 
 
