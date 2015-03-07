@@ -63,7 +63,7 @@ def get_or_create_project_and_add_view(view, wizzard=True):
 	else:
 		# New ts project
 		try:
-			Debug('project', "Open project: %s" % tsconfigdir)
+			Debug('notify', "Try open project: %s" % tsconfigdir)
 			new_project = OpenedProject(view)
 			if not hasattr(new_project, 'id'):
 				return None
@@ -164,10 +164,13 @@ class OpenedProject(object):
 		self.errors = Errors(self)
 		self.completion = Completion(self)
 		self.highlighter = ErrorsHighlighter(self)
+		Debug('notify', 'Initializion finished')
 
 
 	def is_initialized(self):
-		return self.processes and self.processes.is_initialized()
+		return hasattr(self, 'processes') \
+				 and self.processes.is_initialized() \
+				 and hasattr(self, 'highlighter')
 
 
 	def assert_initialisation_finished(self):
@@ -192,7 +195,7 @@ class OpenedProject(object):
 
 		window = view.window()
 		if window is None:
-			print("ArcticTypescript: Window is None, why??")
+			Debug('notify', "ArcticTypescript: Window is None, why??")
 			return
 		if window not in self.windows:
 			Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
@@ -237,7 +240,7 @@ class OpenedProject(object):
 	def close_project(self, on_closed=None):
 		""" Closes project, kills tsserver processes, removes all highlights, ... """
 		Debug('project', "Project %s will be closed now" % (self.tsconfigfile, ))
-		print("Close project %s" % self.tsconfigfile)
+		Debug('notify', "Close project %s" % self.tsconfigfile)
 		self.on_project_closed = on_closed
 		if self.errors: # remove error highlights
 			self.errors.lasterrors = []
@@ -271,7 +274,7 @@ class OpenedProject(object):
 			Use use_cache if you are making multiple request at once
 		"""
 		if optionkey not in allowed_compileroptions:
-			print("Requested unknown compiler option: %s. Will always be None."
+			Debug('notify', "Requested unknown compiler option: %s. Will always be None."
 				  % optionkey)
 		return get_deep(self._get_tsconfigsettings(use_cache),
 						'compilerOptions:' + optionkey)
@@ -284,6 +287,29 @@ class OpenedProject(object):
 			return None
 
 
+	def get_common_path_prefix_of_files(self, use_cache=False):
+		""" Returns the common dir which all files of tsconfig.json["files"]
+			have in commmon: "src" for ["src/main.ts", "src/test.ts"] """
+		try:
+			files = get_deep(self._get_tsconfigsettings(use_cache), 'files')
+
+			if len(files) > 0:
+				common_prefix = os.path.dirname(files[0])
+				for f in files:
+					dir_ = os.path.dirname(f)
+					# shorten prefix until it is matched
+					while len(common_prefix) > 0:
+						if dir_.startswith(common_prefix):
+							break
+						else:
+							common_prefix = common_prefix[:-1]
+				return common_prefix
+		except KeyError:
+			pass
+
+		return ""
+
+
 	def _get_tsconfigsettings(self, use_cache=False):
 		""" No cacheing by default """
 		if use_cache and hasattr(self, 'tsconfigcache'):
@@ -292,7 +318,7 @@ class OpenedProject(object):
 			try:
 				self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
 			except Exception as e:
-				print("Error reading tsconfig.json: %s" % e)
+				Debug('notify', "Error reading tsconfig.json: %s" % e)
 				raise CancelCommand
 		else:
 			self.tsconfigcache = {}
@@ -328,7 +354,7 @@ class OpenedProject(object):
 
 		"""
 		if settingskey not in allowed_settings:
-			print("Requested unknown setting: %s. Will always be None."
+			Debug('notify', "Requested unknown setting: %s. Will always be None."
 				  % settingskey)
 			return None
 
@@ -366,7 +392,7 @@ class OpenedProject(object):
 	# ###############################################    COMPILE   #############
 
 
-	def compile_once(self, window_for_panel):
+	def compile_once(self, window_for_panel, triggered_for_file):
 
 		if self.is_compiling and self.compiler is not None:
 			if self.compiler.is_alive():
@@ -377,7 +403,7 @@ class OpenedProject(object):
 
 		if not self.is_compiling:
 			self.is_compiling = True
-			self.compiler = Compiler(self, window_for_panel)
+			self.compiler = Compiler(self, window_for_panel, triggered_for_file)
 			self.compiler.daemon = True
 
 			sublime.status_message('Compiling')
@@ -429,3 +455,57 @@ class OpenedProject(object):
 			variables[key] = self.get_setting(key, use_cache=True)
 
 		return variables
+
+	def show_compiled_file(self):
+		""" Displays the compiled result. Displays out if out is specified.
+		Otherwise the file which corresponds to view, if view is a ts file. """
+
+		try:
+			out = self.get_compileroption("out", use_cache=True)
+			if out:
+				display_file = os.path.join(self.tsconfigdir, out)
+				self._typescript_build_view_command(display_file)
+				return
+		except KeyError:
+			pass
+
+		try:
+			outdir = self.get_compileroption("outDir", use_cache=True)
+			if outdir:
+				if self.compiler and self.compiler.triggered_for_file:
+					tsfile = self.compiler.triggered_for_file
+				else:
+					tsfile = os.path.join(self.tsconfigdir, self.get_first_file_of_tsconfigjson(use_cache=True))
+
+				# rel path from tsconfigdir to view.file_name
+				relpath = os.path.relpath(os.path.normcase(tsfile),
+								start=self.tsconfigdir)
+				#relpath = "src/views/uimain.ts"
+
+				# all common prefixes from the [files] in tsconfig.json are discared
+				discard = self.get_common_path_prefix_of_files(use_cache=True)
+				# discard = "src"
+
+				if relpath.startswith(discard):
+					relpath = relpath[len(discard):]
+
+				if relpath.startswith("/"):
+					relpath = relpath[1:]
+
+				if relpath.endswith(".ts"):
+					relpath = relpath[:-2] + "js"
+
+				display_file = os.path.join(self.tsconfigdir, outdir, relpath)
+				self._typescript_build_view_command(display_file)
+				return
+		except KeyError:
+			pass
+
+
+
+	def _typescript_build_view_command(self, display_file):
+		sublime.active_window().active_view().run_command('typescript_build_view',
+						 { "project_id": self.id,
+						   "display_file": display_file })
+
+

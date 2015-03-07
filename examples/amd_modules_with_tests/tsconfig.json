@@ -10,6 +10,7 @@
         "src/testrunner.ts"
     ],
     "ArcticTypescript": {
-    	"post_processing_commands": ["grunt copy"]
+    	"post_processing_commands": ["grunt copy"],
+        "show_build_file": true
     }
 }

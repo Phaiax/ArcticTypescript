@@ -260,7 +260,7 @@ class TypescriptOutlineViewSetText(sublime_plugin.TextCommand):
 			T3SVIEWS.OUTLINE.set_text(edit_token, members, self.view)
 		except (Exception) as e:
 			sublime.status_message("Outline panel : %s" % e)
-			print("Outline panel: %s" % e)
+			Debug('error', "Outline panel: %s" % e)
 
 
 # ################################# ERROR PANEL ############################
@@ -303,7 +303,7 @@ class TypescriptErrorPanelSetText(sublime_plugin.TextCommand):
 			except (Exception) as e:
 				msg = "Internal Arctic Typescript error in error panel : %s" % e
 				sublime.status_message(msg)
-				print(msg)
+				Debug('error', msg)
 		else:
 			T3SVIEWS.ERROR.set_text(edit_token, text=text)
 
@@ -325,7 +325,7 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 			filename = self.view.file_name()
 
 			if not project.get_setting('activate_build_system'):
-				print("ArcticTypescript: build_system_disabled")
+				Debug('notify', "Build system is disabled.")
 				return
 
 			project.assert_initialisation_finished()
@@ -334,7 +334,7 @@ class TypescriptBuild(sublime_plugin.TextCommand):
 			if characters != False:
 				self.window.run_command('save')
 
-			project.compile_once(self.window)
+			project.compile_once(self.window, filename)
 
 
 class TypescriptTerminateBuilds(sublime_plugin.TextCommand):
@@ -350,15 +350,18 @@ class TypescriptTerminateBuilds(sublime_plugin.TextCommand):
 
 class TypescriptBuildView(sublime_plugin.TextCommand):
 
-	def run(self, edit_token, filename):
-		if filename != 'error':
-			ts_filename = self.view.file_name()
-			if SETTINGS.get('show_build_file', get_root(ts_filename)):
-				T3SVIEWS.COMPILE.enable()
-				T3SVIEWS.COMPILE.bring_to_top(back_to=self.view)
-				if os.path.exists(filename):
-					data = read_file(filename)
-					T3SVIEWS.COMPILE.set_text(edit_token, data)
-				else:
-					T3SVIEWS.COMPILE.set_text(edit_token, filename)
+	def run(self, edit_token, project_id, display_file):
+		project = project_by_id(project_id)
+		if project:
+			if not project.get_setting('show_build_file'):
+				return
+
+			T3SVIEWS.COMPILE.enable()
+			T3SVIEWS.COMPILE.bring_to_top(back_to=self.view)
+
+			if os.path.exists(display_file):
+				data = read_file(display_file)
+				T3SVIEWS.COMPILE.set_text(edit_token, data)
+			else:
+				T3SVIEWS.COMPILE.set_text(edit_token, display_file)
 

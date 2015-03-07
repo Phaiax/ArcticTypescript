@@ -47,7 +47,7 @@ class Completion(object):
 			if tss_result_json.strip() == 'null':
 				sublime.status_message('ArcticTypescript: no completions available')
 			else:
-				print('completion json error : ', tss_result_json)
+				Debug('error', 'Completion request failed: %s', tss_result_json)
 			return 0
 
 		for entry in entries:
@@ -164,12 +164,26 @@ class Completion(object):
 
 	# ENTRY VALUE
 	def _get_list_value(self,entry):
+
+		# {'kind': 'method', 'docComment': '', 'kindModifiers': 'declare', 'type': '(method) MSNodeExtensions.swapNode(otherNode: Node): Node', 'name': 'swapNode'}
+		# {'kind': 'property', 'docComment': '', 'kindModifiers': 'declare', 'type': '(property) GlobalEventHandlers.onpointerup: (ev: PointerEvent) => any', 'name': 'onpointerup'}
+		# {'kind': 'property', 'docComment': '', 'kindModifiers': 'declare', 'type': '(property) Node.DOCUMENT_TYPE_NODE: number', 'name': 'DOCUMENT_TYPE_NODE'}
+		# {'kind': 'method', 'docComment': 'Allows updating the print settings for the page.', 'kindModifiers': 'declare', 'type': '(method) Document.updateSettings(): void', 'name': 'updateSettings'}
+		# {'kindModifiers': 'declare', 'docComment': '', 'kind': 'function', 'name': 'setTimeout', 'type': '(function) setTimeout(handler: any, timeout?: any, ...args: any[]): number'}
+
 		type = entry['type'] if 'type' in entry else entry['name']
-		match = re.match('(<.*>|)\((.*)\):',str(type))
+
+		# remove (<kind>)
+		kind_part = "(%s)" % entry['kind']
+		if type.startswith(kind_part):
+			type = type[len(kind_part):]
+
+		# catches the inner argumetns of a function call
+		match = re.match('.*\((.*)\):', str(type))
 		result = []
 
 		if match:
-			variables = self._parse_args(match.group(2))
+			variables = self._parse_args(match.group(1))
 			count = 1
 			for variable in variables:
 				splits = variable.split(':')
@@ -186,7 +200,8 @@ class Completion(object):
 			return re.escape(entry['name'])
 
 	# PARSE FUNCTION ARGUMENTS
-	def _parse_args(self,group):
+	def _parse_args(self, group):
+		# group = "otherNode: Node, param2: string"
 		args = []
 		arg = ""
 		callback = False

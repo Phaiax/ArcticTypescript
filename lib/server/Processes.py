@@ -67,7 +67,7 @@ class Processes(object):
 			Start tss.js (2 times).
 			Displays message to user while starting and calls project.on_services_started() afterwards
 		"""
-		print('Typescript initializing ' + self.project.tsconfigfile)
+		Debug('notify', 'starting tsserver ' + self.project.tsconfigfile)
 		self.slow = TssJsStarterThread(self.project)
 		self.slow.start()
 
@@ -183,7 +183,7 @@ class TssJsStarterThread(Thread):
 		cwd = os.path.abspath(self.project.tsconfigdir)
 		rootfile = self.project.get_first_file_of_tsconfigjson()
 		if rootfile is None:
-			print("ArcticTypescript: Please specify your files in tsconfig.json")
+			Debug('error', "Please specify your files in tsconfig.json")
 		cmdline = [node_path, tss_path, "--project", ".", str(rootfile)]
 
 		return node_path, cwd, cmdline
@@ -207,12 +207,12 @@ class TssJsStarterThread(Thread):
 
 	def check_process_health(self):
 		if self.tss_process.poll() is not None:
-			Debug('tss', 'TSS process has terminated unexpectly')
+			Debug('error', 'TSS process has terminated unexpectly')
 			errorout = self.tss_process.stderr.readlines()
-			print("Arctic Typescript: tss.js error:")
-			print(''.join([str(s.decode('UTF-8')) for s in errorout]))
+			errorout_str = ''.join([str(s.decode('UTF-8')) for s in errorout])
+			Debug('error', "typescript-tools error: \n %s" % errorout_str)
 
-# ----------------------------------------- ADAPTER THREAD -------------------------- #
+# ----------------------------------------- ADAPTER THREAD -------------------- #
 
 class TssAdapterThread(Thread):
 	"""

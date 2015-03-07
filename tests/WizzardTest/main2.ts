@@ -16,7 +16,13 @@ var s = {
 };
 
 
-s.yosurs.his.match("Owen")
+s.yours.his.match("Owen")
 
 
 var z;
+
+setTimeout("handler: any"," timeout?: any"," ...args: any[]")
+
+var a = new AnimationEvent();
+
+a.initEvent("eventssssTypeArg: string",true,true);

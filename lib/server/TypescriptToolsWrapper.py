@@ -227,7 +227,6 @@ class TypescriptToolsWrapper(object):
 
 
 		def on_quit(msg=""):
-			print(msg)
 			if hasattr(self, 'finished_callback_called'):
 				return
 			self.finished_callback_called = True

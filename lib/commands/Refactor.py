@@ -15,7 +15,7 @@ from ..Tss import TSS
 from ..display.Panel import PANEL
 from ..display.Errors import ERRORS
 from ..system.Settings import SETTINGS
-from ..Utils import debounce, dirname, read_file, get_kwargs
+from ..Utils import debounce, dirname, read_file, get_kwargs, Debug
 
 
 # ----------------------------------------- UTILS --------------------------------------- #

@@ -4,14 +4,19 @@ import sys
 from functools import wraps
 
 
+# Use this to start a visual debugger
+# import spdb ; spdb.start()
+
+
 # ####################### DEFINE LIST OF DISPLAYED DEBUG MESSAGES ##############
 
-print_classifications = ['build', 'build+']
+# notify and error should be enabled in production
+print_classifications = ['notify', 'error']
 
 
 # ####################### Possible classifications #############################
 
-possible_classifications = [ 'all',
+possible_classifications = [ 'all', 'notify', 'error',
 	'tss', 'tss+', 'tss++',
 	'command', 'command+',
 	'adapter', 'adapter+',

@@ -57,14 +57,21 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@max_calls()
 	@catch_CancelCommand
 	def on_activated(self, view):
-		get_or_create_project_and_add_view(view)
+		project = get_or_create_project_and_add_view(view)
+		#if project:
+		#	if T3SVIEWS.COMPILE.is_active():
+		#		project.show_compiled_file()
+
 
 
 	# ON CLONED FILE
 	@max_calls()
 	@catch_CancelCommand
 	def on_clone(self, view):
-		get_or_create_project_and_add_view(view)
+		project = get_or_create_project_and_add_view(view)
+		#if project:
+			#if T3SVIEWS.COMPILE.is_active():
+			#	project.show_compiled_file()
 
 
 	# ON SAVE
@@ -146,5 +153,11 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 			project = get_or_create_project_and_add_view(view)
 			if project:
 				return True
+		if key == "ArcticTypescriptBuild":
+			project = get_or_create_project_and_add_view(view)
+			if project:
+				if project.get_setting('activate_build_system'):
+					return True
+		return False
 
 

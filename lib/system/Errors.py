@@ -4,7 +4,7 @@ import sublime
 import json
 import re
 
-from ..utils import max_calls
+from ..utils import max_calls, Debug
 from ..utils.fileutils import fn2k
 
 
@@ -35,7 +35,7 @@ class Errors(object):
 		except BaseException as e: # Also catches JSON exceptions
 			self.lasterrors = []
 			self.failure = "%s" % e
-			print('Internal ArcticTypescript error during show_errors: %s (Exception Message: %s)' % (errors, "%s" % e))
+			Debug('error', 'Internal ArcticTypescript error during show_errors: %s (Exception Message: %s)' % (errors, e))
 
 		self.project.highlighter.highlight_all_open_files()
 		sublime.active_window().run_command('typescript_error_panel_set_text',

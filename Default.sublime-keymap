@@ -57,12 +57,12 @@
 		"command": "typescript_build",
 		"args": {"characters": ""},
 		"keys": ["f8"],
-		"context": [ {"key": "ArcticTypescript"} ]
+		"context": [ {"key": "ArcticTypescriptBuild"} ]
 	},
 	{
 		"command": "typescript_build",
 		"args": {"characters": ""},
 		"keys": ["ctrl+b"],
-		"context": [ {"key": "ArcticTypescript"} ]
+		"context": [ {"key": "ArcticTypescriptBuild"} ]
 	}
 ]

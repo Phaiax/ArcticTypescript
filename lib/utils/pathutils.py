@@ -49,7 +49,7 @@ def get_tss_path():
 
 def default_node_path(node_path, project=None):
 	if node_path == 'none':
-		print('ArcticTypescript: The setting node_path is set to "none". That is depreciated. Remove the setting.')
+		Debug('notify', 'The setting node_path is set to "none". That is depreciated. Remove the setting.')
 		node_path = None
 
 	if node_path == "" or node_path is None:

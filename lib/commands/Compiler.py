@@ -26,7 +26,8 @@ from ..display.Panel import PANEL
 
 class Compiler(Thread):
 
-	def __init__(self, project, window_for_panel):
+	def __init__(self, project, window_for_panel, triggered_for_file):
+		self.triggered_for_file = triggered_for_file
 		self.window_for_panel = window_for_panel
 		self.project = project
 		self.p = None
@@ -35,7 +36,7 @@ class Compiler(Thread):
 
 	def run(self):
 		if self.p is not None:
-			print("Only use Compiler Object once!")
+			Debug('error', "Only use Compiler Object once!")
 
 		self.cwd = os.path.abspath(self.project.tsconfigdir)
 		node_path, compile_cmd = self._make_commandline()
@@ -51,6 +52,8 @@ class Compiler(Thread):
 				self._run_command(pre_cmd, shell=True)
 
 		self._run_command(compile_cmd)
+
+		self.project.show_compiled_file()
 
 		if self.post_pre_authorized:
 			for post_cmd in self.post_processing_commands:
@@ -178,7 +181,7 @@ class Compiler(Thread):
 				self.p.communicate() # release readline() block
 				Debug('build+', 'BUILD: process killed')
 			except Exception as e:
-				print("Failure while killing compiler thread: %s" % e)
+				Debug('error', "Failure while killing compiler thread: %s" % e)
 
 
 	def _show_output(self, line):
@@ -186,9 +189,4 @@ class Compiler(Thread):
 		PANEL.update(line)
 		#window.run_command('typescript_build_view',
 		#				   {"filename":line['output'].replace('[end]','\n')})
-
-	def _show_view(self, line):
-		pass
-		#window.run_command('typescript_build_view', {"filename":line['filename'].replace('\n','')})
-
 

@@ -52,7 +52,7 @@
 		"caption": "ArcticTypescript: Build",
 		"command": "typescript_build",
 		"args": {"characters": ""},
-		"context": [ {"key": "ArcticTypescript"} ]
+		"context": [ {"key": "ArcticTypescriptBuild"} ]
 	},
 	{
 		"caption": "ArcticTypescript: Terminate All Builds",
