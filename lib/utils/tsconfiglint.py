@@ -50,6 +50,8 @@ class TsconfigLinter(object):
 		self.error_regions = []
 		self.tsconfig = None
 		self.msg, self.line, self.col, self.char = None, None, None, None
+		self.numerrors = 0
+		self.linted = False
 
 		self._read_file()
 		self._check_empty()
@@ -58,8 +60,10 @@ class TsconfigLinter(object):
 				self._check_key_spellings()
 				self._check_unknown_keys()
 				self._validate_values()
+				seff._check_files_are_strings()
 
 		self._add_regions()
+		self.linted = True
 
 
 	def _read_file(self):
@@ -68,6 +72,7 @@ class TsconfigLinter(object):
 		self.len = len(self.content)
 
 		if self.content is None:
+			self.numerrors += 1
 			raise CancelCommand()
 
 	def _check_empty(self):
@@ -86,16 +91,19 @@ class TsconfigLinter(object):
 			self._parse_jsonerror(e.args[0])
 
 			if self.msg is None:
-				Debug('tsconfig', 'could not parse error message')
+				Debug('tsconfig.json', 'json error %s' % e)
+				self.numerrors += 1
 				raise CancelCommand()
 
 			self._lint_char(self.char)
+			self.numerrors += 1
 			Debug('tsconfig.json', "%s (Line %i Column %i)" % (self.msg, self.line, self.col))
 
 			return True
 
 		except Exception as e:
 			Debug('tsconfig', 'unexpected json.loads() error %s %s' % (type(e), e))
+			self.numerrors += 1
 			raise CancelCommand()
 		return False
 
@@ -114,51 +122,38 @@ class TsconfigLinter(object):
 		# check for spelling
 		self._expect_key_of_obj_to_be_y(self.tsconfig, "compilerOptions")
 		self._expect_key_of_obj_to_be_y(self.tsconfig, "files")
+		self._expect_key_of_obj_to_be_y(self.tsconfig, "filesGlob")
 		self._expect_key_of_obj_to_be_y(self.tsconfig, "ArcticTypescript")
-
-		# if "compilerOptions" in self.tsconfig:
-		# 	for co in allowed_compileroptions:
-		# 		self._expect_key_of_obj_to_be_y(self.tsconfig["compilerOptions"],
-		# 			co)
-
-
-		# if "ArcticTypescript" in self.tsconfig:
-		# 	for setting in allowed_settings:
-		# 		self._expect_key_of_obj_to_be_y(self.tsconfig["ArcticTypescript"],
-		# 			setting)
 
 
 	def _check_root_dicts(self):
 		if type(self.tsconfig) != dict:
 			self._lint_char(0, self.len - 1)
+			self.numerrors += 1
 			Debug('tsconfig.json', "root structure must be an object: { }")
 			return False
 
-		if "compilerOptions" in self.tsconfig:
-			if type(self.tsconfig['compilerOptions']) != dict:
-				self._lint_value_of_key('compilerOptions')
-				Debug('tsconfig.json', "compilerOptions's value must be an object: { }")
-				return False
 
-		if "ArcticTypescript" in self.tsconfig:
-			if type(self.tsconfig['ArcticTypescript']) != dict:
-				self._lint_value_of_key('ArcticTypescript')
-				Debug('tsconfig.json', "ArcticTypescript's value must be an object: { }")
-				return False
+		valid = self._execute_validator(dict, self.tsconfig, 'compilerOptions'), \
+				self._execute_validator(list, self.tsconfig, 'files'), \
+				self._execute_validator(list, self.tsconfig, 'filesGlob')\
+				self._execute_validator(dict, self.tsconfig, 'ArcticTypescript')
 
-		return True
+		return all(valid)
 
 	def _check_unknown_keys(self):
 
 		if "compilerOptions" in self.tsconfig:
 			for option in self.tsconfig["compilerOptions"].keys():
 				if option not in allowed_compileroptions:
+					self.numerrors += 1
 					Debug('tsconfig.json', "unknown key '%s' in compilerOptions" % option)
 					self._lint_key(option)
 
 		if "ArcticTypescript" in self.tsconfig:
 			for option in self.tsconfig["ArcticTypescript"].keys():
 				if option not in allowed_settings:
+					self.numerrors += 1
 					Debug('tsconfig.json', "unknown key '%s' in ArcticTypescript" % option)
 					self._lint_key(option)
 
@@ -167,62 +162,97 @@ class TsconfigLinter(object):
 
 		if "compilerOptions" in self.tsconfig:
 			for key, validator in compileroptions_validations.items():
-				if key in self.tsconfig["compilerOptions"]:
-					uservalue = self.tsconfig["compilerOptions"][key]
-					self._execute_validator(validator, uservalue, key)
+				self._execute_validator(validator, self.tsconfig["compilerOptions"], key)
 
 		if "ArcticTypescript" in self.tsconfig:
 			for key, validator in settings_validations.items():
-				if key in self.tsconfig["ArcticTypescript"]:
-					uservalue = self.tsconfig["ArcticTypescript"][key]
-					self._execute_validator(validator, uservalue, key)
+				self._execute_validator(validator, self.tsconfig["ArcticTypescript"], key)
 
 
 
-	def _execute_validator(self, validator, uservalue, key):
+	def _execute_validator(self, validator, dict_with_uservalue, key):
+		if key not in dict_with_uservalue:
+			return True
+		uservalue = dict_with_uservalue[key]
 		# type
 		if validator == str:
 			if type(uservalue) != str:
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be a string" % key)
 				self._lint_value_of_key(key)
+				return False
 
 		if validator == list:
 			if type(uservalue) != list:
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be a list" % key)
 				self._lint_value_of_key(key)
+				return False
 
 		if validator == bool:
 			if type(uservalue) != bool:
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be true or false" % key)
 				self._lint_value_of_key(key)
+				return False
 
 		if validator == dict:
 			if type(uservalue) != dict:
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be an object: { }" % key)
 				self._lint_value_of_key(key)
+				return False
 
 		# regex
 		if type(validator) == str:
 			if type(uservalue) != str:
 				self._lint_value_of_key(key)
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be a string" % key)
+				return False
 			else:
 				m = re.match(validator, uservalue)
 				if m is None:
+					self.numerrors += 1
 					Debug('tsconfig.json', "value of '%s' should match regex %s" %
 						(key, validator))
 					self._lint_value_of_key(key)
+					return False
 
 		# list of string values
 		if type(validator) == list:
 			if type(uservalue) != str:
+				self.numerrors += 1
 				Debug('tsconfig.json', "value of '%s' has to be a string" % key)
 				self._lint_value_of_key(key)
+				return False
 			else:
 				if uservalue not in validator:
+					self.numerrors += 1
 					Debug('tsconfig.json', "value of '%s' should be one of %s" %
 						(key, validator))
 					self._lint_value_of_key(key)
+					return False
+		return True
+
+
+	def _check_files_are_strings(self):
+		if "files" in self.tsconfig:
+			for file_ in self.tsconfig["files"]:
+				if type(file_) is not str:
+					self.numerrors += 1
+					self._lint_value_of_key("files")
+					Debug('tsconfig.json', "all files have to be strings")
+					break
+
+		if "filesGlob" in self.tsconfig:
+			for glob_ in self.tsconfig["filesGlob"]:
+				if type(glob_) is not str:
+					self.numerrors += 1
+					self._lint_value_of_key("filesGlob")
+					Debug('tsconfig.json', "all filesGlobs have to be strings")
+					break
+
 
 
 	def _add_regions(self):
@@ -240,6 +270,7 @@ class TsconfigLinter(object):
 				if k == y:
 					return
 
+				self.numerrors += 1
 				Debug('tsconfig.json', "key '%s' is spelled wrong" %
 						(key, validator))
 
