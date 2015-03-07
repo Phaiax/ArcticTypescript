@@ -9,6 +9,7 @@ from ..utils.fileutils import read_and_decode_json_file, file_exists, \
 from ..utils.pathutils import find_tsconfigdir
 from ..utils.disabling import is_plugin_temporarily_disabled
 from ..utils.CancelCommand import CancelCommand
+from ..utils.options import allowed_compileroptions, allowed_settings
 from ..utils import get_deep, get_first, random_str, Debug
 
 from .ProjectWizzard import ProjectWizzard
@@ -82,34 +83,6 @@ def project_by_id(project_id):
 		return OPENED_PROJECTS[project_id]
 	return None
 
-allowed_compileroptions = [
-	"target", #?: string;            // 'es3'|'es5' (default) | 'es6'
-    "module", #?: string;            // 'amd'|'commonjs' (default)
-    "declaration", #?: boolean;      // Generates corresponding `.d.ts` file
-    "out", #?: string;               // Concatenate and emit a single file
-    "outDir", #?: string;            // Redirect output structure to this directory
-    "noImplicitAny", #?: boolean;    // Error on inferred `any` type
-    "suppressImplicitAnyIndexErrors",
-    "removeComments", #?: boolean;   // Do not emit comments in output
-    "sourceMap", #?: boolean;        // Generates SourceMaps (.map files)
-    "sourceRoot", #?: string;        // Optionally specifies the location where debugger should locate TypeScript source files after deployment
-    "mapRoot", #?: string; 			 // Optionally Specifies the location where debugger should locate map files after deployment
-    "preserveConstEnums", #?:boolean;	// Do not erase const enum declarations in generated code.
-    "removeComments", #?: boolean;  //  Do not emit comments to output.
-    ]
-
-
-allowed_settings = [
-	"activate_build_system",     #?:boolean;   default: true
-	"auto_complete",             #?:boolean,   default: true
-	"node_path",                 #?:string,    default: null -> nodejs in $PATH
-	"tsc_path",                  #?:string,    default: null -> search a node_modules dir with tsc or use ArcticTypescript's tsc
-	"error_on_save_only",        #?:boolean,   default: false
-	"build_on_save",             #?:boolean,   default: false
-	"show_build_file",           #?:boolean,   default: false
-	"pre_processing_commands",   #?:[string]   default: []
-	"post_processing_commands",  #?:[string]   default: []
-]
 
 
 class OpenedProject(object):

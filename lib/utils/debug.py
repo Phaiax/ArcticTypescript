@@ -10,8 +10,8 @@ from functools import wraps
 
 # ####################### DEFINE LIST OF DISPLAYED DEBUG MESSAGES ##############
 
-# notify and error should be enabled in production
-print_classifications = ['notify', 'error']
+# notify, tsconfig.json and error should be enabled in production
+print_classifications = ['notify', 'error', 'tsconfig.json']
 
 
 # ####################### Possible classifications #############################
@@ -28,7 +28,8 @@ possible_classifications = [ 'all', 'notify', 'error',
 	'focus', 'max_calls',
 	'layout',
 	'goto',
-	'project', 'project+']
+	'project', 'project+',
+	'tsconfig', 'tsconfig.json']
 
 
 # ####################### DEBUG logger #########################################

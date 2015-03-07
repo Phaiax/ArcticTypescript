@@ -2,7 +2,6 @@
 
 import sublime
 import time
-import re
 
 from .Base import Base
 from ...utils import Debug, max_calls

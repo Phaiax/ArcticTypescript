@@ -5,8 +5,6 @@ TODO
 hard
 ----
 
- * multiple root files (add every file)
- * no exceptions if tsconfig json error during init
 
 good to have
 ------------
@@ -21,13 +19,14 @@ features
  * tsserver
    + refactoring
    + formatting
- * tsconfig validation
  * multiple window fixes
  * build file live change (some utf error with autofilename)
 
 DONE
 ====
 
+ * no exceptions if tsconfig json error during init
+ * tsconfig validation
  * is Build output working?
  * replace all print() with Debug('nofity')
  * Code-Completion. Replaced arguments are shitty

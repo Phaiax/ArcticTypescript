@@ -3,6 +3,8 @@
 import sublime
 import sublime_plugin
 
+import os
+
 from .display.T3SViews import T3SVIEWS
 
 from .system.Project import OpenedProject, get_or_create_project_and_add_view
@@ -11,6 +13,7 @@ from .utils import Debug, max_calls
 from .utils.viewutils import run_command_on_any_ts_view
 from .utils.fileutils import file_exists
 from .utils.CancelCommand import catch_CancelCommand, CancelCommand
+from .utils.tsconfiglint import check_tsconfig
 
 
 # ------------------------------------------- EVENTS ------------------------------------------ #
@@ -58,6 +61,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_activated(self, view):
 		project = get_or_create_project_and_add_view(view)
+		check_tsconfig(view)
 		#if project:
 		#	if T3SVIEWS.COMPILE.is_active():
 		#		project.show_compiled_file()
@@ -69,6 +73,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_clone(self, view):
 		project = get_or_create_project_and_add_view(view)
+		check_tsconfig(view)
 		#if project:
 			#if T3SVIEWS.COMPILE.is_active():
 			#	project.show_compiled_file()
@@ -130,6 +135,10 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
 			if not project.get_setting('error_on_save_only'):
 				project.errors.start_recalculation()
+
+		else:
+			check_tsconfig(view)
+
 
 
 	# ON QUERY COMPLETION
