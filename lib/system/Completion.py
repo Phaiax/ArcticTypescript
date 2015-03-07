@@ -42,12 +42,13 @@ class Completion(object):
 		del self.completion_list[:]
 
 		try:
-			entries = json.loads(tss_result_json)['entries']
+			entries = json.loads(tss_result_json)
+			entries = entries['entries']
 		except:
 			if tss_result_json.strip() == 'null':
 				sublime.status_message('ArcticTypescript: no completions available')
 			else:
-				Debug('error', 'Completion request failed: %s', tss_result_json)
+				Debug('error', 'Completion request failed: %s' % tss_result_json)
 			return 0
 
 		for entry in entries:

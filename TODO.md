@@ -2,17 +2,28 @@
 TODO
 ====
 
- * build file live change (some utf error with autofilename)
- * filesGlob
+hard
+----
+
  * multiple root files (add every file)
- * error list has crude messages if a missing element of an object is selected
- * multiple window fixes
- * tsconfig validation
+ * no exceptions if tsconfig json error during init
+
+good to have
+------------
+
  * snippets -> Readme, AutoFilePath -> Readme
+ * error list has crude messages if a missing element of an object is selected
+
+features
+--------
+
+ * filesGlob
  * tsserver
    + refactoring
    + formatting
-
+ * tsconfig validation
+ * multiple window fixes
+ * build file live change (some utf error with autofilename)
 
 DONE
 ====

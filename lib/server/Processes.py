@@ -184,7 +184,7 @@ class TssJsStarterThread(Thread):
 		rootfile = self.project.get_first_file_of_tsconfigjson()
 		if rootfile is None:
 			Debug('error', "Please specify your files in tsconfig.json")
-		cmdline = [node_path, tss_path, "--project", ".", str(rootfile)]
+		cmdline = [node_path, tss_path, "--project", "."]
 
 		return node_path, cwd, cmdline
 
@@ -198,8 +198,11 @@ class TssJsStarterThread(Thread):
 			and kills the tss.js process.
 		"""
 		self.tss_queue.put("stop!") # setinel value to stop queue
-		self.tss_process.terminate()
-		self.tss_process.kill()
+		try:
+			self.tss_process.terminate()
+			self.tss_process.kill()
+		except ProcessLookupError:
+			pass
 		try:
 			self.tss_process.communicate() # release readline() block
 		except Exception:
@@ -265,8 +268,14 @@ class TssAdapterThread(Thread):
 			Debug('adapter+', "WAIT for new work (%i currently debouncing)" % len(self.middleware_queue))
 
 		Debug('adapter', "QUIT async adapter to tss process and close queue")
-		self.stdin.close()
-		self.stdout.close()
+		try:
+			self.stdin.close()
+		except Exception:
+			pass
+		try:
+			self.stdout.close()
+		except Exception:
+			pass
 
 
 	def append_to_middlewarequeue(self, async_command, set_timer=True):

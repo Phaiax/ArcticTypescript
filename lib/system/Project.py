@@ -121,6 +121,13 @@ class OpenedProject(object):
 
 	def __init__(self, startview):
 
+		self.processes = None
+		self.compiler = None
+		self.errors = None
+		self.highlighter = None
+		self.tsserver = None
+		self.completion = None
+
 		if not startview.is_valid() or startview.window() is None:
 			return
 
@@ -133,9 +140,7 @@ class OpenedProject(object):
 		self.views = [] # All views with .ts files
 		self.tsconfigdir = find_tsconfigdir(startview.file_name())
 		self.tsconfigfile = os.path.join(self.tsconfigdir, "tsconfig.json")
-		self.processes = None
 		self.is_compiling = False
-		self.compiler = None
 		self.authorized_commands = []
 		self.forbidden_commands = []
 
@@ -169,8 +174,10 @@ class OpenedProject(object):
 
 	def is_initialized(self):
 		return hasattr(self, 'processes') \
+				 and self.processes is not None \
 				 and self.processes.is_initialized() \
-				 and hasattr(self, 'highlighter')
+				 and hasattr(self, 'highlighter') \
+				 and self.highlighter is not None
 
 
 	def assert_initialisation_finished(self):
@@ -179,6 +186,8 @@ class OpenedProject(object):
 		if not self.is_initialized():
 			sublime.status_message('You must wait for the initialisation to finish (%s)' % filename)
 			raise CancelCommand()
+
+
 
 
 	# ###############################################    OPEN/CLOSE   ##########
