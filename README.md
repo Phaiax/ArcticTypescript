@@ -121,7 +121,7 @@ Create a `filesGlob` list next to the `files` list. Everytime you **save**
         "filesGlob": [
             "./**/*.ts",
             "!./node_modules/**/*.ts"
-        ],
+        ]
     }
 
 [at-tsconfig]: https://github.com/TypeStrong/atom-typescript/blob/master/docs/tsconfig.md
