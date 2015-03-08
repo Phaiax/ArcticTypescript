@@ -102,12 +102,32 @@ the typescript compiler: Refer to `tsc --help`.
 
 Decide between:
  * `out='outfile.js'` : Then use ```/// <reference path="second.ts" />``` to
-    spread your code. [Example][singleoutexample]
+    spread your code. [Example][example_singleout]
  * `outDir='built/'` and `module='amd'`: Use ```import s = require('second')```
-   to spread your code. [Example][amdexample]
+   to spread your code. [Example][example_amd]
 
-[singleoutexample]:
-[amdexample]:
+
+
+
+
+### filesGlob ###
+
+[Atom TypeScript][atomts] provides a feature called [filesGlob][at-tsconfig].
+Create a `filesGlob` list next to the `files` list. Everytime you save
+`tsconfig.json` the files will be updated. Example:
+
+    {
+        "compilerOptions": { },
+        "filesGlob": [
+            "./**/*.ts",
+            "!./node_modules/**/*.ts"
+        ],
+    }
+
+[at-tsconfig]: https://github.com/TypeStrong/atom-typescript/blob/master/docs/tsconfig.md
+
+
+
 
 ### ArcticTypescript settings ###
 
