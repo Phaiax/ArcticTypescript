@@ -40,7 +40,7 @@ def check_tsconfig(view):
         Show Errors using Regions.
         Set a error map [<(a,b), msg>] into views settings. """
 
-    if not _if_is_valid_and_enabled(view):
+    if not _is_valid_and_enabled(view):
         return
 
     Debug('tsconfig', 'tsconfig modified, check')
@@ -59,7 +59,7 @@ def show_lint_in_status(view):
     """ Uses the error map stored in view.settings() to display
         status messages if the cursor is above an error """
 
-    if not _if_is_valid_and_enabled(view):
+    if not _is_valid_and_enabled(view):
         return
 
     if view.settings().has('tsconfig-lints'):
@@ -77,7 +77,6 @@ def show_lint_in_status(view):
             view.set_status('tsconfig-errors', ' | '.join(current_errors))
         else:
             view.erase_status('tsconfig-errors')
-
 
 
 # ######################################################################
@@ -155,6 +154,7 @@ class TsconfigLinter(object):
 
         # display errors
         self._add_regions()
+        self._store_error_locations_in_views_settings()
         self.linted = True
 
 
@@ -176,7 +176,7 @@ class TsconfigLinter(object):
         self.numerrors += 1
         # Debug('tsconfig.json', msg)
 
-    def _store_error_locations_in_views_settings():
+    def _store_error_locations_in_views_settings(self):
         """ Stores the errors in view.settings()
             Format: [<((a,b), msg)>] """
 
@@ -299,7 +299,6 @@ class TsconfigLinter(object):
         # <class 'ValueError'> Expecting ':' delimiter: line 2
         #                      column 27 (char 28)
         # <class 'ValueError'> Expecting object: line 2 column 28 (char 29)
-
 
 
     # ######################################################################
@@ -571,8 +570,5 @@ class TsconfigLinter(object):
             region = sublime.Region(char, char + length)
         self.error_regions.append(region)
         return (region.a, region.b)
-
-
-
 
 
