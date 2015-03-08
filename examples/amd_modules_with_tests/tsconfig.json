@@ -1,16 +1,20 @@
 {
     "compilerOptions": {
+        "outDir": "built/",
         "module": "amd",
-        "outDir": "built/js/",
         "sourceMap": true,
         "target": "es5"
     },
     "files": [
         "src/app.ts",
-        "src/testrunner.ts"
+        "src/testrunner.ts",
+        "src/tests/utilstest.ts",
+        "src/utils/utils.ts"
     ],
     "ArcticTypescript": {
-    	"post_processing_commands": ["grunt copy"],
-        "show_build_file": true
+        "show_build_file": true,
+        "post_processing_commands": [
+            "grunt copy"
+        ]
     }
 }

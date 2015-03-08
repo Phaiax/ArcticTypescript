@@ -47,7 +47,7 @@ class TypescriptReloadProject(sublime_plugin.TextCommand):
 			#project.tsserver.reload(lambda: )
 
 
-# ################################# SHOW INFS ##################################
+# ################################# SHOW INFOS #################################
 
 class TypescriptType(sublime_plugin.TextCommand):
 

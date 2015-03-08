@@ -46,6 +46,11 @@ def get_tss_path():
 	""" Return path to tss.js """
 	return os.path.join(package_path, 'bin', 'tss.js')
 
+# GET TSS PATH
+def get_expandglob_path():
+	""" Return path to expandglob.js """
+	return os.path.join(package_path, 'bin', 'expandglob.js')
+
 
 def default_node_path(node_path, project=None):
 	if node_path == 'none':

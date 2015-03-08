@@ -5,12 +5,15 @@ TODO
 hard
 ----
 
+* check parent dir in wizzard for tsfile generation
+
 
 good to have
 ------------
 
  * snippets -> Readme, AutoFilePath -> Readme
  * error list has crude messages if a missing element of an object is selected
+ * test build filew view without dir and outDir
 
 features
 --------

@@ -1,0 +1,8 @@
+{
+	"name": "bin-folder-from-ArcticTypescript",
+	"description": "this file only exists to manage dependencies",
+	"dependencies":{
+		"glob-expand": "0.0.2",
+		"typescript": "Microsoft/TypeScript"
+	}
+}

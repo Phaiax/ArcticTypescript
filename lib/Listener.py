@@ -13,33 +13,7 @@ from .utils import Debug, max_calls
 from .utils.viewutils import run_command_on_any_ts_view
 from .utils.fileutils import file_exists
 from .utils.CancelCommand import catch_CancelCommand, CancelCommand
-from .utils.tsconfiglint import check_tsconfig
 
-
-# ------------------------------------------- EVENTS ------------------------------------------ #
-
-
-@max_calls()
-def on_init(root):
-	pass
-	#TSS.removeEventListener('init', root, on_init)
-	#FILES.init(root, on_files_loaded)
-
-@max_calls()
-def on_files_loaded():
-	pass
-	# we don't know if a ts view is activated, start conditions
-	#run_command_on_any_ts_view('typescript_update_structure', {"force": True})
-	#run_command_on_any_ts_view('typescript_recalculate_errors') project.errors.start_recalculation()
-
-
-@max_calls()
-def on_kill(root):
-	pass
-	#TSS.removeEventListener('kill', root, on_kill)
-	#FILES.remove_by_root(root)
-	#ERRORS.on_close_typescript_project(root)
-	#T3SVIEWS.hide_all()
 
 
 
@@ -61,11 +35,9 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_activated(self, view):
 		project = get_or_create_project_and_add_view(view)
-		check_tsconfig(view)
 		#if project:
 		#	if T3SVIEWS.COMPILE.is_active():
 		#		project.show_compiled_file()
-
 
 
 	# ON CLONED FILE
@@ -73,7 +45,6 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_clone(self, view):
 		project = get_or_create_project_and_add_view(view)
-		check_tsconfig(view)
 		#if project:
 			#if T3SVIEWS.COMPILE.is_active():
 			#	project.show_compiled_file()
@@ -84,7 +55,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_post_save(self, view):
 		project = get_or_create_project_and_add_view(view)
-		if project:
+		if project and project.is_initialized():
 			project.tsserver.update(view)
 
 			# Old: it has tested, if file is already tracked by the tsserver
@@ -117,7 +88,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_modified(self, view):
 		project = get_or_create_project_and_add_view(view)
-		if project:
+		if project and project.is_initialized():
 
 
 			project.tsserver.update(view)
@@ -136,8 +107,6 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 			if not project.get_setting('error_on_save_only'):
 				project.errors.start_recalculation()
 
-		else:
-			check_tsconfig(view)
 
 
 
@@ -145,7 +114,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	@catch_CancelCommand
 	def on_query_completions(self, view, prefix, locations):
 		project = get_or_create_project_and_add_view(view)
-		if project:
+		if project and project.is_initialized():
 			pos = view.sel()[0].begin()
 			(line, col) = view.rowcol(pos)
 			Debug('autocomplete', "on_query_completions(), sublime wants to see the results, cursor currently at %i , %i (enabled: %s, items: %i)" % (line+1, col+1, project.completion.enabled_for['viewid'], len(project.completion.get_list()) ) )
@@ -160,11 +129,11 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 	def on_query_context(self, view, key, operator, operand, match_all):
 		if key == "ArcticTypescript":
 			project = get_or_create_project_and_add_view(view)
-			if project:
+			if project and project.is_initialized():
 				return True
 		if key == "ArcticTypescriptBuild":
 			project = get_or_create_project_and_add_view(view)
-			if project:
+			if project and project.is_initialized():
 				if project.get_setting('activate_build_system'):
 					return True
 		return False
