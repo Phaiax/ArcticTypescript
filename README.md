@@ -112,9 +112,10 @@ Decide between:
 
 ### filesGlob ###
 
-[Atom TypeScript][atomts] provides a feature called [filesGlob][at-tsconfig].
-Create a `filesGlob` list next to the `files` list. Everytime you **save**
-`tsconfig.json` the files will be updated. Example:
+[Atom-TypeScript][atomts] provides a feature called [filesGlob][at-tsconfig].
+ArcticTypescript mimics that feature. Create a `filesGlob` list next to
+the `files` list. Everytime you **save** `tsconfig.json` the files will be
+updated. Example:
 
     {
         "compilerOptions": { },
