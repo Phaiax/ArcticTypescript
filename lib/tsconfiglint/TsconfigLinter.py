@@ -12,386 +12,425 @@ from ..utils.pathutils import package_path
 from ..utils.viewutils import get_content
 
 from ..utils.options import allowed_compileroptions, \
-							allowed_settings, \
-					 		compileroptions_validations, \
-					 		settings_validations
+                            allowed_settings, \
+                             compileroptions_validations, \
+                             settings_validations
 
 from ..utils.disabling import set_tsglobexpansion_disabled, \
-							  set_tsglobexpansion_enabled,
-							  is_tsglobexpansion_disabled
+                              set_tsglobexpansion_enabled, \
+                              is_tsglobexpansion_disabled
 
 
 empty_tsconfig = {
-	"compilerOptions": {},
-	"files": []
+    "compilerOptions": {},
+    "files": []
 }
 
 
 
 
-def is_tsconfig(view):
-	return view and view.file_name() \
-		and os.path.basename(view.file_name()) == "tsconfig.json"
-
-
 @catch_CancelCommand
 def check_tsconfig(view):
-	""" Reads the tsconfig.json and checks for errors """
+    """ Tests view for being a tsconfig.json.
+        Reads the tsconfig.json and checks for errors.
+        Show Errors using Regions.
+        Set a error map [<(a,b), msg>] into views settings. """
 
-	if not is_tsconfig(view):
-		return
+    if not _if_is_valid_and_enabled(view):
+        return
 
-	if not view.is_valid() or view.is_loading():
-		return
+    Debug('tsconfig', 'tsconfig modified, check')
 
-	if is_tsglobexpansion_disabled():
-		raise CancelCommand()
+    linter = TsconfigLinter(view)
 
-	Debug('tsconfig', 'tsconfig modified, check')
-	linter = TsconfigLinter(view)
-	error_locations = []
-	error_locations.extend(linter.harderrors)
-	error_locations.extend(linter.softerrors)
-	view.settings().set('tsconfig-lints', error_locations)
-	return linter
+    return linter
+
+
+def _is_valid_and_enabled(view):
+    """ Returns True if tslint should be activated """
+    if not view.is_valid() or view.is_loading():
+        return False
+
+    if not _is_tsconfig(view):
+        return False
+
+    if is_tsglobexpansion_disabled():
+        return False
+
+    return True
+
+
+def _is_tsconfig(view):
+    """ Returns True if view is a tsconfig.json file """
+    if view is None or not view:
+        return False
+    fn = view.file_name() # only call once!
+    if fn is None or not fn:
+        return False
+    return os.path.basename(fn) == "tsconfig.json"
 
 
 def show_lint_in_status(view):
-	if not is_tsconfig(view):
-		return
+    """ Uses the error map stored in view.settings() to display status messages
+        if the cursor is above an error """
 
-	if not view.is_valid() or view.is_loading():
-		return
+    if not _if_is_valid_and_enabled(view):
+        return
 
-	if is_tsglobexpansion_disabled():
-		raise CancelCommand()
+    if view.settings().has('tsconfig-lints'):
+        error_locations = view.settings().get('tsconfig-lints', [])
 
-	if view.settings().has('tsconfig-lints'):
-		error_locations = view.settings().get('tsconfig-lints', [])
+        current_errors = []
+        current_selection = view.sel()[0]
 
-		current_errors = []
-		sel = view.sel()[0]
+        for pos, error in error_locations:
+            error_region = sublime.Region(pos[0], pos[1])
+            if current_selection.intersects(error_region):
+                current_errors.append(error)
 
-		for pos, error in error_locations:
-			error_region = sublime.Region(pos[0], pos[1])
-			if sel.intersects(error_region):
-				current_errors.append(error)
+        if len(current_errors):
+            view.set_status('tsconfig-errors', ' | '.join(current_errors))
+        else:
+            view.erase_status('tsconfig-errors')
 
-		if len(current_errors):
-			view.set_status('tsconfig-errors', ' | '.join(current_errors))
-		else:
-			view.erase_status('tsconfig-errors')
 
 class TsconfigLinter(object):
+    """ Executes a linting on view.
+        View has to be a tsconfig.json file.
+        Marks errors and saves an error map in views settings.
+        FatalErrors: IO Errors -> raise CancelCommands, the unexpected
+        HardErrors: Syntax Errors, Wrong Types
+        SoftErrors: Spellings, non existent files, unknown keys.
+        Inserts a default structure if the file is empty. """
+
+
+    def __init__(self, view):
+        """ Starts linting. Raises CancelCommand if a fatal error occures """
+
+        # Initializing
+        self.linted = False
+        self.view = view
+
+        self.error_regions = []
+        self.tsconfig = None
+        self.harderrors = [] # would prevent from expanding filesglob
+        self.softerrors = [] # would allow expandglob.js to work
+        self.numerrors = 0;
+        self.msg, self.line, self.col, self.char = None, None, None, None
+
+        # reading
+        self._read_file()
+        self._check_empty_and_insert_default()
+        # main syntax checks
+        if not self._check_jsonsyntax():
+            if self._check_root_dicts():
+                # syntax is fine -> linting
+                self._check_key_spellings()
+                self._check_unknown_keys()
+                self._validate_values()
+                self._check_files_are_strings()
+                self._check_files_are_ts_files()
+                self._check_files_exist()
+
+        # display errors
+        self._add_regions()
+        self.linted = True
+
+
+    def _hard_error(self, msg, pos):
+        """ Display and cound hard error """
+        self.harderrors.append((pos, msg))
+        self.numerrors += 1
+        Debug('tsconfig.json', msg)
+
+
+    def _soft_error(self, msg, pos):
+        """ Display and count soft error """
+        self.softerrors.append((pos, msg))
+        self.numerrors += 1
+        # Debug('tsconfig.json', msg)
+
+    def _store_error_locations_in_views_settings():
+        """ Stores the errors in view.settings()
+            Format: [<((a,b), msg)>] """
+        error_locations = []
+        error_locations.extend(self.harderrors)
+        error_locations.extend(self.softerrors)
+        self.view.settings().set('tsconfig-lints', error_locations)
+
+
+    def _read_file(self):
+        """ Reads content from view into self.content and self.len """
+        self.content = get_content(self.view) #read_file(view.file_name())
+        self.len = len(self.content)
+
+        if self.content is None:
+            self.numerrors += 1
+            Debug('tsconfig', 'Could not read content from view.')
+            raise CancelCommand()
+
+
+    def _check_empty_and_insert_default(self):
+        """ Checks if content is empty and inserts default tsonfig.json if so. """
+        if self.content == "":
+            if not is_tsglobexpansion_disabled():
+                Debug('tsconfig', 'put default empty base structure to tsconfig.json')
+                self.view.run_command('append', {'characters':
+                        json.dumps(empty_tsconfig, indent=4)})
+            raise CancelCommand()
+
+
+    def _check_jsonsyntax(self):
+        try:
+            self.tsconfig = json.loads(self.content)
+        except ValueError as e:
+            Debug('tsconfig', 'json error %s %s' % (type(e), e))
+
+            self._parse_jsonerror(e.args[0])
+
+            if self.msg is None:
+                Debug('tsconfig.json', 'json error %s' % e)
+                self.numerrors += 1
+                raise CancelCommand()
+
+            self._hard_error("%s (Line %i Column %i)" % (self.msg, self.line, self.col),
+                              self._lint_char(self.char))
+
+            return True
 
-	def __init__(self, view):
-
-		self.view = view
-		self.error_regions = []
-		self.tsconfig = None
-		self.msg, self.line, self.col, self.char = None, None, None, None
-		self.harderrors = [] # would prevent from expanding filesglob
-		self.softerrors = [] # would allow expandglob.js to work
-		self.linted = False
-		self.numerrors = 0;
-
-		self._read_file()
-		self._check_empty()
-		if not self._check_jsonsyntax():
-			if self._check_root_dicts():
-				self._check_key_spellings()
-				self._check_unknown_keys()
-				self._validate_values()
-				self._check_files_are_strings()
-				self._check_files_are_ts_files()
-				self._check_files_exist()
-
-		self._add_regions()
-		self.linted = True
-
-
-	def _hard_error(self, msg, pos):
-		self.harderrors.append((pos, msg))
-		self.numerrors += 1
-		Debug('tsconfig.json', msg)
-
-
-	def _soft_error(self, msg, pos):
-		self.softerrors.append((pos, msg))
-		self.numerrors += 1
-		# Debug('tsconfig.json', msg)
-
-
-	def _read_file(self):
-
-		self.content = get_content(self.view) #read_file(view.file_name())
-		self.len = len(self.content)
-
-		if self.content is None:
-			self.numerrors += 1
-			raise CancelCommand()
-
-
-	def _check_empty(self):
-		if self.content == "":
-			if not is_tsglobexpansion_disabled():
-				Debug('tsconfig', 'put default empty base structure to tsconfig.json')
-				self.view.run_command('append', {'characters':
-						json.dumps(empty_tsconfig, indent=4)})
-			raise CancelCommand()
-
-
-	def _check_jsonsyntax(self):
-		try:
-			self.tsconfig = json.loads(self.content)
-		except ValueError as e:
-			Debug('tsconfig', 'json error %s %s' % (type(e), e))
-
-			self._parse_jsonerror(e.args[0])
-
-			if self.msg is None:
-				Debug('tsconfig.json', 'json error %s' % e)
-				self.numerrors += 1
-				raise CancelCommand()
-
-			self._hard_error("%s (Line %i Column %i)" % (self.msg, self.line, self.col),
-				 			 self._lint_char(self.char))
-
-			return True
-
-		except Exception as e:
-			Debug('tsconfig', 'unexpected json.loads() error %s %s' % (type(e), e))
-			self.numerrors += 1
-			raise CancelCommand()
-		return False
-
-
-	def _lint_char(self, char, length=0):
-		if length == 0:
-			region = sublime.Region(
-						char - 2 if char >= 2 		   else 0,
-						char + 2 if char <= self.len - 2 else self.len)
-		else:
-			region = sublime.Region(char, char + length)
-		self.error_regions.append(region)
-		return (region.a, region.b)
-
-
-	def _check_key_spellings(self):
-
-		# check for spelling
-		self._expect_key_of_obj_to_be_y(self.tsconfig, "compilerOptions")
-		self._expect_key_of_obj_to_be_y(self.tsconfig, "files")
-		self._expect_key_of_obj_to_be_y(self.tsconfig, "filesGlob")
-		self._expect_key_of_obj_to_be_y(self.tsconfig, "ArcticTypescript")
-
-
-	def _check_root_dicts(self):
-		if type(self.tsconfig) != dict:
-			self._hard_error("root structure must be an object: { }",
-							self._lint_char(0, self.len - 1))
-			return False
-
-
-		valid = self._execute_validator(dict, self.tsconfig, 'compilerOptions'), \
-				self._execute_validator(list, self.tsconfig, 'files'), \
-				self._execute_validator(list, self.tsconfig, 'filesGlob'), \
-				self._execute_validator(dict, self.tsconfig, 'ArcticTypescript')
-
-		return all(valid)
-
-	def _check_unknown_keys(self):
-
-		if "compilerOptions" in self.tsconfig:
-			for option in self.tsconfig["compilerOptions"].keys():
-				if option not in allowed_compileroptions:
-					self._soft_error("unknown key '%s' in compilerOptions" % option,
-									self._lint_key(option))
-
-		if "ArcticTypescript" in self.tsconfig:
-			for option in self.tsconfig["ArcticTypescript"].keys():
-				if option not in allowed_settings:
-					self._soft_error("unknown key '%s' in ArcticTypescript" % option,
-									self._lint_key(option))
-
-
-	def _validate_values(self):
-
-		if "compilerOptions" in self.tsconfig:
-			for key, validator in compileroptions_validations.items():
-				self._execute_validator(validator, self.tsconfig["compilerOptions"], key)
-
-		if "ArcticTypescript" in self.tsconfig:
-			for key, validator in settings_validations.items():
-				self._execute_validator(validator, self.tsconfig["ArcticTypescript"], key)
-
-
-
-	def _execute_validator(self, validator, dict_with_uservalue, key):
-		if key not in dict_with_uservalue:
-			return True
-		uservalue = dict_with_uservalue[key]
-		# type
-		if validator == str:
-			if type(uservalue) != str:
-				self._hard_error("value of '%s' has to be a string" % key,
-								 self._lint_value_of_key(key))
-				return False
-
-		if validator == list:
-			if type(uservalue) != list:
-				self._hard_error("value of '%s' has to be a list" % key,
-								self._lint_value_of_key(key))
-				return False
-
-		if validator == bool:
-			if type(uservalue) != bool:
-				self._hard_error("value of '%s' has to be true or false" % key,
-								self._lint_value_of_key(key))
-				return False
-
-		if validator == dict:
-			if type(uservalue) != dict:
-				self._hard_error("value of '%s' has to be an object: { }" % key,
-								self._lint_value_of_key(key))
-				return False
-
-		# regex
-		if type(validator) == str:
-			if type(uservalue) != str:
-				self._hard_error("value of '%s' has to be a string" % key,
-								self._lint_value_of_key(key))
-				return False
-			else:
-				m = re.match(validator, uservalue)
-				if m is None:
-					self._soft_error("value of '%s' should match regex %s" %
-												(key, validator),
-									self._lint_value_of_key(key))
-					return False
-
-		# list of string values
-		if type(validator) == list:
-			if type(uservalue) != str:
-				self._hard_error("value of '%s' has to be a string" % key,
-								self._lint_value_of_key(key))
-				return False
-			else:
-				if uservalue not in validator:
-					self._soft_error("value of '%s' should be one of %s" %
-												(key, validator),
-									self._lint_value_of_key(key))
-					return False
-		return True
-
-
-	def _check_files_are_strings(self):
-		if "files" in self.tsconfig:
-			for file_ in self.tsconfig["files"]:
-				if type(file_) is not str:
-					self._soft_error("all files have to be strings",
-									self._lint_value_of_key("files"))
-					break
-
-		if "filesGlob" in self.tsconfig:
-			for glob_ in self.tsconfig["filesGlob"]:
-				if type(glob_) is not str:
-					self._hard_error("all filesGlobs have to be strings",
-									self._lint_value_of_key("filesGlob"))
-					break
-
-	def _check_files_exist(self):
-		if "files" in self.tsconfig:
-			if len(self.tsconfig["files"]) > 1000:
-				return
-			tsdir = os.path.abspath(os.path.dirname(self.view.file_name()))
-			for file_ in self.tsconfig["files"]:
-				file_path = os.path.join(tsdir, file_)
-				if not os.path.isfile(file_path):
-					self._soft_error("file %s does not exist or is not a file" % file_,
-									self._lint_string_value(file_))
-
-	def _check_files_are_ts_files(self):
-		if "files" in self.tsconfig:
-			for file_ in self.tsconfig["files"]:
-				if not file_.endswith('.ts'):
-					self._soft_error("file %s is no .ts file" % file_,
-									self._lint_string_value(file_))
-
-
-	def _add_regions(self):
-
-		self.view.add_regions('tsconfig-error', self.error_regions,
-						 'invalid', 'dot', sublime.DRAW_NO_FILL)
-
-
-	def _expect_key_of_obj_to_be_y(self, obj, y):
-		key_found = False
-		for k in obj.keys():
-			if k.lower() == y.lower():
-				key_found = True
-
-				if k == y:
-					return
-
-				self._soft_error("key '%s' is spelled wrong" % k,
-								self._lint_key(k))
-		return key_found
-
-
-	def _lint_key(self, keyname):
-		quote_style_2 = self.content.find('"%s"' % keyname)
-		if quote_style_2 != -1:
-			return self._lint_char(quote_style_2 + 1, len(keyname))
-
-		quote_style_1 = self.content.find("'%s'" % keyname)
-		if quote_style_1 != -1:
-			return self._lint_char(quote_style_1 + 1, len(keyname))
-
-	def _lint_string_value(self, value):
-		quote_style_2 = self.content.find('"%s"' % value)
-		if quote_style_2 != -1:
-			return self._lint_char(quote_style_2 + 1, len(value))
-
-		quote_style_1 = self.content.find("'%s'" % keyname)
-		if quote_style_1 != -1:
-			return self._lint_char(quote_style_1 + 1, len(value))
-
-
-	def _lint_value_of_key(self, keyname):
-		keypos = self.content.find("'%s'" % keyname)
-		if keypos == -1:
-			keypos = self.content.find('"%s"' % keyname)
-		if keypos == -1:
-			return
-
-		# set pointer to end of key
-		p = keypos + len(keyname) + 2
-
-		# find :
-		while self.content[p] != ":" and p < self.len - 1:
-			p += 1
-
-		return self._lint_char(p + 1, 3)
-
-
-
-
-	def _parse_jsonerror(self, error):
-		try:
-			self.msg, line, col, char = re.match(
-			'(.*): line ([\d]+) column ([\d]+) \(char ([\d]+)\)', error).groups()
-		except Exception:
-			return
-
-		self.line = int(line)
-		self.col = int(col)
-		self.char = int(char)
-
-		if str(self.line) != line \
-				or str(self.col) != col \
-				or str(self.char) != char:
-			self.msg, self.line, self.col, self.char = None, None, None, None
+        except Exception as e:
+            Debug('tsconfig', 'unexpected json.loads() error %s %s' % (type(e), e))
+            self.numerrors += 1
+            raise CancelCommand()
+        return False
+
+
+    def _lint_char(self, char, length=0):
+        if length == 0:
+            region = sublime.Region(
+                        char - 2 if char >= 2            else 0,
+                        char + 2 if char <= self.len - 2 else self.len)
+        else:
+            region = sublime.Region(char, char + length)
+        self.error_regions.append(region)
+        return (region.a, region.b)
+
+
+    def _check_key_spellings(self):
+
+        # check for spelling
+        self._expect_key_of_obj_to_be_y(self.tsconfig, "compilerOptions")
+        self._expect_key_of_obj_to_be_y(self.tsconfig, "files")
+        self._expect_key_of_obj_to_be_y(self.tsconfig, "filesGlob")
+        self._expect_key_of_obj_to_be_y(self.tsconfig, "ArcticTypescript")
+
+
+    def _check_root_dicts(self):
+        if type(self.tsconfig) != dict:
+            self._hard_error("root structure must be an object: { }",
+                            self._lint_char(0, self.len - 1))
+            return False
+
+
+        valid = self._execute_validator(dict, self.tsconfig, 'compilerOptions'), \
+                self._execute_validator(list, self.tsconfig, 'files'), \
+                self._execute_validator(list, self.tsconfig, 'filesGlob'), \
+                self._execute_validator(dict, self.tsconfig, 'ArcticTypescript')
+
+        return all(valid)
+
+    def _check_unknown_keys(self):
+
+        if "compilerOptions" in self.tsconfig:
+            for option in self.tsconfig["compilerOptions"].keys():
+                if option not in allowed_compileroptions:
+                    self._soft_error("unknown key '%s' in compilerOptions" % option,
+                                    self._lint_key(option))
+
+        if "ArcticTypescript" in self.tsconfig:
+            for option in self.tsconfig["ArcticTypescript"].keys():
+                if option not in allowed_settings:
+                    self._soft_error("unknown key '%s' in ArcticTypescript" % option,
+                                    self._lint_key(option))
+
+
+    def _validate_values(self):
+
+        if "compilerOptions" in self.tsconfig:
+            for key, validator in compileroptions_validations.items():
+                self._execute_validator(validator, self.tsconfig["compilerOptions"], key)
+
+        if "ArcticTypescript" in self.tsconfig:
+            for key, validator in settings_validations.items():
+                self._execute_validator(validator, self.tsconfig["ArcticTypescript"], key)
+
+
+
+    def _execute_validator(self, validator, dict_with_uservalue, key):
+        if key not in dict_with_uservalue:
+            return True
+        uservalue = dict_with_uservalue[key]
+        # type
+        if validator == str:
+            if type(uservalue) != str:
+                self._hard_error("value of '%s' has to be a string" % key,
+                                 self._lint_value_of_key(key))
+                return False
+
+        if validator == list:
+            if type(uservalue) != list:
+                self._hard_error("value of '%s' has to be a list" % key,
+                                self._lint_value_of_key(key))
+                return False
+
+        if validator == bool:
+            if type(uservalue) != bool:
+                self._hard_error("value of '%s' has to be true or false" % key,
+                                self._lint_value_of_key(key))
+                return False
+
+        if validator == dict:
+            if type(uservalue) != dict:
+                self._hard_error("value of '%s' has to be an object: { }" % key,
+                                self._lint_value_of_key(key))
+                return False
+
+        # regex
+        if type(validator) == str:
+            if type(uservalue) != str:
+                self._hard_error("value of '%s' has to be a string" % key,
+                                self._lint_value_of_key(key))
+                return False
+            else:
+                m = re.match(validator, uservalue)
+                if m is None:
+                    self._soft_error("value of '%s' should match regex %s" %
+                                                (key, validator),
+                                    self._lint_value_of_key(key))
+                    return False
+
+        # list of string values
+        if type(validator) == list:
+            if type(uservalue) != str:
+                self._hard_error("value of '%s' has to be a string" % key,
+                                self._lint_value_of_key(key))
+                return False
+            else:
+                if uservalue not in validator:
+                    self._soft_error("value of '%s' should be one of %s" %
+                                                (key, validator),
+                                    self._lint_value_of_key(key))
+                    return False
+        return True
+
+
+    def _check_files_are_strings(self):
+        if "files" in self.tsconfig:
+            for file_ in self.tsconfig["files"]:
+                if type(file_) is not str:
+                    self._soft_error("all files have to be strings",
+                                    self._lint_value_of_key("files"))
+                    break
+
+        if "filesGlob" in self.tsconfig:
+            for glob_ in self.tsconfig["filesGlob"]:
+                if type(glob_) is not str:
+                    self._hard_error("all filesGlobs have to be strings",
+                                    self._lint_value_of_key("filesGlob"))
+                    break
+
+    def _check_files_exist(self):
+        if "files" in self.tsconfig:
+            if len(self.tsconfig["files"]) > 1000:
+                return
+            tsdir = os.path.abspath(os.path.dirname(self.view.file_name()))
+            for file_ in self.tsconfig["files"]:
+                file_path = os.path.join(tsdir, file_)
+                if not os.path.isfile(file_path):
+                    self._soft_error("file %s does not exist or is not a file" % file_,
+                                    self._lint_string_value(file_))
+
+    def _check_files_are_ts_files(self):
+        if "files" in self.tsconfig:
+            for file_ in self.tsconfig["files"]:
+                if not file_.endswith('.ts'):
+                    self._soft_error("file %s is no .ts file" % file_,
+                                    self._lint_string_value(file_))
+
+
+    def _add_regions(self):
+
+        self.view.add_regions('tsconfig-error', self.error_regions,
+                         'invalid', 'dot', sublime.DRAW_NO_FILL)
+
+
+    def _expect_key_of_obj_to_be_y(self, obj, y):
+        key_found = False
+        for k in obj.keys():
+            if k.lower() == y.lower():
+                key_found = True
+
+                if k == y:
+                    return
+
+                self._soft_error("key '%s' is spelled wrong" % k,
+                                self._lint_key(k))
+        return key_found
+
+
+    def _lint_key(self, keyname):
+        quote_style_2 = self.content.find('"%s"' % keyname)
+        if quote_style_2 != -1:
+            return self._lint_char(quote_style_2 + 1, len(keyname))
+
+        quote_style_1 = self.content.find("'%s'" % keyname)
+        if quote_style_1 != -1:
+            return self._lint_char(quote_style_1 + 1, len(keyname))
+
+    def _lint_string_value(self, value):
+        quote_style_2 = self.content.find('"%s"' % value)
+        if quote_style_2 != -1:
+            return self._lint_char(quote_style_2 + 1, len(value))
+
+        quote_style_1 = self.content.find("'%s'" % keyname)
+        if quote_style_1 != -1:
+            return self._lint_char(quote_style_1 + 1, len(value))
+
+
+    def _lint_value_of_key(self, keyname):
+        keypos = self.content.find("'%s'" % keyname)
+        if keypos == -1:
+            keypos = self.content.find('"%s"' % keyname)
+        if keypos == -1:
+            return
+
+        # set pointer to end of key
+        p = keypos + len(keyname) + 2
+
+        # find :
+        while self.content[p] != ":" and p < self.len - 1:
+            p += 1
+
+        return self._lint_char(p + 1, 3)
+
+
+
+
+    def _parse_jsonerror(self, error):
+        try:
+            self.msg, line, col, char = re.match(
+            '(.*): line ([\d]+) column ([\d]+) \(char ([\d]+)\)', error).groups()
+        except Exception:
+            return
+
+        self.line = int(line)
+        self.col = int(col)
+        self.char = int(char)
+
+        if str(self.line) != line \
+                or str(self.col) != col \
+                or str(self.char) != char:
+            self.msg, self.line, self.col, self.char = None, None, None, None
 
 
 

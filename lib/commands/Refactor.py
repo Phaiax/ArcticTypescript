@@ -3,9 +3,9 @@
 from subprocess import Popen, PIPE
 from threading import Thread
 try:
-	from queue import Queue
+    from queue import Queue
 except ImportError:
-	from Queue import Queue
+    from Queue import Queue
 
 import sublime
 import os
@@ -21,71 +21,71 @@ from ..Utils import debounce, dirname, read_file, get_kwargs, Debug
 # ----------------------------------------- UTILS --------------------------------------- #
 
 def show_output(window,line):
-	PANEL.show(window)
-	PANEL.update(line['output'])
+    PANEL.show(window)
+    PANEL.update(line['output'])
 
 def clear_panel(window):
-	PANEL.clear(window)
+    PANEL.clear(window)
 
 
 # --------------------------------------- COMPILER -------------------------------------- #
 
 class Refactor(Thread):
 
-	def __init__(self, window, member, refs, root):
-		self.window = window
-		self.member = member
-		self.refs = refs
-		self.root = root
-		Thread.__init__(self)
+    def __init__(self, window, member, refs, root):
+        self.window = window
+        self.member = member
+        self.refs = refs
+        self.root = root
+        Thread.__init__(self)
 
-	def run(self):
-		clear_panel(self.window)
+    def run(self):
+        clear_panel(self.window)
 
-		node = SETTINGS.get_node(self.root)
-		kwargs = get_kwargs()
-		p = Popen([node, os.path.join(dirname,'bin','refactor.js'), self.member, json.dumps(self.refs)], stdin=PIPE, stdout=PIPE, **kwargs)
-		reader = RefactorReader(self.window,p.stdout,Queue())
-		reader.daemon = True
-		reader.start()
+        node = SETTINGS.get_node(self.root)
+        kwargs = get_kwargs()
+        p = Popen([node, os.path.join(dirname,'bin','refactor.js'), self.member, json.dumps(self.refs)], stdin=PIPE, stdout=PIPE, **kwargs)
+        reader = RefactorReader(self.window,p.stdout,Queue())
+        reader.daemon = True
+        reader.start()
 
 
 class RefactorReader(Thread):
 
-	def __init__(self,window,stdout,queue):
-		self.window = window
-		self.stdout = stdout
-		self.queue = queue
-		Thread.__init__(self)
+    def __init__(self,window,stdout,queue):
+        self.window = window
+        self.stdout = stdout
+        self.queue = queue
+        Thread.__init__(self)
 
-	def run(self):
-		delay = 1000
-		previous = ""
-		for line in iter(self.stdout.readline, b''):
-			line = json.loads(line.decode('UTF-8'))
-			if 'output' in line:
-				show_output(self.window,line)
-			elif 'file' in line:
-				filename = line['file']
-				content = read_file(filename)
-				lines = len(content.split('\n'))-1
-				if previous != filename:
-					self.send(filename,lines,content,delay)
-					delay+=100
+    def run(self):
+        delay = 1000
+        previous = ""
+        for line in iter(self.stdout.readline, b''):
+            line = json.loads(line.decode('UTF-8'))
+            if 'output' in line:
+                show_output(self.window,line)
+            elif 'file' in line:
+                filename = line['file']
+                content = read_file(filename)
+                lines = len(content.split('\n'))-1
+                if previous != filename:
+                    self.send(filename,lines,content,delay)
+                    delay+=100
 
-				previous = filename
-			else:
-				print('refactor error')
+                previous = filename
+            else:
+                print('refactor error')
 
 
-		self.stdout.close()
+        self.stdout.close()
 
-	def send(self,filename,lines,content,delay):
-		sublime.set_timeout(lambda:self.update(filename,lines,content),delay)
+    def send(self,filename,lines,content,delay):
+        sublime.set_timeout(lambda:self.update(filename,lines,content),delay)
 
-	def update(self,filename,lines,content):
-		TSS.update(filename, lines, content)
-		ERRORS.start_recalculation(filename_or_root)
+    def update(self,filename,lines,content):
+        TSS.update(filename, lines, content)
+        ERRORS.start_recalculation(filename_or_root)
 
 
 

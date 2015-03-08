@@ -77,7 +77,7 @@ class test_helloworld_command(TestCase):
             self.view.window().run_command("close_file")
 
     def setText(self, string):
-    	pass
+        pass
         #self.view.run_command("insert", {"characters": string})
 
     def getRow(self, row):
