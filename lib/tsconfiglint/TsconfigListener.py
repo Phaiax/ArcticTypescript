@@ -10,6 +10,8 @@ from .tsconfigglobexpand import expand_filesglob
 from ..utils.CancelCommand import catch_CancelCommand, CancelCommand
 
 class TsconfigEventListener(sublime_plugin.EventListener):
+    """ Listen to file events -> Activate TsconfigLinter.
+        check_tsconfig immediately returns if file is no tsconfig.json """
 
     def on_activated_async(self, view):
         check_tsconfig(view)

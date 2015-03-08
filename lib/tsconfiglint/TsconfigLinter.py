@@ -28,6 +28,10 @@ empty_tsconfig = {
 
 
 
+# ##########################################################################
+# ###################         MAIN: lints entry point             ##########
+# ##########################################################################
+
 
 @catch_CancelCommand
 def check_tsconfig(view):
@@ -44,6 +48,41 @@ def check_tsconfig(view):
     linter = TsconfigLinter(view)
 
     return linter
+
+
+# ##########################################################################
+# #############         MAIN: display error in status             ##########
+# ##########################################################################
+
+
+def show_lint_in_status(view):
+    """ Uses the error map stored in view.settings() to display
+        status messages if the cursor is above an error """
+
+    if not _if_is_valid_and_enabled(view):
+        return
+
+    if view.settings().has('tsconfig-lints'):
+        error_locations = view.settings().get('tsconfig-lints', [])
+
+        current_errors = []
+        current_selection = view.sel()[0]
+
+        for pos, error in error_locations:
+            error_region = sublime.Region(pos[0], pos[1])
+            if current_selection.intersects(error_region):
+                current_errors.append(error)
+
+        if len(current_errors):
+            view.set_status('tsconfig-errors', ' | '.join(current_errors))
+        else:
+            view.erase_status('tsconfig-errors')
+
+
+
+# ######################################################################
+# ###############                   HELPERS                   ##########
+# ######################################################################
 
 
 def _is_valid_and_enabled(view):
@@ -70,28 +109,9 @@ def _is_tsconfig(view):
     return os.path.basename(fn) == "tsconfig.json"
 
 
-def show_lint_in_status(view):
-    """ Uses the error map stored in view.settings() to display status messages
-        if the cursor is above an error """
-
-    if not _if_is_valid_and_enabled(view):
-        return
-
-    if view.settings().has('tsconfig-lints'):
-        error_locations = view.settings().get('tsconfig-lints', [])
-
-        current_errors = []
-        current_selection = view.sel()[0]
-
-        for pos, error in error_locations:
-            error_region = sublime.Region(pos[0], pos[1])
-            if current_selection.intersects(error_region):
-                current_errors.append(error)
-
-        if len(current_errors):
-            view.set_status('tsconfig-errors', ' | '.join(current_errors))
-        else:
-            view.erase_status('tsconfig-errors')
+# ##########################################################################
+# ###################         CLASS: TsconfigLinter               ##########
+# ##########################################################################
 
 
 class TsconfigLinter(object):
@@ -105,7 +125,8 @@ class TsconfigLinter(object):
 
 
     def __init__(self, view):
-        """ Starts linting. Raises CancelCommand if a fatal error occures """
+        """ Starts linting.
+            Raises CancelCommand if a fatal error occures. """
 
         # Initializing
         self.linted = False
@@ -137,6 +158,11 @@ class TsconfigLinter(object):
         self.linted = True
 
 
+    # ######################################################################
+    # ###############                   HELPERS                   ##########
+    # ######################################################################
+
+
     def _hard_error(self, msg, pos):
         """ Display and cound hard error """
         self.harderrors.append((pos, msg))
@@ -153,10 +179,27 @@ class TsconfigLinter(object):
     def _store_error_locations_in_views_settings():
         """ Stores the errors in view.settings()
             Format: [<((a,b), msg)>] """
+
         error_locations = []
         error_locations.extend(self.harderrors)
         error_locations.extend(self.softerrors)
         self.view.settings().set('tsconfig-lints', error_locations)
+
+
+    # ######################################################################
+    # ###############            DISPLAY                          ##########
+    # ######################################################################
+
+
+    def _add_regions(self):
+        """ Display all found Errors """
+        self.view.add_regions('tsconfig-error', self.error_regions,
+                              'invalid', 'dot', sublime.DRAW_NO_FILL)
+
+
+    # ######################################################################
+    # ###############                   READ CONTENT              ##########
+    # ######################################################################
 
 
     def _read_file(self):
@@ -171,67 +214,135 @@ class TsconfigLinter(object):
 
 
     def _check_empty_and_insert_default(self):
-        """ Checks if content is empty and inserts default tsonfig.json if so. """
+        """ Checks if content is empty and inserts default tsonfig.json if so.
+            Raises CancelCommand() if empty before. """
+
         if self.content == "":
             if not is_tsglobexpansion_disabled():
-                Debug('tsconfig', 'put default empty base structure to tsconfig.json')
+                Debug('tsconfig', 'put default base structure to tsconfig.json')
                 self.view.run_command('append', {'characters':
                         json.dumps(empty_tsconfig, indent=4)})
             raise CancelCommand()
 
 
+    # ######################################################################
+    # ###############                   JSON                      ##########
+    # ######################################################################
+
+
     def _check_jsonsyntax(self):
+        """ Parse self.content into self.tsconfig.
+            Raise CancelCommand on Fatal Error.
+            Make HardErrors on syntax errors.
+            Return True if parsing has succeeded, even if there were errors. """
+
         try:
+            # DECODE
             self.tsconfig = json.loads(self.content)
         except ValueError as e:
             Debug('tsconfig', 'json error %s %s' % (type(e), e))
 
+            # Parse -> self.msg,line,col,char
             self._parse_jsonerror(e.args[0])
 
+            # Parsing of exception failed
             if self.msg is None:
                 Debug('tsconfig.json', 'json error %s' % e)
                 self.numerrors += 1
                 raise CancelCommand()
 
-            self._hard_error("%s (Line %i Column %i)" % (self.msg, self.line, self.col),
-                              self._lint_char(self.char))
+            # Display
+            self._hard_error("%s (Line %i Column %i)"
+                             % (self.msg, self.line, self.col),
+                             self._lint_range(self.char))
 
-            return True
+            return True # Allow detailed linting
 
         except Exception as e:
-            Debug('tsconfig', 'unexpected json.loads() error %s %s' % (type(e), e))
+            # The Unexpected
+            Debug('tsconfig', 'unexpected json.loads() error %s %s'
+                               % (type(e), e))
             self.numerrors += 1
             raise CancelCommand()
+
         return False
 
 
-    def _lint_char(self, char, length=0):
-        if length == 0:
-            region = sublime.Region(
-                        char - 2 if char >= 2            else 0,
-                        char + 2 if char <= self.len - 2 else self.len)
-        else:
-            region = sublime.Region(char, char + length)
-        self.error_regions.append(region)
-        return (region.a, region.b)
+    def _parse_jsonerror(self, error):
+        """ Parse the exception message:
+            extract line, char, col, msg into self.* """
+
+        try:
+            self.msg, line, col, char = re.match(
+                        '(.*): line ([\d]+) column ([\d]+) \(char ([\d]+)\)',
+                        error).groups()
+        except Exception:
+            self.msg, self.line, self.col, self.char = None, None, None, None
+            return
+
+        # str -> int -> str should be the same
+
+        self.line = int(line)
+        self.col = int(col)
+        self.char = int(char)
+
+        if str(self.line) != line \
+                or str(self.col) != col \
+                or str(self.char) != char:
+            self.msg, self.line, self.col, self.char = None, None, None, None
+
+
+        # Some Possible JSON Errors:
+
+        # <class 'ValueError'> Expecting property name enclosed in
+        #                      double quotes: line 2 column 25 (char 26)
+        # <class 'ValueError'> Expecting ':' delimiter: line 2
+        #                      column 27 (char 28)
+        # <class 'ValueError'> Expecting object: line 2 column 28 (char 29)
+
+
+
+    # ######################################################################
+    # ###############            LINT BASE STRUCTURE, KEYS        ##########
+    # ######################################################################
 
 
     def _check_key_spellings(self):
+        """ Check Spelling of main dicts: currently only caSe """
 
-        # check for spelling
         self._expect_key_of_obj_to_be_y(self.tsconfig, "compilerOptions")
         self._expect_key_of_obj_to_be_y(self.tsconfig, "files")
         self._expect_key_of_obj_to_be_y(self.tsconfig, "filesGlob")
         self._expect_key_of_obj_to_be_y(self.tsconfig, "ArcticTypescript")
 
 
+    def _expect_key_of_obj_to_be_y(self, obj, y):
+        """ Checks for wrong spellings (caSe) of y in the keys of obj """
+
+        key_found = False
+        for k in obj.keys():
+            if k.lower() == y.lower():
+                key_found = True
+
+                if k == y:
+                    return
+
+                self._soft_error("key '%s' is spelled wrong" % k,
+                                self._lint_key(k))
+        return key_found
+
+
     def _check_root_dicts(self):
+        """ Check Type of root dicts == dict.
+            Returns True if everything is ok. """
+
+        # root
         if type(self.tsconfig) != dict:
             self._hard_error("root structure must be an object: { }",
-                            self._lint_char(0, self.len - 1))
+                            self._lint_range(0, self.len - 1))
             return False
 
-
+        # first layer
         valid = self._execute_validator(dict, self.tsconfig, 'compilerOptions'), \
                 self._execute_validator(list, self.tsconfig, 'files'), \
                 self._execute_validator(list, self.tsconfig, 'filesGlob'), \
@@ -240,36 +351,56 @@ class TsconfigLinter(object):
         return all(valid)
 
     def _check_unknown_keys(self):
+        """ Check for unknown keys in compilerOptions and ArcticTypescript """
 
         if "compilerOptions" in self.tsconfig:
             for option in self.tsconfig["compilerOptions"].keys():
                 if option not in allowed_compileroptions:
-                    self._soft_error("unknown key '%s' in compilerOptions" % option,
-                                    self._lint_key(option))
+                    self._soft_error("unknown key '%s' in compilerOptions"
+                                     % option,
+                                     self._lint_key(option))
 
         if "ArcticTypescript" in self.tsconfig:
             for option in self.tsconfig["ArcticTypescript"].keys():
                 if option not in allowed_settings:
-                    self._soft_error("unknown key '%s' in ArcticTypescript" % option,
-                                    self._lint_key(option))
+                    self._soft_error("unknown key '%s' in ArcticTypescript"
+                                     % option,
+                                     self._lint_key(option))
+
+
+    # ######################################################################
+    # ###############            LINT VALUES                      ##########
+    # ######################################################################
 
 
     def _validate_values(self):
+        """ Validate compilerOptions and ArcticTypescript using the validators
+            from utils.options """
 
         if "compilerOptions" in self.tsconfig:
             for key, validator in compileroptions_validations.items():
-                self._execute_validator(validator, self.tsconfig["compilerOptions"], key)
+                self._execute_validator(validator,
+                                        self.tsconfig["compilerOptions"], key)
 
         if "ArcticTypescript" in self.tsconfig:
             for key, validator in settings_validations.items():
-                self._execute_validator(validator, self.tsconfig["ArcticTypescript"], key)
+                self._execute_validator(validator,
+                                        self.tsconfig["ArcticTypescript"], key)
 
 
 
     def _execute_validator(self, validator, dict_with_uservalue, key):
+        """ Execute validation for dict_with_uservalue[key]
+            and display error on validation failure.
+            HardErrors on type mismatch,
+            SoftErrors on regex or [<str>] mismatch.
+            Returns True if key does not exists or if it is valid """
+
+        # exists?
         if key not in dict_with_uservalue:
             return True
         uservalue = dict_with_uservalue[key]
+
         # type
         if validator == str:
             if type(uservalue) != str:
@@ -325,6 +456,11 @@ class TsconfigLinter(object):
 
 
     def _check_files_are_strings(self):
+        """
+            Checks if all files are Strings. > SoftError
+            Checks if all filesGlobs are Strings. > HardError (because then
+            expandGlob will not work)
+        """
         if "files" in self.tsconfig:
             for file_ in self.tsconfig["files"]:
                 if type(file_) is not str:
@@ -339,7 +475,16 @@ class TsconfigLinter(object):
                                     self._lint_value_of_key("filesGlob"))
                     break
 
+
+    # ######################################################################
+    # ###############            LINT FILES (exist, extension)    ##########
+    # ######################################################################
+
+
     def _check_files_exist(self):
+        """ Checks if the files exist > SoftError.
+            Does nothing if to much files are listed. """
+
         if "files" in self.tsconfig:
             if len(self.tsconfig["files"]) > 1000:
                 return
@@ -347,10 +492,13 @@ class TsconfigLinter(object):
             for file_ in self.tsconfig["files"]:
                 file_path = os.path.join(tsdir, file_)
                 if not os.path.isfile(file_path):
-                    self._soft_error("file %s does not exist or is not a file" % file_,
-                                    self._lint_string_value(file_))
+                    self._soft_error("file %s does not exist or is not a file"
+                                     % file_,
+                                     self._lint_string_value(file_))
 
     def _check_files_are_ts_files(self):
+        """ Checks for file extension .ts > SoftError """
+
         if "files" in self.tsconfig:
             for file_ in self.tsconfig["files"]:
                 if not file_.endswith('.ts'):
@@ -358,46 +506,43 @@ class TsconfigLinter(object):
                                     self._lint_string_value(file_))
 
 
-    def _add_regions(self):
-
-        self.view.add_regions('tsconfig-error', self.error_regions,
-                         'invalid', 'dot', sublime.DRAW_NO_FILL)
-
-
-    def _expect_key_of_obj_to_be_y(self, obj, y):
-        key_found = False
-        for k in obj.keys():
-            if k.lower() == y.lower():
-                key_found = True
-
-                if k == y:
-                    return
-
-                self._soft_error("key '%s' is spelled wrong" % k,
-                                self._lint_key(k))
-        return key_found
+    # ######################################################################
+    # ###############              LINT HELPERS                   ##########
+    # ######################################################################
 
 
     def _lint_key(self, keyname):
+        """ Simple string search for keyname in parenteses, lint that key.
+            Returns the position (sublime.Region) of that lint """
+
         quote_style_2 = self.content.find('"%s"' % keyname)
         if quote_style_2 != -1:
-            return self._lint_char(quote_style_2 + 1, len(keyname))
+            return self._lint_range(quote_style_2 + 1, len(keyname))
 
         quote_style_1 = self.content.find("'%s'" % keyname)
         if quote_style_1 != -1:
-            return self._lint_char(quote_style_1 + 1, len(keyname))
+            return self._lint_range(quote_style_1 + 1, len(keyname))
 
     def _lint_string_value(self, value):
+        """ Simple string search for value in parenteses, lint that value.
+            Returns the position (sublime.Region) of that lint """
+
         quote_style_2 = self.content.find('"%s"' % value)
         if quote_style_2 != -1:
-            return self._lint_char(quote_style_2 + 1, len(value))
+            return self._lint_range(quote_style_2 + 1, len(value))
 
         quote_style_1 = self.content.find("'%s'" % keyname)
         if quote_style_1 != -1:
-            return self._lint_char(quote_style_1 + 1, len(value))
+            return self._lint_range(quote_style_1 + 1, len(value))
 
 
     def _lint_value_of_key(self, keyname):
+        """
+            Simple string search for keyname in parenteses, lint the
+            value of that key.
+            Returns the position (sublime.Region) of that lint
+        """
+
         keypos = self.content.find("'%s'" % keyname)
         if keypos == -1:
             keypos = self.content.find('"%s"' % keyname)
@@ -411,33 +556,23 @@ class TsconfigLinter(object):
         while self.content[p] != ":" and p < self.len - 1:
             p += 1
 
-        return self._lint_char(p + 1, 3)
+        return self._lint_range(p + 1, 3)
 
 
+    def _lint_range(self, char, length=0):
+        """ Lints from position char.
+            Returns the position (sublime.Region) of that lint """
 
-
-    def _parse_jsonerror(self, error):
-        try:
-            self.msg, line, col, char = re.match(
-            '(.*): line ([\d]+) column ([\d]+) \(char ([\d]+)\)', error).groups()
-        except Exception:
-            return
-
-        self.line = int(line)
-        self.col = int(col)
-        self.char = int(char)
-
-        if str(self.line) != line \
-                or str(self.col) != col \
-                or str(self.char) != char:
-            self.msg, self.line, self.col, self.char = None, None, None, None
+        if length == 0:
+            region = sublime.Region(
+                        char - 2 if char >= 2            else 0,
+                        char + 2 if char <= self.len - 2 else self.len)
+        else:
+            region = sublime.Region(char, char + length)
+        self.error_regions.append(region)
+        return (region.a, region.b)
 
 
 
 
 
-#<class 'ValueError'> Expecting property name enclosed in double quotes: line 2 column 25 (char 26)
-#<class 'ValueError'> Expecting ':' delimiter: line 2 column 27 (char 28)
-#<class 'ValueError'> Expecting object: line 2 column 28 (char 29)
-#<class 'ValueError'> Expecting property name enclosed in double quotes: line 2 column 31 (char 32)
-#<class 'ValueError'> Expecting object: line 3 column 15 (char 48)
