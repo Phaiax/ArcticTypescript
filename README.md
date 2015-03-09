@@ -37,12 +37,12 @@ Commands and Shortcuts
 Example Projects
 ----------------------------------------------------------------------------
 
- * [Brower example without modules][example_basicbrowser] : compile to single file
- * [AMD-Modules][example_amd] : only compiling, no example index.html
- * FEATURED: [AMD-Modules with tests for Browser][example_amdtest] : index.html for app and test.html for tests
- * [Nodejs][example_commonjs] : only compiling
- * [Nodejs with test][example_commonjstest] : automatic text execution with mocha after build
- * [Simplest example][example_singleout] : everything will be compiled to out.js
+ * [Brower example without modules][example_basicbrowser]: compile to single file
+ * [AMD-Modules][example_amd]: only compiling, no example index.html
+ * [AMD-Modules with tests for Browser][example_amdtest] **FEATURED**: index.html for app and test.html for tests
+ * [Nodejs][example_commonjs]: only compiling
+ * [Nodejs with test][example_commonjstest]: automatic text execution with mocha after build
+ * [Simplest example][example_singleout]: everything will be compiled to out.js
 
 [example_amdtest]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/amd_modules_with_tests
 [example_basicbrowser]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/basic_browser_project
