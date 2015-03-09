@@ -110,8 +110,7 @@ class ProjectWizzard(object):
         Debug('project+', 'Ask for tsconfig.json location')
         self.window.show_input_panel("Location for tsconfig.json (use your project folder)",
                                      os.path.dirname(self.view.file_name()),
-                                     lambda folder: [self._set_folder(folder),
-                                         self._ask_output_type()],
+                                     lambda folder: self._set_folder_and_go_on(folder),
                                      None, # on change
                                      lambda: [self._cleanup(),
                                                set_plugin_temporarily_disabled(folder=self.view),
@@ -120,10 +119,19 @@ class ProjectWizzard(object):
                                     )
 
 
-    def _set_folder(self, tsconfigfolder):
-        self.tsconfigfolder = tsconfigfolder
-        self.tspath = os.path.abspath(os.path.join(self.tsconfigfolder, 'tsconfig.json'))
-
+    def _set_folder_and_go_on(self, tsconfigfolder):
+        tsconfigfolder = os.path.abspath(tsconfigfolder)
+        is_direct_parent =  os.path.relpath(tsconfigfolder,
+                                            os.path.dirname(self.view.file_name())) \
+                                .replace('../','').replace('..','') \
+                                == ""
+        if is_direct_parent:
+            self.tsconfigfolder = tsconfigfolder
+            self.tspath = os.path.abspath(os.path.join(self.tsconfigfolder, 'tsconfig.json'))
+            self._ask_output_type()
+        else:
+            sublime.status_message("#### You have to choose a parent folder! ####")
+            self._create_tsconfigjson()
 
     def _ask_output_type(self, message=""):
         """ Singlefile output or multiple files (AMD or commonjs style) """

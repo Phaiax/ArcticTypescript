@@ -5,20 +5,18 @@ TODO
 hard
 ----
 
-* check parent dir in wizzard for tsfile generation
 
 
 good to have
 ------------
 
- * snippets -> Readme, AutoFilePath -> Readme
+ * Open wizzard on tsconfig error
  * error list has crude messages if a missing element of an object is selected
  * test build filew view without dir and outDir
 
 features
 --------
 
- * filesGlob
  * tsserver
    + refactoring
    + formatting
@@ -28,6 +26,9 @@ features
 DONE
 ====
 
+ * filesGlob
+ * check parent dir in wizzard for tsfile generation
+ * snippets -> Readme, AutoFilePath -> Readme
  * no exceptions if tsconfig json error during init
  * tsconfig validation
  * is Build output working?
