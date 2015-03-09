@@ -5,12 +5,11 @@ TODO
 hard
 ----
 
-
+* add all! compilerOptions
 
 good to have
 ------------
 
- * Lint tsconfig before opening project
  * error list has crude messages if a missing element of an object is selected
  * test build filew view without dir and outDir
 
@@ -26,6 +25,7 @@ features
 DONE
 ====
 
+ * Lint tsconfig before opening project (-> done automatically but without real linter)
  * Open wizzard on tsconfig error
  * filesGlob
  * check parent dir in wizzard for tsfile generation

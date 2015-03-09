@@ -123,13 +123,15 @@ class TsconfigLinter(object):
         Inserts a default structure if the file is empty. """
 
 
-    def __init__(self, view):
+    def __init__(self, view=None, file_name=None):
         """ Starts linting.
             Raises CancelCommand if a fatal error occures. """
 
         # Initializing
         self.linted = False
         self.view = view
+        self.file_name = file_name
+
 
         self.error_regions = []
         self.tsconfig = None
@@ -139,7 +141,7 @@ class TsconfigLinter(object):
         self.msg, self.line, self.col, self.char = None, None, None, None
 
         # reading
-        self._read_file()
+        self._read_file_and_set_paths()
         self._check_empty_and_insert_default()
         # main syntax checks
         if not self._check_jsonsyntax():
@@ -179,11 +181,11 @@ class TsconfigLinter(object):
     def _store_error_locations_in_views_settings(self):
         """ Stores the errors in view.settings()
             Format: [<((a,b), msg)>] """
-
-        error_locations = []
-        error_locations.extend(self.harderrors)
-        error_locations.extend(self.softerrors)
-        self.view.settings().set('tsconfig-lints', error_locations)
+        if self.view:
+            error_locations = []
+            error_locations.extend(self.harderrors)
+            error_locations.extend(self.softerrors)
+            self.view.settings().set('tsconfig-lints', error_locations)
 
 
     # ######################################################################
@@ -193,8 +195,9 @@ class TsconfigLinter(object):
 
     def _add_regions(self):
         """ Display all found Errors """
-        self.view.add_regions('tsconfig-error', self.error_regions,
-                              'invalid', 'dot', sublime.DRAW_NO_FILL)
+        if self.view:
+            self.view.add_regions('tsconfig-error', self.error_regions,
+                                  'invalid', 'dot', sublime.DRAW_NO_FILL)
 
 
     # ######################################################################
@@ -202,10 +205,19 @@ class TsconfigLinter(object):
     # ######################################################################
 
 
-    def _read_file(self):
+    def _read_file_and_set_paths(self):
         """ Reads content from view into self.content and self.len """
-        self.content = get_content(self.view) #read_file(view.file_name())
-        self.len = len(self.content)
+        if self.view:
+            self.file_name = self.view.file_name()
+            self.content = get_content(self.view)
+            self.len = len(self.content)
+        elif self.file_name:
+            self.content = read_file(self.file_name)
+            self.len = len(self.content)
+        else:
+            Debug('error', "Tsconfiglinter: either view or filename is required");
+
+        self.tsconfigdir = os.path.abspath(os.path.dirname(self.file_name))
 
         if self.content is None:
             self.numerrors += 1
@@ -218,7 +230,7 @@ class TsconfigLinter(object):
             Raises CancelCommand() if empty before. """
 
         if self.content == "":
-            if not is_tsglobexpansion_disabled():
+            if not is_tsglobexpansion_disabled() and self.view:
                 Debug('tsconfig', 'put default base structure to tsconfig.json')
                 self.view.run_command('append', {'characters':
                         json.dumps(empty_tsconfig, indent=4)})
@@ -487,9 +499,9 @@ class TsconfigLinter(object):
         if "files" in self.tsconfig:
             if len(self.tsconfig["files"]) > 1000:
                 return
-            tsdir = os.path.abspath(os.path.dirname(self.view.file_name()))
+
             for file_ in self.tsconfig["files"]:
-                file_path = os.path.join(tsdir, file_)
+                file_path = os.path.join(self.tsconfigdir, file_)
                 if not os.path.isfile(file_path):
                     self._soft_error("file %s does not exist or is not a file"
                                      % file_,
