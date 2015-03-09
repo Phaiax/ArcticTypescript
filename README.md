@@ -79,6 +79,7 @@ Minimal Example `tsconfig.json`:
                  required.** You only need to specify the file from the top / root
                  of your internal reference tree (your main.ts). But it does no
                  harm to specify more files.
+                 **Alternative**: use `"filesGlob" : []` (see below)
 
 
 More `compilerOptions`:
