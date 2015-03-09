@@ -13,7 +13,7 @@ ArcticTypescript
  * snippets
 
 
-![Images of ArcticTypescript](https://github.com/Phaiax/ArcticTypescript/tree/master/screenshots/animated.gif)
+![Images of ArcticTypescript](https://raw.githubusercontent.com/Phaiax/ArcticTypescript/master/screenshots/animated.gif)
 
 
 Commands and Shortcuts
