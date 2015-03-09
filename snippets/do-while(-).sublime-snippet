@@ -1,4 +1,4 @@
-<snippet>
+    <snippet>
     <content><![CDATA[do {
 	${0:// code...}
 } while (${1:a <= 10});]]></content>

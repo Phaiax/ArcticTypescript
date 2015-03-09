@@ -1,14 +1,16 @@
 ArcticTypescript
 ================
 
- * TypeScript language auto completion
- * TypeScript language syntax highlighting
- * TypeScript language error highlighting
- * A build System *for Typescript 1.5*
- * Fast access to errors via shortcuts and clicks
- * Goto definition
- * View type
- * Wizzard for project creation (create .ts file to activate)
+ * Wizzard for project creation (create .ts file to activate).
+ * syntax highlighting
+ * auto completion
+ * live error highlighting
+ * fast access to errors via shortcuts and clicks
+ * jump to declaration
+ * quick info
+ * build system *for Typescript 1.5*
+ * view build result.js
+ * snippets
 
 
 
@@ -23,11 +25,12 @@ Commands and Shortcuts
  * `alt + shift + e k`      jump to 3rd error
  * `alt + shift + e l`      jump to 4th error
  * `F1`                     show details about type under cursor
- * `F4`                     jump to definition
+ * `F4`                     jump to declaration
  * `shift+F5`               reload (do this if autocompletion is missing
                             something or after tsconfig.json changes)
  * `F8` or `ctrl + b`       Build the project.
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
+ * snippets: see below
 
 
 
@@ -205,6 +208,39 @@ You can use variables for the string values:
 
 
  [sublime_variables]: http://docs.sublimetext.info/en/latest/reference/build_systems/configuration.html?highlight=file_name#build-system-variables
+
+
+
+
+Snippets
+----------------------------------------------------------------------------
+
+Type `<trigger>` and press `TAB` to insert snippet: `<trigger>`: feature
+
+ * `ctor`: constructor
+ * `class`: class with constructor
+ * `do`: do while loop
+ * `for`: `for (…; i++) {…}`
+ * `forl`: `for (… .length; i++) {…}`
+ * `forb`: `for (…; i--) {…}` backwards loop (faster?)
+ * `forin`: for … in … loop
+ * `func`: `function a(b) {c}`
+ * `get`: public getter
+ * `set`: public setter
+ * `prop`: public getter and setter
+ * `ifelse`: if … else …
+ * `if`: if …
+ * `import`: `import a = require('b')`
+ * `log`: `console.log();`
+ * `meth`: public class method
+ * `ref`: `/// <reference path="a" />`
+ * `ret0`: `return false;`
+ * `ret1`: `return true;`
+ * `ret`: `return a;`
+ * `timeout`: `setTimeout(() => {}, 500);`
+ * `switch`: switch … case: … default:
+ * `throw`: `throw "";`
+
 
 
 
