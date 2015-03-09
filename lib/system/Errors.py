@@ -27,7 +27,6 @@ class Errors(object):
         try:
             self.failure = ""
             self.lasterrors = json.loads(errors)
-            print(self.lasterrors)
             if type(self.lasterrors) is not list:
                 raise Warning("tss.js internal error: %s" % errors)
             self._provide_better_explanations_for_some_errors()

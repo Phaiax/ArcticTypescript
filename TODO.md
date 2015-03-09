@@ -18,6 +18,7 @@ features
    + refactoring
    + formatting
  * multiple window fixes
+ * Glob expand before build
  * build file live change (some utf error with autofilename)
 
 DONE
