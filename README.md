@@ -219,28 +219,28 @@ Snippets
 Type `<trigger>` and press `TAB` to insert snippet: `<trigger>`: feature
 
  * `ctor`: constructor
- * `class`: class with constructor
+ * `cls`: class with constructor
  * `do`: do while loop
  * `for`: `for (…; i++) {…}`
  * `forl`: `for (… .length; i++) {…}`
  * `forb`: `for (…; i--) {…}` backwards loop (faster?)
  * `forin`: for … in … loop
- * `func`: `function a(b) {c}`
+ * `f`: `function a(b) {c}`
  * `get`: public getter
  * `set`: public setter
  * `prop`: public getter and setter
- * `ifelse`: if … else …
+ * `ie`: if … else …
  * `if`: if …
- * `import`: `import a = require('b')`
+ * `imp`: `import a = require('b')`
  * `log`: `console.log();`
- * `meth`: public class method
+ * `met`: public class method
  * `ref`: `/// <reference path="a" />`
- * `ret0`: `return false;`
- * `ret1`: `return true;`
+ * `r0`: `return false;`
+ * `r1`: `return true;`
  * `ret`: `return a;`
- * `timeout`: `setTimeout(() => {}, 500);`
- * `switch`: switch … case: … default:
- * `throw`: `throw "";`
+ * `to`: `setTimeout(() => {}, 500);`
+ * `sw`: switch … case: … default:
+ * `thr`: `throw "";`
 
 
 

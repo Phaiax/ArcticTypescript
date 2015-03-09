@@ -8,7 +8,7 @@
 		${4:// code...}
 		break;
 }]]></content>
-	<tabTrigger>switch</tabTrigger>
+	<tabTrigger>sw</tabTrigger>
 	<scope>source.ts</scope>
     <description>switch statement …</description>
 </snippet>
