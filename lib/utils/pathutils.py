@@ -58,7 +58,7 @@ def default_node_path(node_path, project=None):
         node_path = None
 
     if node_path == "" or node_path is None:
-        return "nodejs"
+        return "nodejs" if sys.platform == "linux" else "node"
         #return '/usr/local/bin/node' if sys.platform == "darwin" else 'nodejs'
     else:
         return expand_variables(node_path, project)
