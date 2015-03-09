@@ -9,9 +9,7 @@ hard
 good to have
 ------------
 
- * error list has crude messages if a missing element of an object is selected
  * test build filew view without dir and outDir
- * first error calculation
 
 features
 --------
@@ -25,6 +23,8 @@ features
 DONE
 ====
 
+ * first error calculation
+ * error list has crude messages if a missing element of an object is selected
  * add all! compilerOptions
  * Lint tsconfig before opening project (-> done automatically but without real linter)
  * Open wizzard on tsconfig error

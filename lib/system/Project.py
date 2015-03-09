@@ -22,6 +22,8 @@ from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
 
 from ..commands.Compiler import Compiler
 
+from ..display.T3SViews import T3SVIEWS
+
 from ..tsconfiglint.TsconfigLinter import TsconfigLinter
 
 from .globals import OPENED_PROJECTS
@@ -165,6 +167,10 @@ class OpenedProject(object):
         self.completion = Completion(self)
         self.highlighter = ErrorsHighlighter(self)
         Debug('notify', 'Initializion finished')
+
+        # Start Error recalculation if error view is open
+        if T3SVIEWS.ERROR._search_existing_view():
+            self.views[0].run_command('typescript_error_panel')
 
 
     def is_initialized(self):
