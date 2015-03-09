@@ -27,6 +27,7 @@ class Errors(object):
         try:
             self.failure = ""
             self.lasterrors = json.loads(errors)
+            print(self.lasterrors)
             if type(self.lasterrors) is not list:
                 raise Warning("tss.js internal error: %s" % errors)
             self._provide_better_explanations_for_some_errors()
@@ -78,7 +79,8 @@ class Errors(object):
                 previous_file = filename
 
             text.append("\n%i >" % e['start']['line'])
-            text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
+            #text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
+            text.append(e['text'].replace('\r',''))
             line += 1
 
             a = (e['start']['line']-1, e['start']['character']-1)

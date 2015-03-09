@@ -11,6 +11,7 @@ good to have
 
  * error list has crude messages if a missing element of an object is selected
  * test build filew view without dir and outDir
+ * first error calculation
 
 features
 --------
