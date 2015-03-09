@@ -218,29 +218,37 @@ Snippets
 
 Type `<trigger>` and press `TAB` to insert snippet: `<trigger>`: feature
 
- * `ctor`: constructor
- * `cls`: class with constructor
- * `do`: do while loop
- * `for`: `for (…; i++) {…}`
- * `forl`: `for (… .length; i++) {…}`
- * `forb`: `for (…; i--) {…}` backwards loop (faster?)
+ * `typescriptsnippets` : Print this list into file as **short reference**.
+
+ * `cls`  : class with constructor
+ * `ctor` : constructor
+ * `get`  : public getter
+ * `set`  : public setter
+ * `prop` : public getter and setter
+ * `met`  : public class method
+
+ * `imp`  : `import a = require('b')`
+ * `ref`  : `/// <reference path="a" />`
+
+ * `do`   : do while loop
+ * `for`  : `for (…; i++) {…}`
+ * `forl` : `for (… .length; i++) {…}`
+ * `forb` : `for (…; i--) {…}` backwards loop (faster?)
  * `forin`: for … in … loop
- * `f`: `function a(b) {c}`
- * `get`: public getter
- * `set`: public setter
- * `prop`: public getter and setter
- * `ie`: if … else …
- * `if`: if …
- * `imp`: `import a = require('b')`
- * `log`: `console.log();`
- * `met`: public class method
- * `ref`: `/// <reference path="a" />`
- * `r0`: `return false;`
- * `r1`: `return true;`
- * `ret`: `return a;`
- * `to`: `setTimeout(() => {}, 500);`
- * `sw`: switch … case: … default:
- * `thr`: `throw "";`
+
+ * `f`    : `function a(b) {c}`
+ * `r0`   : `return false;`
+ * `r1`   : `return true;`
+ * `ret`  : `return a;`
+
+ * `ie`   : if … else …
+ * `if`   : if …
+
+ * `log`  : `console.log();`
+ * `to`   : `setTimeout(() => {}, 500);`
+ * `sw`   : switch … case: … default:
+ * `thr`  : `throw "";`
+
 
 
 

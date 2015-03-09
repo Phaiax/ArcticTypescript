@@ -4,5 +4,5 @@
 }]]></content>
     <tabTrigger>for</tabTrigger>
     <scope>source.ts</scope>
-    <description>for (…; i++) {…}</description>
+    <description>for (…; ++i) {…}</description>
 </snippet>
