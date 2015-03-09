@@ -262,16 +262,21 @@ You need [Sublime Text 3][sublime3],
 and optionally [Typescript][typescript]
 (ArcticTypescript also provides a compiler).
 
-[sublime3]: http://www.sublimetext.com/3
-[pc_install]: https://packagecontrol.io/installation#st3
-[nodejs]: http://nodejs.org/
-[typescript]: http://www.typescriptlang.org/
-
 
 Install ArcticTypescript: Open Sublime
 --> Goto Anything
 --> `Package Control: Install Package`
 --> `ArcticTypescript`
+
+Install the [AutoFileName][autofilename] plugin for completion of
+`/// <reference path="xxx" />`
+
+[sublime3]: http://www.sublimetext.com/3
+[pc_install]: https://packagecontrol.io/installation#st3
+[nodejs]: http://nodejs.org/
+[typescript]: http://www.typescriptlang.org/
+[autofilename]: https://packagecontrol.io/packages/AutoFileName
+
 
 
 
