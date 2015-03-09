@@ -437,6 +437,18 @@ class TsconfigLinter(object):
                                 self._lint_value_of_key(key))
                 return False
 
+        if validator == int:
+            if type(uservalue) != int:
+                self._hard_error("value of '%s' has to be a integer" % key,
+                                self._lint_value_of_key(key))
+                return False
+
+        if validator == float:
+            if not (type(uservalue) == int or type(uservalue) == float):
+                self._hard_error("value of '%s' has to be a number" % key,
+                                self._lint_value_of_key(key))
+                return False
+
         # regex
         if type(validator) == str:
             if type(uservalue) != str:

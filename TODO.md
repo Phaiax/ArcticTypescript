@@ -5,7 +5,6 @@ TODO
 hard
 ----
 
-* add all! compilerOptions
 
 good to have
 ------------
@@ -25,6 +24,7 @@ features
 DONE
 ====
 
+ * add all! compilerOptions
  * Lint tsconfig before opening project (-> done automatically but without real linter)
  * Open wizzard on tsconfig error
  * filesGlob
