@@ -10,7 +10,7 @@ hard
 good to have
 ------------
 
- * Open wizzard on tsconfig error
+ * Lint tsconfig before opening project
  * error list has crude messages if a missing element of an object is selected
  * test build filew view without dir and outDir
 
@@ -26,6 +26,7 @@ features
 DONE
 ====
 
+ * Open wizzard on tsconfig error
  * filesGlob
  * check parent dir in wizzard for tsfile generation
  * snippets -> Readme, AutoFilePath -> Readme

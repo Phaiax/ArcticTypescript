@@ -24,7 +24,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
 
     # CLOSE FILE
     @max_calls(name='Listener.on_close')
-    def on_close(self, view):
+    def on_close_async(self, view):
         project = get_or_create_project_and_add_view(view, wizzard=False)
         if project:
             project.close(view)
@@ -33,7 +33,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
     # FILE ACTIVATED
     @max_calls()
     @catch_CancelCommand
-    def on_activated(self, view):
+    def on_activated_async(self, view):
         project = get_or_create_project_and_add_view(view)
         #if project:
         #    if T3SVIEWS.COMPILE.is_active():
@@ -43,7 +43,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
     # ON CLONED FILE
     @max_calls()
     @catch_CancelCommand
-    def on_clone(self, view):
+    def on_clone_async(self, view):
         project = get_or_create_project_and_add_view(view)
         #if project:
             #if T3SVIEWS.COMPILE.is_active():
@@ -53,7 +53,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
     # ON SAVE
     @max_calls()
     @catch_CancelCommand
-    def on_post_save(self, view):
+    def on_post_save_async(self, view):
         project = get_or_create_project_and_add_view(view)
         if project and project.is_initialized():
             project.tsserver.update(view)
@@ -75,7 +75,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
     # ON CLICK
     @max_calls(name='listener.on_selection_modified')
     @catch_CancelCommand
-    def on_selection_modified(self, view):
+    def on_selection_modified_async(self, view):
         project = get_or_create_project_and_add_view(view)
         if project and project.is_initialized():
             project.highlighter.display_error_in_status_if_cursor(view)
@@ -86,7 +86,7 @@ class TypescriptEventListener(sublime_plugin.EventListener):
     # ON VIEW MODIFIED
     @max_calls()
     @catch_CancelCommand
-    def on_modified(self, view):
+    def on_modified_async(self, view):
         project = get_or_create_project_and_add_view(view)
         if project and project.is_initialized():
 

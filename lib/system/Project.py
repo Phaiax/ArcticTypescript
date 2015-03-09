@@ -300,7 +300,10 @@ class OpenedProject(object):
             try:
                 self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
             except Exception as e:
-                Debug('notify', "Error reading tsconfig.json: %s" % e)
+                Debug('notify', "Error reading tsconfig.json: %s. Close Project." % e)
+                PWizz = ProjectWizzard(sublime.active_window().active_view(), lambda: None)
+                PWizz.handle_tsconfig_error(self.tsconfigfile, ["tsconfig.json error. Close Project."])
+                self.close_project()
                 raise CancelCommand
         else:
             self.tsconfigcache = {}

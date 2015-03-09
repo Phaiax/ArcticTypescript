@@ -18,6 +18,8 @@ class ProjectWizzard(object):
     def __init__(self, view, finished_callback):
         self.finished_callback = finished_callback
         self.window = view.window()
+        if not self.window: # workaround
+            self.window = view.window()
         self.view = view
         self.tsconfigfolder = None
         self.module = None
@@ -71,15 +73,18 @@ class ProjectWizzard(object):
         self.window.show_quick_panel(self.messages, on_select)
 
 
-    def handle_tsconfig_error(self, message=""):
+    def handle_tsconfig_error(self, tsconfigfile, message=""):
         """ User will be asked to create a tsconfig.json file """
         self._prepare(message)
 
         self.messages.append(['> Open your tsconfig.json and Edit it'])
-        self.actions.append(lambda: [self.window.open_file(package_path + '/examples/basicexample/tsconfig.json'), self._cleanup()])
+        self.actions.append(lambda: [self.window.open_file(tsconfigfile), self._cleanup()])
 
-        self.messages.append(['> Show me a tsconfig.json example'])
-        self.actions.append(lambda: [self.window.open_file(package_path + '/examples/basicexample/tsconfig.json'), self._cleanup()])
+        self.messages.append(['> Show tsconfig.json example'])
+        self.actions.append(lambda: [self.window.open_file(package_path + '/examples/basic_browser_project/tsconfig.json'), self._cleanup()])
+
+        self.messages.append(['> Documentation: README ', 'see Chapter Settings'])
+        self.actions.append(lambda: [self.window.open_file(package_path + '/README.md'), self._cleanup()])
 
         self._show_and_action()
 
@@ -123,8 +128,8 @@ class ProjectWizzard(object):
         tsconfigfolder = os.path.abspath(tsconfigfolder)
         is_direct_parent =  os.path.relpath(tsconfigfolder,
                                             os.path.dirname(self.view.file_name())) \
-                                .replace('../','').replace('..','') \
-                                == ""
+                            .replace('../', '').replace('..', '').replace('.', '') \
+                            == ""
         if is_direct_parent:
             self.tsconfigfolder = tsconfigfolder
             self.tspath = os.path.abspath(os.path.join(self.tsconfigfolder, 'tsconfig.json'))
@@ -132,6 +137,7 @@ class ProjectWizzard(object):
         else:
             sublime.status_message("#### You have to choose a parent folder! ####")
             self._create_tsconfigjson()
+
 
     def _ask_output_type(self, message=""):
         """ Singlefile output or multiple files (AMD or commonjs style) """
