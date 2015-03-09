@@ -42,14 +42,16 @@ Example Projects
  * [AMD-Modules with tests for Browser][example_amdtest] **FEATURED**: index.html for app and test.html for tests
  * [Nodejs][example_commonjs]: only compiling
  * [Nodejs with test][example_commonjstest]: automatic text execution with mocha after build
- * [Simplest example][example_singleout]: everything will be compiled to out.js
+ * [Simplest concat example][example_singleout]: everything will be compiled to out.js
+ * [Simplest example][most_simple]: empty tsconfig.json `{ }`. Every .ts file will be compiled by itself. Not the ideal solution for multiple .ts files. Use [Simplest concat example][example_singleout] instead.
 
 [example_amdtest]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/amd_modules_with_tests
 [example_basicbrowser]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/basic_browser_project
 [example_commonjstest]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/common_js_modules_with_tests
-[example_singleout]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/single_out_dir
+[example_singleout]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/single_out_file
 [example_amd]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/using_amd_modules
 [example_commonjs]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/using_commonjs_modules
+[most_simple]: https://github.com/Phaiax/ArcticTypescript/tree/master/examples/most_simple
 
 
 

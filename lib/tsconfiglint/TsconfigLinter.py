@@ -23,7 +23,6 @@ from ..utils.disabling import set_tsglobexpansion_disabled, \
 
 empty_tsconfig = {
     "compilerOptions": {},
-    "files": []
 }
 
 
