@@ -4,8 +4,35 @@ import sys
 from functools import wraps
 
 
-# Use this to start a visual debugger
+# Use this to start a visual debugger (PluginDebugger (a sublime plugin) and
+# winpdb must be installed)
 # import spdb ; spdb.start()
+
+# Commands for python console
+#   import ArcticTypescript.lib as a
+# first project:
+#   p = a.system.globals.OPENED_PROJECTS.values().__iter__().__next__()
+# print indexed files:
+#   p.tsserver.get_tss_indexed_files(lambda a:print(a))
+#   p.tsserver.dump("c:/users/danie_000/amd_modules_with_tests/src/app.ts", 'C:/users/danie_000/dump3.txt', print)
+# error recalculation:
+#   p.tsserver.executed_with_most_recent_file_contents = []
+#   p.errors.start_recalculation()
+# p.tsserver.reload()
+
+# TypescriptToolsWrapper.eva() -> evaluates javascript command in tss.js
+#   p.tsserver.eva('_this')
+#   p.tsserver.last_eva
+# But needs this code in tss.js (add manually below the command checks before using eva() for debugging)
+#                else if (m = match(cmd, /^eva ([\s\S]*)$/)) {
+#                    if (m[1]) {
+#                        var res = eval(m[1]);
+#                        res = JSON.stringify(res); //.replace(/\n/g, '<br>').replace(/"/g, '\'');
+#                        _this.outputJSON('' + res + '');
+#                    }
+#                    else
+#                        _this.outputJSON('"no input"');
+#                }
 
 
 # ####################### DEFINE LIST OF DISPLAYED DEBUG MESSAGES ##############

@@ -68,8 +68,9 @@ def file_exists(filename):
 
 # FILENAME transformations
 def filename2linux(filename):
-    """ returns filename with linux slashes """
-    return filename.replace('\\','/')
+    """ returns filename with linux slashes. Also makes normcase before!
+        (Windows: normcase: /->\\ and lowercase), then back to / """
+    return os.path.normcase(filename).replace('\\','/')
 
 
 def filename2key(filename):

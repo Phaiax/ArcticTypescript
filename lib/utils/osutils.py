@@ -9,8 +9,8 @@ def get_kwargs(stderr=True):
         startupinfo = subprocess.STARTUPINFO()
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         if stderr:
-            errorlog = open(os.devnull, 'w')
-            return {'stderr':errorlog, 'startupinfo': startupinfo}
+            #errorlog = open(os.devnull, 'w')
+            return {'stderr':subprocess.DEVNULL, 'startupinfo': startupinfo}
         return {'startupinfo': startupinfo}
     else:
         return {}
