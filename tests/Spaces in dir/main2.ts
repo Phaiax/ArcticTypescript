@@ -1,4 +1,4 @@
-/// <references path="lib/mylib.ts">
+/// <reference path="lib/mylib.ts" />
 
 //import T = require('lib/mylib');
 
