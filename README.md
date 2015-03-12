@@ -116,8 +116,7 @@ Decide between:
 
 
 
-
-### filesGlob ###
+### filesGlob ##################################################################
 
 [Atom-TypeScript][atomts] provides a feature called [filesGlob][at-tsconfig].
 ArcticTypescript mimics that feature. Create a `filesGlob` list next to
@@ -137,7 +136,7 @@ updated. Example:
 
 
 
-### ArcticTypescript settings ###
+### ArcticTypescript settings ##################################################
 
 You can configure ArcticTypescript as well (type, default):
 
