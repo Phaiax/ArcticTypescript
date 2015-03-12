@@ -9,10 +9,20 @@ setTimeout(function(){
 	document.getElementById("dyn").innerHTML = "Dynamic!"
 }, 1000);
 
-var k = 22;
+var k = {"abcde" : 22}
 
-var s = function(){}
+console.log(k.abcdefg)
+console.log(k.abcdefgh)
+console.log(k.abcdefghi)
+console.log(k.abcdefghij)
 
-var o = () => {}
+class AClass {
 
+    constructor(argument) {
+        // code...
+    }
 
+    public test() : void {
+
+    }
+}

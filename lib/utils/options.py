@@ -2,6 +2,8 @@
 
 # the values are validators!
 
+
+
 compileroptions_validations = {
     "target" : ["es3", "es5", "es6"], #?: string;            // 'es3'|'es5' (default) | 'es6'
     "module" : ["amd", "commonjs"], #?: string;            // 'amd'|'commonjs' (default)
@@ -16,6 +18,21 @@ compileroptions_validations = {
     "mapRoot" : str, #?: string;              // Optionally Specifies the location where debugger should locate map files after deployment
     "preserveConstEnums" : bool, #?:boolean;    // Do not erase const enum declarations in generated code.
     "removeComments" : bool, #?: boolean;  //  Do not emit comments to output.
+    # these options are from the atom typescript tsconfig.ts
+    "allowNonTsExtensions" : bool,
+    "charset" : str,
+    "codepage" : int,
+    "declaration" : bool,
+    "diagnostics" : bool,
+    "emitBOM" : bool,
+    "locals" : str,
+    "noEmitOnError" : bool,
+    "noErrorTruncation" : bool,
+    "noLib" : bool,
+    "noLibCheck" : bool,
+    "noResolve" : bool,
+    "version" : bool,
+    "watch" : bool,
 }
 allowed_compileroptions = list(compileroptions_validations.keys())
 

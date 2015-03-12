@@ -5,7 +5,7 @@ import threading
 from ..system.globals import debounced_timers
 
 
-DEFAULT_DEBOUNCE_DELAY = 0.8 # Will also be used for AsyncCommand debounce
+DEFAULT_DEBOUNCE_DELAY = 0.2 # Will also be used for AsyncCommand debounce
 
 
 # DEBOUNCE CALL

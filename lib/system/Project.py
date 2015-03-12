@@ -22,6 +22,10 @@ from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
 
 from ..commands.Compiler import Compiler
 
+from ..display.T3SViews import T3SVIEWS
+
+from ..tsconfiglint.TsconfigLinter import TsconfigLinter
+
 from .globals import OPENED_PROJECTS
 
 
@@ -53,6 +57,7 @@ def get_or_create_project_and_add_view(view, wizzard=True):
             PWizz = ProjectWizzard(view, lambda: get_or_create_project_and_add_view(view))
             PWizz.new_tsconfig_wizzard("No tsconfig.json found. Use this wizzard to create one.")
         return None
+    tsconfigfile = os.path.join(tsconfigdir, "tsconfig.json")
 
     opened_project_with_same_tsconfig = \
          get_first(OPENED_PROJECTS.values(), lambda p: p.tsconfigdir == tsconfigdir)
@@ -65,8 +70,23 @@ def get_or_create_project_and_add_view(view, wizzard=True):
         # New ts project
         try:
             Debug('notify', "Try open project: %s" % tsconfigdir)
-            new_project = OpenedProject(view)
-            if not hasattr(new_project, 'id'):
+
+            # Lint tsconfig.json before opening
+            can_open_project = True
+            try:
+                linter = TsconfigLinter(file_name=tsconfigfile)
+            except CancelCommand:
+                can_open_project = False
+            if len(linter.harderrors) > 0:
+                can_open_project = False
+
+            if can_open_project:
+                new_project = OpenedProject(view)
+                if not hasattr(new_project, 'id'):
+                    return None
+                return new_project
+            else:
+                show_tsconfig_failed_wizzard(tsconfigfile)
                 return None
         except CancelCommand:
             if get_or_create_project_and_add_view(view):
@@ -83,6 +103,10 @@ def project_by_id(project_id):
         return OPENED_PROJECTS[project_id]
     return None
 
+
+def show_tsconfig_failed_wizzard(tsconfigfile):
+    PWizz = ProjectWizzard(sublime.active_window().active_view(), lambda: None)
+    PWizz.handle_tsconfig_error(tsconfigfile, ["tsconfig.json error. Close Project."])
 
 
 class OpenedProject(object):
@@ -128,8 +152,8 @@ class OpenedProject(object):
 
 
     def _initialize_project(self):
+        self._lint_tsconfig_wizzard_on_harderrors()
         self._start_typescript_services()
-        self.TSS = None
 
 
     def _start_typescript_services(self):
@@ -143,6 +167,10 @@ class OpenedProject(object):
         self.completion = Completion(self)
         self.highlighter = ErrorsHighlighter(self)
         Debug('notify', 'Initializion finished')
+
+        # Start Error recalculation if error view is open
+        if T3SVIEWS.ERROR._search_existing_view():
+            self.views[0].run_command('typescript_error_panel')
 
 
     def is_initialized(self):
@@ -183,6 +211,9 @@ class OpenedProject(object):
             Debug('project+', "New Window added to project %s" % (self.tsconfigfile, ))
             self.windows.append(view.window())
 
+
+    def _lint_tsconfig_wizzard_on_harderrors(self):
+        self.tsconfigfile
 
     def close(self, view):
         """ Should be called if a view has been closed. Also accepts views which do not
@@ -300,7 +331,9 @@ class OpenedProject(object):
             try:
                 self.tsconfigcache = read_and_decode_json_file(self.tsconfigfile)
             except Exception as e:
-                Debug('notify', "Error reading tsconfig.json: %s" % e)
+                Debug('notify', "Error reading tsconfig.json: %s. Close Project." % e)
+                show_tsconfig_failed_wizzard(self.tsconfigfile)
+                self.close_project()
                 raise CancelCommand
         else:
             self.tsconfigcache = {}

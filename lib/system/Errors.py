@@ -78,7 +78,8 @@ class Errors(object):
                 previous_file = filename
 
             text.append("\n%i >" % e['start']['line'])
-            text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
+            #text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
+            text.append(e['text'].replace('\r',''))
             line += 1
 
             a = (e['start']['line']-1, e['start']['character']-1)
