@@ -1,0 +1,24 @@
+v0.6.0
+------
+
+tl;dr:  required config file tsconfig.json. -> README
+
+
+- many internal changes. Report issues @ github.
+
+- Dropped: .sublimets config file, config in x.sublime-project
+
+- Now:
+    - Compiler related config -> tsconfig.json (REQUIRED)
+        - linting of tsconfig.json
+        - There is a WIZZARD if no tsconfig.json is found
+   - Other config -> multiple allowed places. Refer to README!
+
+- Compiler priority:
+    1. Setting: tsc_path
+    2. Search for typescript in your projects node_modules
+    3. Use compiler supplied with ArcticTypescript (pre 1.5 (beta)) (should be fine)
+
+- README rewrite
+
+- PRO Users: take a look at filesGlob feature (-> README)

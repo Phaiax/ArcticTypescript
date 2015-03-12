@@ -328,6 +328,11 @@ the dependency in `package.json` to
 Important Changes
 ----------------------------------------------------------------------------
 
+v0.6.0:
+*  Dropped .sublimets, x.sublime-project. Compiler options belong to tsconfig.json
+*  Many internal changes. Report if something is broken.
+*  README rewrite
+
 v0.5.0:
 *  You will need a new config file called tsconfig.json
 *  Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
