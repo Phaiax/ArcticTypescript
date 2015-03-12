@@ -54,6 +54,22 @@ class TypescriptToolsWrapper(object):
             .set_result_callback(callback) \
             .append_to_fast_queue()
 
+    # Evaluate Javascript (refer to utils/debug.py)
+    @max_calls()
+    def eva(self, js_cmd):
+        def cb(strres):
+            import json
+            js = json.loads(strres)
+            # Sometimes this is to much output. Activate and adapt this if you are evaluating '_this'
+            #del js['fileNameToScript']['c:/Users/danie_000/AppData/Roaming/Sublime Text 3/Packages/ArcticTypescript/bin/node_modules/typescript/bin/lib.d.ts']
+            #del js['snapshots']['c:/Users/danie_000/AppData/Roaming/Sublime Text 3/Packages/ArcticTypescript/bin/node_modules/typescript/bin/lib.d.ts']
+            print(json.dumps(js, indent=3))
+            self.last_eva = js
+        eva = 'eva {0}'.format(js_cmd)
+        AsyncCommand(eva, self.project) \
+            .set_result_callback(cb) \
+            .append_to_slow_queue()
+
     # TYPE
     @max_calls()
     def type(self, filename, line, col, callback):
