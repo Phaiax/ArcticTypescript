@@ -11,6 +11,7 @@ ArcticTypescript
  * build system *for Typescript 1.5*
  * view build result.js
  * snippets
+ * filesGlob support (on_save only)
 
 
 ![Images of ArcticTypescript](https://raw.githubusercontent.com/Phaiax/ArcticTypescript/master/screenshots/animated.gif)
@@ -331,6 +332,8 @@ v0.6.0:
 *  Dropped .sublimets, x.sublime-project. Compiler options belong to tsconfig.json
 *  Many internal changes. Report if something is broken.
 *  README rewrite
+*  ProjectWizzard
+*  filesGlob
 
 v0.5.0:
 *  You will need a new config file called tsconfig.json
