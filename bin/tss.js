@@ -1,5 +1,5 @@
 // Copyright (c) Claus Reinke. All rights reserved.
-// Licensed under the Apache License, Version 2.0.
+// Licensed under the Apache License, Version 2.0. 
 // See LICENSE.txt in the project root for complete license information.
 ///<reference path='typings/node/node.d.ts'/>
 ///<reference path='node_modules/typescript/bin/typescript.d.ts'/>
@@ -52,7 +52,7 @@ var TSS = (function () {
     };
     TSS.prototype.updateScript = function (fileName, content) {
         var script = this.fileNameToScript[fileName];
-        if (script !== undefined) {
+        if (script) {
             script.updateContent(content);
         }
         else {
@@ -62,7 +62,7 @@ var TSS = (function () {
     };
     TSS.prototype.editScript = function (fileName, minChar, limChar, newText) {
         var script = this.fileNameToScript[fileName];
-        if (script !== undefined) {
+        if (script) {
             script.editContent(minChar, limChar, newText);
             this.snapshots[fileName] = new harness.ScriptSnapshot(script);
             return;
@@ -123,13 +123,13 @@ var TSS = (function () {
     /** load file and dependencies, prepare language service for queries */
     TSS.prototype.setup = function (files, options) {
         var _this = this;
-        this.rootFiles = files.map(this.resolveRelativePath);
+        this.rootFiles = files.map(function (file) { return _this.resolveRelativePath(file); });
         this.compilerOptions = options;
         // this.compilerOptions.diagnostics = true;
         // this.compilerOptions.target      = ts.ScriptTarget.ES5;
         // this.compilerOptions.module      = ts.ModuleKind.CommonJS;
         this.fileNameToContent = {};
-        // build program from root file,
+        // build program from root files,
         // chase dependencies (references and imports), normalize file names, ...
         this.compilerHost = ts.createCompilerHost(this.compilerOptions);
         this.program = ts.createProgram(this.rootFiles, this.compilerOptions, this.compilerHost);
@@ -323,7 +323,7 @@ var TSS = (function () {
                 else if (m = match(cmd, /^update( nocheck)? (\d+)( (\d+)-(\d+))? (.*)$/)) {
                     file = _this.resolveRelativePath(m[6]);
                     script = _this.fileNameToScript[file];
-                    added = script === undefined;
+                    added = !script;
                     range = !!m[3];
                     check = !m[1];
                     // TODO: handle dependency changes
@@ -338,7 +338,7 @@ var TSS = (function () {
                                 var endLine = parseInt(m[5]);
                                 var maxLines = script.lineMap.length;
                                 var startPos = startLine <= maxLines ? (startLine < 1 ? 0 : _this.lineColToPosition(file, startLine, 1)) : script.content.length;
-                                var endPos = endLine < maxLines ? (endLine < 1 ? 0 : _this.lineColToPosition(file, endLine + 1, 0)) //??CHECK
+                                var endPos = endLine < maxLines ? (endLine < 1 ? 0 : _this.lineColToPosition(file, endLine + 1, 0) - 1) //??CHECK
                                  : script.content.length;
                                 _this.editScript(file, startPos, endPos, lines.join(EOL));
                             }
@@ -405,7 +405,7 @@ var TSS = (function () {
                 else if (m = match(cmd, /^reload$/)) {
                     // TODO: keep updated (in-memory-only) files?
                     _this.setup(_this.rootFiles, _this.compilerOptions);
-                    _this.outputJSON('"reloaded ' + _this.rootFiles[0] + ' and ' + (_this.rootFiles.length - 1) + ' more, TSS listening.."');
+                    _this.outputJSON(_this.listeningMessage('reloaded'));
                 }
                 else if (m = match(cmd, /^quit$/)) {
                     rl.close();
@@ -428,7 +428,12 @@ var TSS = (function () {
         }).on('close', function () {
             _this.outputJSON('"TSS closing"');
         });
-        this.outputJSON('"loaded ' + this.rootFiles[0] + ' and ' + (this.rootFiles.length - 1) + ' more, TSS listening.."');
+        this.outputJSON(this.listeningMessage('loaded'));
+    };
+    TSS.prototype.listeningMessage = function (prefix) {
+        var count = this.rootFiles.length - 1;
+        var more = count > 0 ? ' (+' + count + ' more)' : '';
+        return '"' + prefix + ' ' + this.rootFiles[0] + more + ', TSS listening.."';
     };
     return TSS;
 })();
@@ -449,29 +454,22 @@ function findConfigFile() {
     }
     return undefined;
 }
-var arg;
+var fileNames;
 var configFile, configObject, configObjectParsed;
 // NOTE: partial options support only
 var commandLine = ts.parseCommandLine(ts.sys.args);
-var fileNames = [];
 if (commandLine.options.version) {
     console.log(require("../package.json").version);
     process.exit(0);
 }
-if (commandLine.options.project) {
-    configFile = ts.normalizePath(ts.combinePaths(commandLine.options.project, "tsconfig.json"));
-}
-else if (commandLine.fileNames.length === 0) {
-    configFile = findConfigFile();
-    if (!configFile) {
-        console.error("can't find project root");
-        console.error("please specify root source file");
-        console.error("  or --project directory (containing a tsconfig.json with files[])");
-        process.exit(1);
-    }
-}
 if (commandLine.fileNames.length > 0) {
     fileNames = commandLine.fileNames;
+}
+else if (commandLine.options.project) {
+    configFile = ts.normalizePath(ts.combinePaths(commandLine.options.project, "tsconfig.json"));
+}
+else {
+    configFile = findConfigFile();
 }
 var options;
 if (configFile) {
@@ -485,19 +483,17 @@ if (configFile) {
         console.error(configObjectParsed.errors);
         process.exit(1);
     }
-    if (fileNames.length === 0 && configObjectParsed.fileNames.length > 0) {
-        fileNames = configObjectParsed.fileNames;
-    }
-    else if (fileNames.length === 0) {
-        console.error("can't find project root");
-        console.error("please specify root source file");
-        console.error("  or --project directory (containing a tsconfig.json with files[])");
-        process.exit(1);
-    }
+    fileNames = configObjectParsed.fileNames;
     options = ts.extend(commandLine.options, configObjectParsed.options);
 }
 else {
     options = ts.extend(commandLine.options, ts.getDefaultCompilerOptions());
+}
+if (!fileNames) {
+    console.error("can't find project root");
+    console.error("please specify root source file");
+    console.error("  or --project directory (containing a tsconfig.json)");
+    process.exit(1);
 }
 var tss = new TSS();
 tss.setup(fileNames, options);
