@@ -204,7 +204,10 @@ class TssJsStarterThread(Thread):
         except ProcessLookupError:
             pass
         try:
-            self.tss_process.communicate() # release readline() block
+            # This fould fry sublime @ windows
+            # but normally, the stream is closed already
+            #self.tss_process.communicate() # release readline() block
+            pass
         except Exception:
             pass
 
