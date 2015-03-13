@@ -12,10 +12,14 @@ ArcticTypescript
  * view build result.js
  * snippets
  * filesGlob support (on_save only)
+ 
+Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] a bug report.
 
 
 ![Images of ArcticTypescript](https://raw.githubusercontent.com/Phaiax/ArcticTypescript/master/screenshots/animated.gif)
 
+[issues]: https://github.com/Phaiax/ArcticTypescript/issues
+[errorfaq]: https://github.com/Phaiax/ArcticTypescript/wiki/Common-Errors-and-Solutions
 
 Commands and Shortcuts
 ----------------------------------------------------------------------------
