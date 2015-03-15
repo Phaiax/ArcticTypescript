@@ -79,7 +79,15 @@ class Errors(object):
 
             text.append("\n%i >" % e['start']['line'])
             #text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
-            text.append(e['text'].replace('\r',''))
+            if isinstance(e['text'], str):
+                text.append(e['text'].replace('\r',''))
+            elif isinstance(e['text'], dict) and 'messageText' in e['text']:
+                text.append(e['text']['messageText'])
+                if 'next' in e['text'] and 'messageText' in e['text']['next']:
+                    text.append('\n   >')
+                    text.append(e['text']['next']['messageText'])
+            else:
+                Debug('error', 'typescript-tools error["text"] has unexpected type %s.' % type(e['text']))
             line += 1
 
             a = (e['start']['line']-1, e['start']['character']-1)
