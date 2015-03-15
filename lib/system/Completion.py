@@ -93,6 +93,7 @@ class Completion(object):
             if is_member:
                 autocomplete_col = get_col_after_last_dot( get_content_of_line_at(view, cursor_pos) )
                 self.enabled_for_col_reference = 'dot'
+                Debug('autocomplete', " -> use dot as referene")
                 if autocomplete_col != cursor_col:
                     Debug('autocomplete', " -> dot is on col %i, use this col instead of cursor position %i" % (autocomplete_col+1, cursor_col+1))
             else:
@@ -117,6 +118,14 @@ class Completion(object):
                 current_view = sublime.active_window().active_view()
                 current_cursor_pos = current_view.sel()[0].begin()
                 (current_cursor_line, current_cursor_col) = current_view.rowcol(current_cursor_pos)
+
+                Debug('autocomplete', " => CL: {0}, L: {1}, efcr: {2}, ccc: {3}, col: {4}, ismstr: {5}"
+                        .format(current_cursor_line,
+                                line,
+                                self.enabled_for_col_reference,
+                                current_cursor_col,
+                                col,
+                                is_member_str))
 
                 if current_view.id() != self.enabled_for['viewid'] or filename != current_view.file_name():
                     Debug('autocomplete', " -> file changed since activation of autocomplete or out-dated request -> cancel")
