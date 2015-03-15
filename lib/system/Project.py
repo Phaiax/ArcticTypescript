@@ -179,6 +179,9 @@ class OpenedProject(object):
         self.highlighter = ErrorsHighlighter(self)
         Debug('notify', 'Initializion finished')
 
+        self.collect_untracked_views_and_update_content(self._on_collected_views)
+
+    def _on_collected_views(self):
         # Start Error recalculation if error view is open
         if T3SVIEWS.ERROR._search_existing_view():
             self.views[0].run_command('typescript_error_panel')
@@ -199,6 +202,33 @@ class OpenedProject(object):
             sublime.status_message('You must wait for the initialisation to finish (%s)' % filename)
             raise CancelCommand()
 
+
+    def collect_untracked_views_and_update_content(self, on_finished):
+        """ Searches for opened ts views which belong to this project,
+            add them to this project, transfer the current workspace
+            view content to the tsserver and call on_finished afterwards. """
+
+        def _collect_and_update_runner(fileslist):
+            fileslist_normcased = [os.path.normcase(f) for f in fileslist]
+
+            for w in sublime.windows():
+                for v in w.views():
+                    if not is_ts(v):
+                        continue
+                    v_tsconfigdir = find_tsconfigdir(v.file_name())
+                    v_tsconfigfile = os.path.join(v_tsconfigdir, "tsconfig.json")
+                    v_tsconfigfile = os.path.normcase(v_tsconfigfile)
+
+                    # belong to same tsconfig AND is already registered in tsconfig[files]
+                    # or referenced by other files in tsconfig[files] = fileslist
+                    if v_tsconfigfile == os.path.normcase(self.tsconfigfile) \
+                            and os.path.normcase(v.file_name()) in fileslist_normcased:
+                        self.open(v)
+                        self.tsserver.update(v)
+
+            on_finished()
+
+        self.tsserver.get_tss_indexed_files(_collect_and_update_runner)
 
 
 
