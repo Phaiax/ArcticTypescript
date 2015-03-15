@@ -23,6 +23,7 @@ from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
 from ..commands.Compiler import Compiler
 
 from ..display.T3SViews import T3SVIEWS
+from ..display.Message import MESSAGE
 
 from ..tsconfiglint.TsconfigLinter import TsconfigLinter
 
@@ -101,6 +102,16 @@ def close_all_projects():
 def project_by_id(project_id):
     if project_id in OPENED_PROJECTS:
         return OPENED_PROJECTS[project_id]
+    return None
+
+
+def opened_project_by_tsconfig(tsconfigfile):
+    if not tsconfigfile:
+        return None
+    tsconfigfile = os.path.normcase(tsconfigfile)
+    for p in OPENED_PROJECTS.values():
+        if os.path.normcase(p.tsconfigfile) == tsconfigfile:
+            return p
     return None
 
 
@@ -274,6 +285,15 @@ class OpenedProject(object):
         OPENED_PROJECTS.pop(self.id)
         if self.on_project_closed:
             self.on_project_closed()
+
+
+    def reopen_project(self):
+        view0 = self.views[0]
+        def reopen():
+            get_or_create_project_and_add_view(view0)
+            MESSAGE.show('Reloading finished', True)
+        MESSAGE.show('Reloading project')
+        self.close_project(reopen)
 
 
 

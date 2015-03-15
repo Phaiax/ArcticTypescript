@@ -39,11 +39,7 @@ class TypescriptReloadProject(sublime_plugin.TextCommand):
         project = get_or_create_project_and_add_view(self.view)
         if project:
             sublime.active_window().run_command('save_all')
-            MESSAGE.show('Reloading project')
-            def reopen():
-                get_or_create_project_and_add_view(self.view)
-                MESSAGE.show('Reloading finished', True)
-            project.close_project(lambda: reopen())
+            project.reopen_project()
             #project.tsserver.reload(lambda: )
 
 

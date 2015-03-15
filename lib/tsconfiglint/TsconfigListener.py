@@ -8,6 +8,7 @@ import os
 from .TsconfigLinter import check_tsconfig, show_lint_in_status
 from .tsconfigglobexpand import expand_filesglob
 from ..utils.CancelCommand import catch_CancelCommand, CancelCommand
+from ..system.Project import opened_project_by_tsconfig
 
 class TsconfigEventListener(sublime_plugin.EventListener):
     """ Listen to file events -> Activate TsconfigLinter.
@@ -31,7 +32,12 @@ class TsconfigEventListener(sublime_plugin.EventListener):
 
     @catch_CancelCommand
     def on_post_save_async(self, view):
-        expand_filesglob(check_tsconfig(view))
+        linter = check_tsconfig(view)
+        linting_succeeded = expand_filesglob(linter)
+        if linting_succeeded:
+            project = opened_project_by_tsconfig(linter.file_name)
+            if project:
+                project.reopen_project()
 
 
     def on_selection_modified_async(self, view):

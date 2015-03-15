@@ -32,27 +32,29 @@ def expand_filesglob(linter):
         This operates on the file contents, so the file should have been saved
         before.
         Returns immediately if not linted or linter is None
+        Returns True if the filesGlob has been expanded
+        Returns False if there was a linter error, so no expansion has been done
     """
 
     # Expanding?
 
     if is_tsglobexpansion_disabled():
-        return
+        return False
 
     if linter is None or not linter or not linter.linted:
-        return
+        return False
 
     if len(linter.harderrors) > 0:
-        return
+        return False
 
     if len(linter.softerrors) != linter.numerrors:
-        return
+        return False
 
     if linter.content == "":
-        return
+        return False
 
     if "filesGlob" not in linter.tsconfig:
-        return
+        return False
 
     # Expand!
     project_dir = os.path.dirname(linter.view.file_name())
@@ -62,8 +64,10 @@ def expand_filesglob(linter):
     # reload file
     linter.view.run_command("revert")
 
-    # lint again
+    # lint again, so the soft errors are still displayed
     check_tsconfig(linter.view)
+
+    return True
 
 
 def _expand_globs_with_javascript(project_dir, linter):
