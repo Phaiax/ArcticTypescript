@@ -54,7 +54,7 @@ def expand_filesglob(linter):
         return False
 
     if "filesGlob" not in linter.tsconfig:
-        return False
+        return True # Should reopen project, so return True here
 
     # Expand!
     project_dir = os.path.dirname(linter.view.file_name())
