@@ -108,15 +108,7 @@ class Errors(object):
 
             text.append("\n%i >" % e['start']['line'])
             #text.append(re.sub(r'^.*?:\s*', '', e['text'].replace('\r','')))
-            if isinstance(e['text'], str):
-                text.append(e['text'].replace('\r',''))
-            elif isinstance(e['text'], dict) and 'messageText' in e['text']:
-                text.append(e['text']['messageText'])
-                if 'next' in e['text'] and 'messageText' in e['text']['next']:
-                    text.append('\n   >')
-                    text.append(e['text']['next']['messageText'])
-            else:
-                Debug('error', 'typescript-tools error["text"] has unexpected type %s.' % type(e['text']))
+            text.extend(self._flatten_errortext(e['text']))
             line += 1
 
             a = (e['start']['line']-1, e['start']['character']-1)
@@ -135,6 +127,20 @@ class Errors(object):
         self.text = ''.join(text)
 
 
+    def _flatten_errortext(self, text_or_dict):
+        text = []
+        if isinstance(text_or_dict, str):
+            text.append(text_or_dict.replace('\r',''))
+        elif isinstance(text_or_dict, dict) and 'messageText' in text_or_dict:
+            text.append(text_or_dict['messageText'])
+            if 'next' in text_or_dict and 'messageText' in text_or_dict['next']:
+                text.append('\n   >')
+                text.append(text_or_dict['next']['messageText'])
+        else:
+            Debug('error', 'typescript-tools error["text"] has unexpected type %s.' % type(text_or_dict))
+        return text
+
+
     def tssjs_to_highlighter(self, view):
         """
             Creates a list of error and warning regions for all errors.
@@ -151,7 +157,7 @@ class Errors(object):
                 a = view.text_point(e['start']['line']-1, e['start']['character']-1)
                 b = view.text_point(e['end']['line']-1, e['end']['character']-1)
 
-                error_texts[(a,b)] = e['text']
+                error_texts[(a,b)] = ''.join(self._flatten_errortext(e['text']))
 
                 if e['category'] == 'Error':
                     error_regions.append(sublime.Region(a,b))
