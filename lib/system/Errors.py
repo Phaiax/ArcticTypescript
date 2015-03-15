@@ -27,7 +27,10 @@ class Errors(object):
         try:
             self.failure = ""
             self.lasterrors = json.loads(errors)
-            if type(self.lasterrors) is not list:
+            if isinstance(self.lasterrors, str):
+                self.lasterrors = [ self._provide_better_explanations_for_tss_errors(self.lasterrors)]
+                # self.lasterrors is a list or None
+            if not isinstance(self.lasterrors, list):
                 raise Warning("tss.js internal error: %s" % errors)
             self._provide_better_explanations_for_some_errors()
             self._tssjs_to_errorview()
@@ -40,6 +43,32 @@ class Errors(object):
         self.project.highlighter.highlight_all_open_files()
         sublime.active_window().run_command('typescript_error_panel_set_text',
                                             { "project_id": self.project.id } )
+
+
+    def _provide_better_explanations_for_tss_errors(self, errorstr):
+        """ Provides better explatations for hard tss errors,
+            which cause typescript-tools to return a string
+            instead of an error list []
+            Returns an error dict like typescript-tools would have
+                done for usual errors."""
+
+        # File <match1> is not registered in tsconfig.json
+        match1 = re.match("(.*)(Could not find file: ')(.*)'.*", errorstr)
+        if match1:
+            missing_file = match1.groups()[2]
+            better_error = "\"Maybe this file missing in your tsconfig.json['files'] list:\n    %s \"" % missing_file
+            Debug('notify', better_error)
+            return {
+                "file": missing_file,
+                "start": {"line": 1, "character": 1},
+                "end": {"line": 1, "character": 1},
+                "text": better_error,
+                "code": 0000,
+                "phase":"Semantics",
+                "category":"TSSError"
+            }
+
+        return None
 
 
     def _provide_better_explanations_for_some_errors(self):

@@ -172,15 +172,15 @@ class Completion(object):
         # {'kind': 'method', 'docComment': 'Allows updating the print settings for the page.', 'kindModifiers': 'declare', 'type': '(method) Document.updateSettings(): void', 'name': 'updateSettings'}
         # {'kindModifiers': 'declare', 'docComment': '', 'kind': 'function', 'name': 'setTimeout', 'type': '(function) setTimeout(handler: any, timeout?: any, ...args: any[]): number'}
 
-        type = entry['type'] if 'type' in entry else entry['name']
+        type_ = entry['type'] if 'type' in entry else entry['name']
 
         # remove (<kind>)
         kind_part = "(%s)" % entry['kind']
-        if type.startswith(kind_part):
-            type = type[len(kind_part):]
+        if type_.startswith(kind_part):
+            type_ = type_[len(kind_part):]
 
         # catches the inner argumetns of a function call
-        match = re.match('.*\((.*)\):', str(type))
+        match = re.match('.*\((.*)\):', str(type_))
         result = []
 
         if match:
