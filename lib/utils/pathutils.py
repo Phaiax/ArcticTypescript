@@ -12,8 +12,12 @@ package_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..
 
 
 def add_usr_local_bin_to_path_on_osx():
-    """ Adds /usr/local/bin to path on mac osx, because that is
-        where nodejs lives """
+    """ OBSOLETE
+        Adds /usr/local/bin to path on mac osx, because that is
+        where nodejs lives.
+        This function has not worked out its intension. Popen does not
+        use this PATH as a search base for the executable.
+        default_node_path() is back to it's previous state."""
     if os.environ.get('PATH') and sys.platform == 'darwin':
         if '/usr/local/bin' in os.environ.get('PATH').split(':'):
             os.environ['PATH'] = os.environ.get('PATH') + ":'/usr/local/bin'"
@@ -58,8 +62,14 @@ def default_node_path(node_path, project=None):
         node_path = None
 
     if node_path == "" or node_path is None:
-        return "nodejs" if sys.platform == "linux" else "node"
-        #return '/usr/local/bin/node' if sys.platform == "darwin" else 'nodejs'
+        if sys.platform == "linux":
+            return "nodejs"
+        elif sys.platform == "nt":
+            return "node"
+        elif sys.platform == "darwin":
+            return "/usr/local/bin/node"
+        else:
+            return "node"
     else:
         return expand_variables(node_path, project)
 
