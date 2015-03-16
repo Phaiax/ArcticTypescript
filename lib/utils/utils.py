@@ -74,6 +74,9 @@ def get_deep(obj, selector):
 
         if type(obj) is dict:
             return get_deep(obj[top_selector], selector)
+
+        if obj is None:
+            raise KeyError()
     except:
         raise KeyError(str(selector))
 

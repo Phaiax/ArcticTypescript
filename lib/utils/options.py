@@ -40,8 +40,8 @@ allowed_compileroptions = list(compileroptions_validations.keys())
 settings_validations = {
     "activate_build_system": bool,     #?:boolean;   default: true
     "auto_complete": bool,             #?:boolean,   default: true
-    "node_path": bool,                 #?:string,    default: null -> nodejs in $PATH
-    "tsc_path": bool,                  #?:string,    default: null -> search a node_modules dir with tsc or use ArcticTypescript's tsc
+    "node_path": str,                 #?:string,    default: null -> nodejs in $PATH
+    "tsc_path": str,                  #?:string,    default: null -> search a node_modules dir with tsc or use ArcticTypescript's tsc
     "error_on_save_only": bool,        #?:boolean,   default: false
     "build_on_save": bool,             #?:boolean,   default: false
     "show_build_file": bool,           #?:boolean,   default: false
