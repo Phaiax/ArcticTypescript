@@ -5,6 +5,7 @@ import sys
 
 from .fileutils import file_exists
 from .utils import replace_variables
+from .debug import Debug
 
 
 # PACKAGE PATH
