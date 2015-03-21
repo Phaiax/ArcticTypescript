@@ -150,11 +150,22 @@ class TssJsStarterThread(Thread):
 
             Debug('tss', 'STARTED tss with: %s' % ' '.join(cmdline))
 
+        except PermissionError as e:
+            self.error = "\n".join(["PermissionError while starting typescript-tools.",
+                    "I have tried this path: >%s<" % node_path,
+                    "The total command is >%s<" % ' '.join(cmdline),
+                    "The error message is >%s<" % e,
+                    "If you are on windows and just have installed node, you first need to logout and login again."])
+            return
         except FileNotFoundError:
             self.error = "\n".join(["Could not find nodejs.",
                     "I have tried this path: %s" % node_path,
                     "Please install nodejs and/or set node_path in the project or plugin settings to the actual executable.",
                     "If you are on windows and just have installed node, you first need to logout and login again."])
+            return
+        except Exception as e:
+            self.error = "Unexpected Error while starting typescript-tools."
+            print(e)
             return
 
 
