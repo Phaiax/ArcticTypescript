@@ -12,7 +12,7 @@ ArcticTypescript
  * view build result.js
  * snippets
  * filesGlob support (on_save only)
- 
+
 Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] a bug report.
 
 
@@ -91,6 +91,7 @@ Minimal Example `tsconfig.json`:
 
 
 More `compilerOptions`:
+
  * `target`              (string) 'es3'|'es5' (default) | 'es6'
  * `module`              (string) 'amd'|'commonjs' (default)
  * `declaration`         (boolean) Generates corresponding `.d.ts` file
@@ -113,6 +114,7 @@ All pathes are relative to `tsconfig.json`. These are exactly the options for
 the typescript compiler: Refer to `tsc --help`.
 
 Decide between:
+
  * `out='outfile.js'` : Then use ```/// <reference path="second.ts" />``` to
     spread your code. [Example][example_singleout]
  * `outDir='built/'` and `module='amd'`: Use ```import s = require('second')```
@@ -306,6 +308,7 @@ Notes for Upgraders / People which used T3S before
 ----------------------------------------------------------------------------
 
 This is a clone of the Typescript T3S Plugin, but with a lots of changes. If you switch to ArcticTypescript, please:
+
  - read this readme
  - uninstall T3S
  - delete the *.sublime-workspace files in your projects
@@ -333,6 +336,7 @@ Important Changes
 ----------------------------------------------------------------------------
 
 v0.6.0:
+
 *  Dropped .sublimets, x.sublime-project. Compiler options belong to tsconfig.json
 *  Many internal changes. Report if something is broken.
 *  README rewrite
@@ -340,17 +344,20 @@ v0.6.0:
 *  filesGlob
 
 v0.5.0:
+
 *  You will need a new config file called tsconfig.json
 *  Updated to TS 1.5 via typescript-tools (switching to tsserver will come soon)
 *  Dropped support for Outline view, since typescript-tools has dropped support
    for this. This feature will come back again with tsserver.
 
 v0.4.0:
+
 *  build system: (relative) paths with spaces are now enclosed in "" automatically
 *  > If you used additional "" to workaround the issue, you have to remove them,
    refer to messages/0.4.0.txt
 
 v0.3.0:
+
 *  relative root files now have a different base directory
 *  The default shortcut to switch to the error view changed to: CTRL + ALT + E
 *  There are 4 new shortcuts to jump to the first four Errors:
