@@ -21,7 +21,6 @@
         "typescript"
     ],
     "dependencies": {
-        "typescript": "git+ssh://git@github.com:Microsoft/TypeScript.git",
         "requirejs": "*",
         "grunt": "*",
         "grunt-contrib-copy": "*"
