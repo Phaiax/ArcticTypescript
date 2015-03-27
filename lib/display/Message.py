@@ -6,37 +6,32 @@ from ..utils.debounce import debounce
 class Message(object):
 
     messages =[]
-    previous = ""
 
-    def show(self,message,hide=False):
+    def show(self, message, hide=False, with_panel=True):
         self.messages = []
         self.messages.append(message)
 
-        window = sublime.active_window()
-        window.run_command("hide_overlay")
-        window.show_quick_panel(self.messages,self.hide)
+        if with_panel:
+            window = sublime.active_window()
+            window.run_command("hide_overlay")
+            window.show_quick_panel(self.messages, self.hide)
         sublime.status_message(message)
 
         if hide:
             debounce(self.hide, 1, 'message' + str(id(MESSAGE)))
 
 
-    def repeat(self,message):
+    def repeat(self, message, with_panel=True):
         self.messages = []
         self.messages.append(message)
 
-        window = sublime.active_window()
 
-        if self.previous == message:
+        if with_panel:
+            window = sublime.active_window()
             window.run_command("hide_overlay")
-            window.show_quick_panel(self.messages,self.hide)
-        else:
-            window.run_command("hide_overlay")
-
-            window.show_quick_panel(self.messages,self.hide)
+            window.show_quick_panel(self.messages, self.hide)
 
         sublime.status_message(message)
-        self.previous = message
 
 
     def hide(self,index=None):

@@ -101,7 +101,7 @@ class Processes(object):
             sublime.set_timeout(lambda: self._wait_for_finish_and_notify_user(i, dir), 100)
         else:
             # starting finished ->
-            MESSAGE.show('Typescript project intialized for file : %s' % self.project.tsconfigfile, True)
+            MESSAGE.show('Typescript project intialized for file : %s' % self.project.tsconfigfile, True, with_panel=False)
             self.project.on_services_started()
 
     def _display_animated_init_message(self, i, dir):
@@ -110,7 +110,7 @@ class Processes(object):
         i += dir
         anim_message = ' Typescript project is initializing [%s]' % '='.rjust(i).ljust(8)
 
-        MESSAGE.repeat(anim_message)
+        MESSAGE.repeat(anim_message, with_panel=False)
 
         return (i, dir)
 
