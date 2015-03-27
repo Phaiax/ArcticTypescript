@@ -4,6 +4,7 @@
         <meta charset="UTF-8" />
         <title>hello</title>
         <script type="text/javascript" src="js/lib/requirejs/require.js" data-main="js/app"></script>
+        <style>pre { display: inline; }</style>
     </head>
     <body>
         <div id="">
@@ -13,12 +14,11 @@
 
             <p>execute <pre>npm install</pre> to install all dependencies</p>
 
-            <p>Currently this project uses the non released version 1.5 of typescript,
-            because the compiler of ArcticTypescript uses tsconfig.json. The most recent typescript version 1.4 is not compatible with tsconfig.json.</p>
+            <p>A <a href="../built/test.html">test system</a> is included.</p>
 
-            <p>package.json: git+ssh://git@github.com:Microsoft/TypeScript.git</p>
+            <p>You must compile the sources and execute the <a href="http://gruntjs.com/getting-started">gruntfile</a>. This will copy the files from the <pre>res/</pre> folder to the <pre>built/</pre> folder, from where you can open <pre>index.html</pre> and <pre>test.html</pre> afterwards.</p>
 
-            <p>A <a href="test.html">test system</a> is included.</p>
+            <p>If you open this file from the <pre>res/</pre> folder, it will not work</p>
         </div>
         <div id="dyn"></div>
 </body>
