@@ -9,7 +9,7 @@ from ..display.T3SViews import T3SVIEWS
 from .AsyncCommand import AsyncCommand
 
 from ..utils import make_hash, Debug, max_calls
-from ..utils.fileutils import is_dts, fn2l
+from ..utils.fileutils import is_dts, fn2l, realfn
 from ..utils.viewutils import get_file_infos
 from ..utils.CancelCommand import CancelCommand
 
@@ -49,7 +49,7 @@ class TypescriptToolsWrapper(object):
     # DUMP FILE (untested)
     @max_calls()
     def dump(self, filename, output, callback):
-        dump_command = 'dump {0} {1}'.format( output, fn2l(filename) )
+        dump_command = 'dump {0} {1}'.format( output, fn2l(realfn(filename)) )
         AsyncCommand(dump_command, self.project) \
             .set_result_callback(callback) \
             .append_to_fast_queue()
@@ -75,7 +75,7 @@ class TypescriptToolsWrapper(object):
     def type(self, filename, line, col, callback):
         """ callback({ tss type answer }, filename=, line=, col=) """
 
-        type_command = 'type {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
+        type_command = 'type {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(realfn(filename)) )
 
         AsyncCommand(type_command, self.project) \
             .set_id("type_command") \
@@ -90,7 +90,7 @@ class TypescriptToolsWrapper(object):
     def definition(self, filename, line, col, callback):
         """ callback({ tss type answer }, filename=, line=, col=) """
 
-        definition_command = 'definition {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
+        definition_command = 'definition {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(realfn(filename)) )
 
         AsyncCommand(definition_command, self.project) \
             .set_id("definition_command") \
@@ -105,7 +105,7 @@ class TypescriptToolsWrapper(object):
     def references(self, filename, line, col, callback):
         """ callback({ tss type answer }, filename=, line=, col=) """
 
-        references_command = 'references {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(filename) )
+        references_command = 'references {0} {1} {2}'.format( str(line+1), str(col+1), fn2l(realfn(filename)) )
 
         AsyncCommand(references_command, self.project) \
             .set_id("references_command") \
@@ -120,7 +120,7 @@ class TypescriptToolsWrapper(object):
         """ callback({ tss type answer }, filename=, sender_view_id=) """
         return # structure command has been dropped
 
-        structure_command = 'structure {0}'.format(fn2l(filename))
+        structure_command = 'structure {0}'.format(fn2l(realfn(filename)))
 
         AsyncCommand(structure_command, self.project) \
             .set_id("structure_command for view %i" % sender_view_id) \
@@ -135,7 +135,7 @@ class TypescriptToolsWrapper(object):
     def complete(self, filename, line, col, is_member_str, callback):
         """ callback("tss type answer as string") """
 
-        completions_command = 'completions {0} {1} {2} {3}'.format(is_member_str, str(line+1), str(col+1), fn2l(filename))
+        completions_command = 'completions {0} {1} {2} {3}'.format(is_member_str, str(line+1), str(col+1), fn2l(realfn(filename)))
 
         Debug('autocomplete', "Send async completion command for line %i , %i" % (line+1, col+1))
 
@@ -155,7 +155,7 @@ class TypescriptToolsWrapper(object):
         # only update if the file contents have changed since last update call on this file
         filename, lines, content = get_file_infos(view)
         if self.need_update(filename, content):
-            update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(filename), content)
+            update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(realfn(filename)), content)
 
             AsyncCommand(update_command, self.project) \
                 .set_id('update %s' % filename) \
@@ -168,7 +168,7 @@ class TypescriptToolsWrapper(object):
     @max_calls()
     def add(self, filename, lines, content):
 
-        update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(filename), content)
+        update_command = 'update nocheck {0} {1}\n{2}'.format(str(lines+1), fn2l(realfn(filename)), content)
 
         AsyncCommand(update_command, self.project) \
             .set_id('add %s' % filename) \

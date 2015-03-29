@@ -56,7 +56,7 @@ class Errors(object):
         match1 = re.match("(.*)(Could not find file: ')(.*)'.*", errorstr)
         if match1:
             missing_file = match1.groups()[2]
-            better_error = "\"Maybe this file missing in your tsconfig.json['files'] list:\n    %s \"" % missing_file
+            better_error = "\"Maybe this file is missing in your tsconfig.json['files'] list:\n    %s \"" % missing_file
             Debug('notify', better_error)
             return {
                 "file": missing_file,
