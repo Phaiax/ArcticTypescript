@@ -165,11 +165,23 @@ class Completion(object):
 
     # ENTRY KEY
     def _get_list_key(self,entry):
+
+        #{'name': 'SVGLineElement',
+        # 'kind': 'var',
+        # 'kindModifiers': 'declare',
+        # 'type': 'interface SVGLineElement\nvar SVGLineElement: {\n    new (): SVGLineElement;\n    prototype: SVGLineElement;\n}',
+        # 'docComment': ''}
+
+
         kindModifiers = get_prefix(entry['kindModifiers'])
         kind = get_prefix(entry['kind'])
-        type = entry['type'] if 'type' in entry else entry['name']
+        type_ = entry['type'] if 'type' in entry else entry['name']
+        type_ = type_.split('\n')[0]
 
-        return kindModifiers+' '+kind+' '+str(entry['name'])+' '+str(type)
+        if kindModifiers == "" and kind == "":
+            kind = get_prefix(type_.split(' ')[0])
+
+        return kindModifiers+' '+kind+' '+str(entry['name'])+' '+str(type_)
 
 
     # ENTRY VALUE
