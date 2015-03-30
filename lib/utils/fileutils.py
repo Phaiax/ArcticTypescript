@@ -86,3 +86,9 @@ def fn2k(filename):
 def fn2l(filename):
     """ shortcut for filename2linux """
     return filename2linux(filename)
+
+
+def realfn(filename):
+    """ Returns the filename while resolving relative paths. (Tsserver is using
+        those resolved paths now.) """
+    return os.path.realpath(filename)
