@@ -260,7 +260,7 @@ repository:
     - name: constant.numeric.ts
       match: \b((0(x|X)[0-9a-fA-F]+)|([0-9]+(\.[0-9]+)?))\b
     - name: storage.type.ts
-      match: \b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|void)\b
+      match: \b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|let|void|type)\b
     - include: '#meta-storage-modifier'
     - name: keyword.control.ts
       match: \b(break|case|catch|continue|declare|default|do|else|finally|for|goto|if|import|package|return|switch|throw|try|while)\b
@@ -344,6 +344,7 @@ repository:
     patterns:
     - include: '#string-quoted-single'
     - include: '#string-quoted-double'
+    - include: '#string-templatestring'
 
   string-quoted-double:
     name: string.quoted.double.ts
@@ -354,8 +355,7 @@ repository:
     endCaptures:
       '0': {name: punctuation.definition.string.end.ts}
     patterns:
-    - name: constant.character.escape.ts
-      match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
+      - include: '#string-hex-escape'
 
   string-quoted-single:
     name: string.quoted.single.ts
@@ -366,9 +366,33 @@ repository:
     endCaptures:
       '0': {name: punctuation.definition.string.end.ts}
     patterns:
-    - match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
-      name: constant.character.escape.ts
+    - include: '#string-hex-escape'
 
+  string-templatestring:
+    name: support.other.ts
+    begin: "`"
+    beginCaptures:
+      '0': {name: punctuation.definition.string.begin.ts}
+    end: "`"
+    endCaptures:
+      '0': {name: punctuation.definition.string.end.ts}
+    patterns:
+    - include: '#string-templatestring-replacement'
+    - include: '#string-hex-escape'
+    - name: string.quoted.other
+      match: ([^`])
+
+  string-templatestring-replacement:
+    name: support.other.ts
+    begin: (\$)(\{)
+    beginCaptures:
+      '1': {name: keyword.operator.ts}
+      '2': {name: "meta.brace.curly.ts keyword.operator.ts" }
+    end: \}
+    endCaptures:
+      '0': {name: "meta.brace.curly.ts keyword.operator.ts"}
+    patterns:
+    - include: '#expression'
 
   string-in-oneline-comment:
     comment: Quoted Strings within oneline comments like // aergae "THIS"
@@ -386,8 +410,7 @@ repository:
     endCaptures:
       '0': {name: punctuation.definition.string.end.ts}
     patterns:
-    - name: constant.character.escape.ts
-      match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
+    - include: '#string-hex-escape'
 
   string-quoted-single-in-oneline-comment:
     name: comment.string.quoted.single.ts
@@ -398,5 +421,10 @@ repository:
     endCaptures:
       '0': {name: punctuation.definition.string.end.ts}
     patterns:
+    - include: '#string-hex-escape'
+
+  string-hex-escape:
+    patterns:
     - match: \\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)
       name: constant.character.escape.ts
+

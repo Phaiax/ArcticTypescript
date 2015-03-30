@@ -773,7 +773,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|void)\b</string>
+					<string>\b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|let|void|type)\b</string>
 					<key>name</key>
 					<string>storage.type.ts</string>
 				</dict>
@@ -1022,6 +1022,22 @@
 					<key>include</key>
 					<string>#string-quoted-double</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string-templatestring</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-hex-escape</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>name</key>
+					<string>constant.character.escape.ts</string>
+				</dict>
 			</array>
 		</dict>
 		<key>string-in-oneline-comment</key>
@@ -1069,10 +1085,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1103,10 +1117,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1137,10 +1149,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1172,10 +1182,87 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-templatestring</key>
+		<dict>
+			<key>begin</key>
+			<string>`</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
 					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>`</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>support.other.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#string-templatestring-replacement</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string-hex-escape</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>([^`])</string>
+					<key>name</key>
+					<string>string.quoted.other</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-templatestring-replacement</key>
+		<dict>
+			<key>begin</key>
+			<string>(\$)(\{)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.ts</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts keyword.operator.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>\}</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts keyword.operator.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>support.other.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#expression</string>
 				</dict>
 			</array>
 		</dict>
