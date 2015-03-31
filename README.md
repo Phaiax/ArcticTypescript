@@ -6,6 +6,7 @@ ArcticTypescript
  * auto completion
  * live error highlighting
  * fast access to errors via shortcuts and clicks
+ * refactoring (beta)
  * jump to declaration
  * quick info
  * build system *for Typescript 1.5*
@@ -31,6 +32,7 @@ Commands and Shortcuts
  * `alt + shift + e k`      jump to 3rd error
  * `alt + shift + e l`      jump to 4th error
  * `F1`                     show details about type under cursor
+ * `F2`                     refactor under cursor (beta: enable in settings first)
  * `F4`                     jump to declaration
  * `shift+F5`               reload (do this if autocompletion is missing
                             something or after tsconfig.json changes)
@@ -147,6 +149,7 @@ updated. Example:
 
 You can configure ArcticTypescript as well (type, default):
 
+ * `enable_refactoring`        (boolean, false) Disabled by default (still beta)
  * `activate_build_system`     (boolean, true)
  * `auto_complete`             (boolean, true)
  * `node_path`                 (string, null) If null, then nodejs must be in $PATH

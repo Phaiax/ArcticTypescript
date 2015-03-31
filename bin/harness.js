@@ -1,5 +1,5 @@
 // Copyright (c) Microsoft, Claus Reinke. All rights reserved.
-// Licensed under the Apache License, Version 2.0. 
+// Licensed under the Apache License, Version 2.0.
 // See LICENSE.txt in the project root for complete license information.
 ///<reference path='typings/node/node.d.ts'/>
 ///<reference path='node_modules/typescript/bin/typescript.d.ts'/>
@@ -25,7 +25,7 @@ var ScriptInfo = (function () {
         this.setContent(content);
         this.editRanges.push({
             length: content.length,
-            textChangeRange: 
+            textChangeRange:
             // NOTE: no shortcut for "update everything" (null only works in some places, #10)
             ts.createTextChangeRange(ts.createTextSpan(0, old_length), content.length)
         });

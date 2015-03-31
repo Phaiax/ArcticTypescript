@@ -2,6 +2,7 @@
 	"auto_complete" : true,
 	"error_on_save_only" : false,
 	"activate_build_system" : true,
+    "enable_refactoring" : false,
 	"node_path" : null,
 	"tsc_path" : null,
 	"build_on_save" : false,

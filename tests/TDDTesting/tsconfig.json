@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
-        "out": "out.js", 
-        "sourceMap": true, 
+        "out": "out.js",
+        "sourceMap": true,
         "target": "es5"
-    }, 
+    },
     "files": [
-        "main.ts", 
+        "main.ts",
         "card.ts"
-    ]
+    ],
+    "ArcticTypescript": {
+        "enable_refactoring": true
+    }
 }

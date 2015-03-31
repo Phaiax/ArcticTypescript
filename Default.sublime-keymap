@@ -49,7 +49,7 @@
 		"context": [ {"key": "ArcticTypescript"} ]
 	},
 	{
-		"command": "typescript_references",
+		"command": "typescript_refactor",
 		"keys": ["f2"],
 		"context": [ {"key": "ArcticTypescript"} ]
 	},

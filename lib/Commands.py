@@ -140,13 +140,16 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 
 # ################################# REFACTORING ############################
 
-class TypescriptReferences(sublime_plugin.TextCommand):
+class TypescriptRefactor(sublime_plugin.TextCommand):
 
     @catch_CancelCommand
     def run(self, edit):
         project = get_or_create_project_and_add_view(self.view)
         if project:
             project.assert_initialisation_finished()
+
+            if project.get_setting('enable_refactoring')
+
             self.root = get_root(self.view.file_name())
 
             pos = self.view.sel()[0].begin()
