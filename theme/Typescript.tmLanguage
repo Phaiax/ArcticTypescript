@@ -146,12 +146,12 @@
 				<key>1</key>
 				<dict>
 					<key>name</key>
-					<string>storage.type.class.ts</string>
+					<string>storage.type.ts storage.type.class.ts</string>
 				</dict>
 				<key>2</key>
 				<dict>
 					<key>name</key>
-					<string>entity.name.type.class.ts</string>
+					<string>entity.name.class.ts</string>
 				</dict>
 			</dict>
 			<key>end</key>
@@ -282,6 +282,47 @@
 				</dict>
 			</array>
 		</dict>
+		<key>enum-expression</key>
+		<dict>
+			<key>begin</key>
+			<string>\b(enum)\b(?:\s+([a-zA-Z_$][\w$]*))?</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>storage.type.enum.ts</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.class.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(?=\})</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>meta.class.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#meta-enum-body</string>
+				</dict>
+			</array>
+		</dict>
 		<key>expression</key>
 		<dict>
 			<key>comment</key>
@@ -304,6 +345,10 @@
 				</dict>
 				<dict>
 					<key>include</key>
+					<string>#enum-expression</string>
+				</dict>
+				<dict>
+					<key>include</key>
 					<string>#function</string>
 				</dict>
 				<dict>
@@ -321,6 +366,12 @@
 				<dict>
 					<key>include</key>
 					<string>#misc-higlighting</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>([a-zA-Z_$][\w$]*)</string>
+					<key>name</key>
+					<string>variable.other.ts</string>
 				</dict>
 			</array>
 		</dict>
@@ -404,6 +455,8 @@
 					<string>punctuation.terminator.statement.ts</string>
 				</dict>
 			</dict>
+			<key>name</key>
+			<string>meta.expression.classattribute</string>
 			<key>patterns</key>
 			<array>
 				<dict>
@@ -467,6 +520,92 @@
 				<dict>
 					<key>include</key>
 					<string>#meta-function-body</string>
+				</dict>
+			</array>
+		</dict>
+		<key>meta-enum-assignedconstant</key>
+		<dict>
+			<key>begin</key>
+			<string>(=)(?:\s*)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string></string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(?=[\s,}])</string>
+			<key>endCaptures</key>
+			<dict/>
+			<key>name</key>
+			<string>meta.enum.assignment</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#expression</string>
+				</dict>
+			</array>
+		</dict>
+		<key>meta-enum-body</key>
+		<dict>
+			<key>begin</key>
+			<string>\{</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(?=\})</string>
+			<key>endCaptures</key>
+			<dict/>
+			<key>name</key>
+			<string>meta.expression.body.enum</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#meta-enum-constant</string>
+				</dict>
+			</array>
+		</dict>
+		<key>meta-enum-constant</key>
+		<dict>
+			<key>begin</key>
+			<string>([a-zA-Z_$][\w$]*)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>constant.character</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>(,)|(?=[}])</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#comment</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#meta-enum-assignedconstant</string>
 				</dict>
 			</array>
 		</dict>
@@ -773,7 +912,7 @@
 				</dict>
 				<dict>
 					<key>match</key>
-					<string>\b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|void)\b</string>
+					<string>\b(boolean|byte|char|class|double|enum|float|function|int|interface|long|number|short|string|var|let|void|type)\b</string>
 					<key>name</key>
 					<string>storage.type.ts</string>
 				</dict>
@@ -815,7 +954,7 @@
 					<key>match</key>
 					<string>\b(super|this)\b</string>
 					<key>name</key>
-					<string>support.constant.ts</string>
+					<string>variable.language.ts</string>
 				</dict>
 				<dict>
 					<key>captures</key>
@@ -1022,6 +1161,22 @@
 					<key>include</key>
 					<string>#string-quoted-double</string>
 				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string-templatestring</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-hex-escape</key>
+		<dict>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>name</key>
+					<string>constant.character.escape.ts</string>
+				</dict>
 			</array>
 		</dict>
 		<key>string-in-oneline-comment</key>
@@ -1069,10 +1224,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1103,10 +1256,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1137,10 +1288,8 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
-					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
 				</dict>
 			</array>
 		</dict>
@@ -1172,10 +1321,87 @@
 			<key>patterns</key>
 			<array>
 				<dict>
-					<key>match</key>
-					<string>\\(x\h{2}|[0-2][0-7]{,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.)</string>
+					<key>include</key>
+					<string>#string-hex-escape</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-templatestring</key>
+		<dict>
+			<key>begin</key>
+			<string>`</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
 					<key>name</key>
-					<string>constant.character.escape.ts</string>
+					<string>punctuation.definition.string.begin.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>`</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>punctuation.definition.string.end.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>support.other.ts meta.templatestring.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#string-templatestring-replacement</string>
+				</dict>
+				<dict>
+					<key>include</key>
+					<string>#string-hex-escape</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>([^`])</string>
+					<key>name</key>
+					<string>string.quoted.other</string>
+				</dict>
+			</array>
+		</dict>
+		<key>string-templatestring-replacement</key>
+		<dict>
+			<key>begin</key>
+			<string>(\$)(\{)</string>
+			<key>beginCaptures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.operator.ts</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts keyword.operator.ts</string>
+				</dict>
+			</dict>
+			<key>end</key>
+			<string>\}</string>
+			<key>endCaptures</key>
+			<dict>
+				<key>0</key>
+				<dict>
+					<key>name</key>
+					<string>meta.brace.curly.ts keyword.operator.ts</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>support.other.ts meta.templatestring.replacement.ts</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>include</key>
+					<string>#expression</string>
 				</dict>
 			</array>
 		</dict>
