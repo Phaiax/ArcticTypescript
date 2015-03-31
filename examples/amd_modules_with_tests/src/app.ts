@@ -11,11 +11,6 @@ setTimeout(function(){
 
 var k = {"abcde" : 22}
 
-console.log(k.abcdefg)
-console.log(k.abcdefgh)
-console.log(k.abcdefghi)
-console.log(k.abcdefghij)
-
 class AClass {
 
     constructor(argument) {
@@ -23,6 +18,5 @@ class AClass {
     }
 
     public test() : void {
-
     }
 }

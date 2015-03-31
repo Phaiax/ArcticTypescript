@@ -62,8 +62,8 @@ repository:
     name: meta.class.ts
     begin: \b(class|interface)\b(?:\s+([a-zA-Z_$][\w$]*))?
     beginCaptures:
-      '1': {name: storage.type.class.ts}
-      '2': {name: entity.name.type.class.ts}
+      '1': {name: "storage.type.ts storage.type.class.ts"}
+      '2': {name: entity.name.class.ts}
     end: (?=\})
     endCaptures:
       '0': {name: meta.brace.curly.ts}
@@ -102,6 +102,52 @@ repository:
       - name: punctuation.definition.comment.ts
         match: ([^\n\r"])
 
+  enum-expression:
+    name: meta.class.ts
+    begin: \b(enum)\b(?:\s+([a-zA-Z_$][\w$]*))?
+    beginCaptures:
+      '1': {name: storage.type.enum.ts}
+      '2': {name: entity.name.class.ts}
+    end: (?=\})
+    endCaptures:
+      '0': {name: meta.brace.curly.ts}
+    patterns:
+    - include: '#comment'
+    - include: '#meta-enum-body'
+
+  meta-enum-body:
+    name: meta.expression.body.enum
+    begin: \{
+    beginCaptures:
+      '0': {name: meta.brace.curly.ts}
+    end: (?=\})
+    endCaptures: {}
+    patterns:
+    - include: '#comment'
+    - include: '#meta-enum-constant'
+
+  meta-enum-constant:
+    begin: ([a-zA-Z_$][\w$]*)
+    beginCaptures:
+      '0': {name: constant.character}
+    end: (,)|(?=[}])
+    patterns:
+    - include: '#comment'
+    - include: '#meta-enum-assignedconstant'
+
+  meta-enum-assignedconstant:
+    name: meta.enum.assignment
+    begin: (=)(?:\s*)
+    beginCaptures:
+      '1': {name: ""}
+    end: (?=[\s,}])
+    endCaptures: {}
+    patterns:
+    - include: '#comment'
+    - include: '#expression'
+
+
+
   expression:
     comment: The main building block
     name: meta.expression.ts
@@ -109,11 +155,14 @@ repository:
     - include: '#comment'
     - include: '#module-expression'
     - include: '#class-expression'
+    - include: '#enum-expression'
     - include: '#function'
     - include: '#block'
     - include: '#string'
     - include: '#regexp'
     - include: '#misc-higlighting'
+    - name: variable.other.ts
+      match: ([a-zA-Z_$][\w$]*)
 
   function:
     name: meta.function.ts
@@ -136,6 +185,7 @@ repository:
     - include: '#meta-class-member-method'
 
   meta-class-member-attribute:
+    name: meta.expression.classattribute
     begin: \b([a-zA-Z_$][\w$]*)\s*(\?\s*)?(?=(=|:))
     beginCaptures:
       '1': {name: meta.toc-list.class.member.ts}
@@ -272,7 +322,7 @@ repository:
       match: \bfalse\b
     - name: constant.language.null.ts
       match: \bnull\b
-    - name: support.constant.ts
+    - name: variable.language.ts
       match: \b(super|this)\b
     - name: meta.prototype.ts
       match: (\.)(prototype|__proto__)\b
@@ -369,7 +419,7 @@ repository:
     - include: '#string-hex-escape'
 
   string-templatestring:
-    name: support.other.ts
+    name: "support.other.ts meta.templatestring.ts"
     begin: "`"
     beginCaptures:
       '0': {name: punctuation.definition.string.begin.ts}
@@ -383,7 +433,7 @@ repository:
       match: ([^`])
 
   string-templatestring-replacement:
-    name: support.other.ts
+    name: "support.other.ts meta.templatestring.replacement.ts"
     begin: (\$)(\{)
     beginCaptures:
       '1': {name: keyword.operator.ts}
