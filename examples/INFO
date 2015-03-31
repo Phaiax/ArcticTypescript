@@ -1,2 +1,6 @@
 Examples are only available in the master branch. (This is the deploy branch)
 Please visit https://github.com/Phaiax/ArcticTypescript
+
+Linux: To copy the examples into a folder called typescript_examples:
+
+git clone --depth 1 https://github.com/Phaiax/ArcticTypescript.git tmp_AT && mv tmp_AT/examples typescript_examples && rm -rf tmp_AT
