@@ -27,11 +27,11 @@ Commands and Shortcuts
 | Shortcut                    | Action |
 |---                          |--- |
 | `Ctrl`+ `Space`             | trigger code completion. |
-| `Alt` + `Shift` + `E` `E`   | error view |
-| `Alt` + `Shift` + `E` `H`   | jump to 1st error |
-| `Alt` + `Shift` + `E` `J`   | jump to 2nd error |
-| `Alt` + `Shift` + `E` `K`   | jump to 3rd error |
-| `Alt` + `Shift` + `E` `L`   | jump to 4th error |
+| `Alt` + `Shift` + `E``E`   | error view |
+| `Alt` + `Shift` + `E``H`   | jump to 1st error |
+| `Alt` + `Shift` + `E``J`   | jump to 2nd error |
+| `Alt` + `Shift` + `E``K`   | jump to 3rd error |
+| `Alt` + `Shift` + `E``L`   | jump to 4th error |
 | `F1`                        | show details about type under cursor |
 | `F4`                        | jump to declaration |
 | `F8` or `Ctrl`+`B`          | Build the project. |
