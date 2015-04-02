@@ -25,18 +25,20 @@ Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] 
 Commands and Shortcuts
 ----------------------------------------------------------------------------
 
- * `ctrl + space`           trigger code completion.
- * `alt + shift + e e`      error view
- * `alt + shift + e h`      jump to 1st error
- * `alt + shift + e j`      jump to 2nd error
- * `alt + shift + e k`      jump to 3rd error
- * `alt + shift + e l`      jump to 4th error
- * `F1`                     show details about type under cursor
- * `F2`                     refactor under cursor (beta: enable in settings first)
- * `F4`                     jump to declaration
- * `shift+F5`               reload (do this if autocompletion is missing
-                            something or after tsconfig.json changes)
- * `F8` or `ctrl + b`       Build the project.
+| Shortcut                    | Action |
+|---                          |--- |
+| `Ctrl`+ `Space`             | trigger code completion. |
+| `Alt` + `Shift` + `E` `E`   | error view |
+| `Alt` + `Shift` + `E` `H`   | jump to 1st error |
+| `Alt` + `Shift` + `E` `J`   | jump to 2nd error |
+| `Alt` + `Shift` + `E` `K`   | jump to 3rd error |
+| `Alt` + `Shift` + `E` `L`   | jump to 4th error |
+| `F1`                        | show details about type under cursor |
+| `F2`                        | refactor under cursor <br>(beta: enable in settings first) |
+| `F4`                        | jump to declaration |
+| `F8` or `Ctrl`+`B`          | Build the project. |
+| `Shift`+`F5`                | reload (do this if autocompletion<br> is missing something or after <br> tsconfig.json changes) |
+
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
  * snippets: see below
 
