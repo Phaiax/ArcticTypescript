@@ -35,9 +35,7 @@ Commands and Shortcuts
 | `F1`                        | show details about type under cursor |
 | `F4`                        | jump to declaration |
 | `F8` or `Ctrl`+`B`          | Build the project. |
-| `Shift`+`F5`                | reload (do this if autocompletion<br>
-                                is missing something or after <br>
-                                tsconfig.json changes) |
+| `Shift`+`F5`                | reload (do this if autocompletion<br> is missing something or after <br> tsconfig.json changes) |
 
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
  * snippets: see below
