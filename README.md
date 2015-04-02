@@ -24,18 +24,18 @@ Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] 
 Commands and Shortcuts
 ----------------------------------------------------------------------------
 
-| Shortcut                                                   | Action |
-|---                                                         |--- |
-| <kbd>Ctrl</kbd>+<kbd>Space</kbd>                           | trigger code completion. |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd><kbd>E</kbd>   | error view |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd><kbd>H</kbd>   | jump to 1st error |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd><kbd>J</kbd>   | jump to 2nd error |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd><kbd>K</kbd>   | jump to 3rd error |
-| <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd><kbd>L</kbd>   | jump to 4th error |
-| <kbd>F1</kbd>                                              | show details about type under cursor |
-| <kbd>F4</kbd>                                              | jump to declaration |
-| <kbd>Shift</kbd>+<kbd>F5</kbd>                             | reload (do this if autocompletion is missing something or after tsconfig.json changes) |
-| <kbd>F8</kbd> or <kbd>Ctrl</kbd>+<kbd>B</kbd>              | Build the project. |
+| Shortcut                    | Action |
+|---                          |--- |
+| `Ctrl`+ `Space`             | trigger code completion. |
+| `Alt` + `Shift` + `E` `E`   | error view |
+| `Alt` + `Shift` + `E` `H`   | jump to 1st error |
+| `Alt` + `Shift` + `E` `J`   | jump to 2nd error |
+| `Alt` + `Shift` + `E` `K`   | jump to 3rd error |
+| `Alt` + `Shift` + `E` `L`   | jump to 4th error |
+| `F1`                        | show details about type under cursor |
+| `F4`                        | jump to declaration |
+| `F8` or `Ctrl`+`B`          | Build the project. |
+| `Shift`+`F5`                | reload (do this if autocompletion is missing something or after tsconfig.json changes) |
 
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
  * snippets: see below
