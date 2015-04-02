@@ -24,7 +24,7 @@ Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] 
 Commands and Shortcuts
 ----------------------------------------------------------------------------
 
-| _ _ _ _ Shortcut _ _ _ _    | Action |
+| Shortcut                    | Action |
 |---                          |--- |
 | `Ctrl`+ `Space`             | trigger code completion. |
 | `Alt` + `Shift` + `E` `E`   | error view |
@@ -35,7 +35,9 @@ Commands and Shortcuts
 | `F1`                        | show details about type under cursor |
 | `F4`                        | jump to declaration |
 | `F8` or `Ctrl`+`B`          | Build the project. |
-| `Shift`+`F5`                | reload (do this if autocompletion is missing something or after tsconfig.json changes) |
+| `Shift`+`F5`                | reload (do this if autocompletion<br>
+                                is missing something or after <br>
+                                tsconfig.json changes) |
 
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
  * snippets: see below
