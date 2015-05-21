@@ -21,6 +21,7 @@ from ..server.Processes import Processes
 from ..server.TypescriptToolsWrapper import TypescriptToolsWrapper
 
 from ..commands.Compiler import Compiler
+from ..commands.Refactor import Refactor
 
 from ..display.T3SViews import T3SVIEWS
 from ..display.Message import MESSAGE
@@ -572,5 +573,13 @@ class OpenedProject(object):
         sublime.active_window().active_view().run_command('typescript_build_view',
                          { "project_id": self.id,
                            "display_file": display_file })
+
+
+    # ###############################################    REFACTOR   #############
+
+    def do_refactor(self, refs, old_name, new_name, edit_token):
+        #if not self.refactor or not self.refactor.is_alive():
+        self.refactor = Refactor(self, refs, old_name, new_name, edit_token)
+        self.refactor.start()
 
 
