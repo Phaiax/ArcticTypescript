@@ -203,23 +203,23 @@ Example Settings in project file `mytsproject.sublime-settings`:
                 "post_processing_commands": [
                     "node .settings/.silns.js",
                     "r.js.cmd -o .settings/.build.js",
-                    "cat $tsconfig",
+                    "cat ${tsconfig}",
                     "echo a\\\\nbc | cat"
                 ]
             }
         }
     }
 
-The working directory for all commands is `$tsconfig_path`. They will be executed
+The working directory for all commands is `${tsconfig_path}`. They will be executed
 using `subprocess.Popen(cmd, shell=True)`. shell=True -> You can use pipes, ...
 
 You can use variables for the string values:
 
  * [Sublime Variables][sublime_variables]
- * All your compilerOptions, e.g. `$outDir`
- * `$platform` : sys.platform = "linux" | "darwin" | "nt"
- * `$tsconfig` : the path to tsconfig.json
- * `$tsconfig_path` : the folder of tsconfig.json
+ * All your compilerOptions, e.g. `${outDir}`
+ * `${platform}` : sys.platform = "linux" | "darwin" | "nt"
+ * `${tsconfig}` : the path to tsconfig.json
+ * `${tsconfig_path}` : the folder of tsconfig.json
 
 
  [sublime_variables]: http://docs.sublimetext.info/en/latest/reference/build_systems/configuration.html?highlight=file_name#build-system-variables
@@ -339,6 +339,10 @@ the dependency in `package.json` to
 
 Important Changes
 ----------------------------------------------------------------------------
+
+v0.7.0:
+*  Variable replacements for post or pre processing commands now require curly braces: `${tsconfig}`
+*  Typescript 1.5 beta
 
 v0.6.0:
 

@@ -5,7 +5,6 @@ import time
 import hashlib
 
 
-
 # ##################################################### VERSION ############
 
 
@@ -31,13 +30,16 @@ def random_str():
 
 def replace_variables(value, variables):
     if hasattr(sublime, 'expand_variables'): # ST3, Build 3068
+        # stringify dict
+        for k in variables.keys():
+            variables[k] = str(variables[k]);
         return sublime.expand_variables(value, variables)
     else:
         # sort keys after length, to get $file_path before $file
         keys = list(variables.keys())
         keys.sort(key=len, reverse=True)
         for k in keys:
-            key = "$%s" % k
+            key = "${%s}" % k
             if key in value:
                 value = value.replace(key, str(variables[k]))
     return value

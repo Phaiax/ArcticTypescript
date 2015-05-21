@@ -9,4 +9,4 @@ var what : string = U.TotalBasicUtils.a();
 (new U.TotalBasicUtils()).b();
 
 
-console.log(what)
+console.log(what);
