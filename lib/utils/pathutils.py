@@ -89,7 +89,7 @@ def default_tsc_path(tsc_path=None, project=None):
                 return os.path.normcase(tsc_path)
 
     # use ArcticTypescript's tsc
-    return os.path.join(package_path, 'bin', 'node_modules', '.bin', 'tsc')
+    return os.path.join(package_path, 'bin', 'node_modules', 'typescript', 'bin', 'tsc')
 
 
 
