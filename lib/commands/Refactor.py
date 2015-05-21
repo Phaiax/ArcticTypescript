@@ -1,26 +1,18 @@
 # coding=utf8
 
-from subprocess import Popen, PIPE
 from threading import Thread
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
 
 import sublime
 import os
-import json
 
-from ..Tss import TSS
-from ..display.Panel import PANEL
-from ..display.Errors import ERRORS
-from ..system.Settings import SETTINGS
-from ..Utils import debounce, dirname, read_file, get_kwargs, Debug
+
+from ..utils import Debug
+from ..utils.fileutils import read_file, file_exists, fn2k
 
 
 # ----------------------------------------- UTILS --------------------------------------- #
 
-def show_output(window,line):
+def show_output(window, line):
     PANEL.show(window)
     PANEL.update(line['output'])
 
@@ -28,64 +20,63 @@ def clear_panel(window):
     PANEL.clear(window)
 
 
-# --------------------------------------- COMPILER -------------------------------------- #
+# ##########################################################################
+# ########################################## REFACTOR ######################
+# ##########################################################################
 
-class Refactor(Thread):
 
-    def __init__(self, window, member, refs, root):
-        self.window = window
-        self.member = member
-        self.refs = refs
-        self.root = root
+#{'lineText': '        let total = 0;',
+# 'file': '/home/daniel/.config/sublime-text-3/Packages/ArcticTypescript/tests/TDDTesting/main.ts',
+# 'min': {'character': 13,
+#         'line': 43},
+# 'lim': {'character': 18,
+#         'line': 43},
+# 'ref': {'textSpan': {'start': 760,
+#                      'length': 5},
+#         'fileName': '/home/daniel/.config/sublime-text-3/Packages/ArcticTypescript/tests/TDDTesting/main.ts',
+#         'isWriteAccess': True}}
+
+
+class Refactor():
+
+    def __init__(self, edit, project, refs, old_name, new_name):
         Thread.__init__(self)
+        self.project = project
+        self.refs = {r['ref'] for r in refs}
+        self.old_name = old_name
+        self.new_name = new_name
+        self.edit_token = edit_token
+
+
+    def start(self):
+        self.run()
 
     def run(self):
-        clear_panel(self.window)
+        self.sort_by_file()
+        Debug('refactor', self.refs_by_file)
 
-        node = SETTINGS.get_node(self.root)
-        kwargs = get_kwargs()
-        p = Popen([node, os.path.join(dirname,'bin','refactor.js'), self.member, json.dumps(self.refs)], stdin=PIPE, stdout=PIPE, **kwargs)
-        reader = RefactorReader(self.window,p.stdout,Queue())
-        reader.daemon = True
-        reader.start()
+        for (file_, refs_in) in self.refs_by_file.values():
+            self.refactor_file(file_, refs_in)
 
 
-class RefactorReader(Thread):
+    def sort_by_file(self):
+        """ sort references by file """
 
-    def __init__(self,window,stdout,queue):
-        self.window = window
-        self.stdout = stdout
-        self.queue = queue
-        Thread.__init__(self)
+        self.refs_by_file = {} # key is the fn2k'ed filename
 
-    def run(self):
-        delay = 1000
-        previous = ""
-        for line in iter(self.stdout.readline, b''):
-            line = json.loads(line.decode('UTF-8'))
-            if 'output' in line:
-                show_output(self.window,line)
-            elif 'file' in line:
-                filename = line['file']
-                content = read_file(filename)
-                lines = len(content.split('\n'))-1
-                if previous != filename:
-                    self.send(filename,lines,content,delay)
-                    delay+=100
+        for ref in self.refs:
+            file_ = fn2k(ref['file'])
+            if file_ not in self.refs_by_file:
+                self.refs_by_file[file_] = []
 
-                previous = filename
-            else:
-                print('refactor error')
+            self.refs_by_file[file_].append(ref)
 
 
-        self.stdout.close()
+    def refactor_file(self, file_name_keyed, refs_in):
 
-    def send(self,filename,lines,content,delay):
-        sublime.set_timeout(lambda:self.update(filename,lines,content),delay)
 
-    def update(self,filename,lines,content):
-        TSS.update(filename, lines, content)
-        ERRORS.start_recalculation(filename_or_root)
 
+        Debug('refactor', 'got here! :D')
+        return
 
 

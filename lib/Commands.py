@@ -7,16 +7,14 @@ import os
 import re
 import traceback
 
-# from .commands.Compiler import Compiler
-# from .commands.Refactor import Refactor
 from .display.T3SViews import T3SVIEWS
 from .display.Message import MESSAGE
 
 from .system.Project import get_or_create_project_and_add_view, project_by_id
 from .system.globals import OPENED_PROJECTS
 
-from .utils.fileutils import read_file
-from .utils.viewutils import get_file_infos
+from .utils.fileutils import read_file, fn2k
+from .utils.viewutils import get_file_infos, get_content_of_view_at
 from .utils.uiutils import get_prefix
 from .utils.CancelCommand import catch_CancelCommand, CancelCommand
 from .utils import Debug, max_calls
@@ -140,58 +138,92 @@ class TypescriptDefinition(sublime_plugin.TextCommand):
 
 # ################################# REFACTORING ############################
 
-class TypescriptReferences(sublime_plugin.TextCommand):
+class TypescriptRefactor(sublime_plugin.TextCommand):
 
     @catch_CancelCommand
-    def run(self, edit):
+    def run(self, edit_token):
         project = get_or_create_project_and_add_view(self.view)
         if project:
             project.assert_initialisation_finished()
-            self.root = get_root(self.view.file_name())
 
+            if not project.get_setting('enable_refactoring'):
+                return
+
+            # Position of activation.
             pos = self.view.sel()[0].begin()
             (line, col) = self.view.rowcol(pos)
             _view = self.view
 
-            def async_react(refs, filename, line, col):
-                self.refs = refs
-                self.window = sublime.active_window()
+            project.tsserver.references(self.view.file_name(), line, col, callback=self.async_react)
 
-                if refs == None: return
+    @catch_CancelCommand
+    def async_react(self, refs, filename, line, col):
+        if refs is None or len(refs) == 0:
+            return
 
-                view = sublime.active_window().active_view()
-                pos = view.sel()[0].begin()
-                (_line, _col) = view.rowcol(pos)
-                if col != _col or line != _line: return
-                if view != _view: return
+        view = sublime.active_window().active_view()
+        project = get_or_create_project_and_add_view(view)
 
-                refactor_member = ""
-                try :
-                    for ref in refs:
-                        if ref['file'].replace('/',os.sep).lower() == self.view.file_name().lower():
-                            refactor_member = self.view.substr(self.get_region(self.view, ref['min'], ref['lim']))
-                    if(refactor_member):
-                        self.window.show_input_panel('Refactoring', refactor_member, self.on_done, None, None)
-                except (Exception) as ref:
-                    sublime.status_message("error panel : plugin not yet intialize please retry after initialisation")
+        if not project:
+            return
 
-            TSS.references(self.view.file_name(), line, col, callback=async_react)
+        if self.selection_has_changed(filename, line, col):
+            return
 
-    def get_region(self,view,min,lim):
-        start_line = min['line']
-        end_line = lim['line']
-        left = min['character']
-        right = lim['character']
+        Debug('refactor', refs)
+        #{'lineText': '        let total = 0;',
+        # 'file': '/home/daniel/.config/sublime-text-3/Packages/ArcticTypescript/tests/TDDTesting/main.ts',
+        # 'min': {'character': 13,
+        #         'line': 43},
+        # 'lim': {'character': 18,
+        #         'line': 43},
+        # 'ref': {'textSpan': {'start': 760,
+        #                      'length': 5},
+        #         'fileName': '/home/daniel/.config/sublime-text-3/Packages/ArcticTypescript/tests/TDDTesting/main.ts',
+        #         'isWriteAccess': True}}
 
-        a = view.text_point(start_line-1,left-1)
-        b = view.text_point(end_line-1,right-1)
-        return sublime.Region(a,b)
 
-    def on_done(self,name):
-        return # TODO
-        refactor = Refactor(self.window, name, self.refs, self.root)
-        refactor.daemon = True
-        refactor.start()
+        refactor_member = self.get_entire_member_name(refs)
+        if not refactor_member:
+            return
+
+        Debug('refactor', refactor_member)
+
+        sublime.active_window().show_input_panel(
+            'Refactoring %s (found %i times) to:' % (refactor_member, len(refs)),
+            refactor_member,
+            lambda new_name: sublime.run_command("typescript_apply_refactor",
+                {"project":project, "refs":refs, "old_name":refactor_member, "new_name":new_name}), # require edit token
+            None, # change
+            None) # camcel
+            ## TODO: keine Objekte ins run_command -> verweise bze hashes und die refs temporär im project abspeicern
+
+    def selection_has_changed(self, orig_filename, orig_line, orig_col):
+        """ Return True if active selection has changed """
+
+        view = sublime.active_window().active_view()
+        if orig_filename != view.file_name():
+            return True
+
+        current_pos = view.sel()[0].begin()
+        (current_line, current_col) = view.rowcol(current_pos)
+
+        if orig_col != current_col or orig_line != current_line:
+            return True
+
+        return False
+
+
+    def get_entire_member_name(self, references):
+        """ returns the complete member name of the refactored member """
+        ref = references[0]
+        return ref['lineText'][ref['min']['character']-1:ref['lim']['character']-1]
+
+
+
+class TypescriptApplyRefactor(sublime_plugin.TextCommand):
+    def run(self, edit_token, project, refs, old_name, new_name):
+        project.do_refactor(refs, refactor_member, new_name, edit_token)
 
 
 # ################################# OPEN OUTLINE PANEL #########################

@@ -187,8 +187,13 @@ var TSS = (function () {
         var seenNoDefaultLib = options.noLib;
         this.rootFiles.forEach(function (file) {
             var source = _this.compilerHost.getSourceFile(file, options.target);
-            seenNoDefaultLib = seenNoDefaultLib || source.hasNoDefaultLib;
-            _this.fileCache.addFile(file, source.text);
+            if (source) {
+                seenNoDefaultLib = seenNoDefaultLib || source.hasNoDefaultLib;
+                _this.fileCache.addFile(file, source.text);
+            }
+            else {
+                throw ("tss cannot find file: " + file);
+            }
         });
         if (!seenNoDefaultLib) {
             var defaultLibFileName = this.compilerHost.getDefaultLibFileName(options);
@@ -558,7 +563,7 @@ function findConfigFile() {
 var fileNames;
 var configFile, configObject, configObjectParsed;
 // NOTE: partial options support only
-var commandLine = ts.parseCommandLine(ts.sys.args);
+var commandLine = ts["parseCommandLine"](ts.sys.args);
 if (commandLine.options.version) {
     console.log(require("../package.json").version);
     process.exit(0);
@@ -597,5 +602,11 @@ if (!fileNames) {
     process.exit(1);
 }
 var tss = new TSS();
-tss.setup(fileNames, options);
-tss.listen();
+try {
+    tss.setup(fileNames, options);
+    tss.listen();
+}
+catch (e) {
+    console.error(e.toString());
+    process.exit(1);
+}

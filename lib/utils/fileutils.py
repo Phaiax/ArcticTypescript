@@ -75,7 +75,7 @@ def filename2linux(filename):
 
 def filename2key(filename):
     """ returns the unified version of filename which can be used as dict key """
-    return filename2linux(filename).lower()
+    return filename2linux(realfn(filename)).lower()
 
 
 def fn2k(filename):

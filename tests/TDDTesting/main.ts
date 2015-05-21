@@ -1,7 +1,6 @@
-
+/// <reference path="card.ts" />
 
 var tartatos = 44;
-
 
 var sigma = "asdasd";
 

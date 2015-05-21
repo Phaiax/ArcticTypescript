@@ -6,6 +6,7 @@ ArcticTypescript
  * auto completion
  * live error highlighting
  * fast access to errors via shortcuts and clicks
+ * refactoring (beta)
  * jump to declaration
  * quick info
  * build system *for Typescript 1.5*
@@ -24,17 +25,20 @@ Errors? See [Common Errors and Solutions][errorfaq] first, then [issue][issues] 
 Commands and Shortcuts
 ----------------------------------------------------------------------------
 
- * `ctrl + space`           trigger code completion.
- * `alt + shift + e e`      error view
- * `alt + shift + e h`      jump to 1st error
- * `alt + shift + e j`      jump to 2nd error
- * `alt + shift + e k`      jump to 3rd error
- * `alt + shift + e l`      jump to 4th error
- * `F1`                     show details about type under cursor
- * `F4`                     jump to declaration
- * `shift+F5`               reload (do this if autocompletion is missing
-                            something or after tsconfig.json changes)
- * `F8` or `ctrl + b`       Build the project.
+| Shortcut                    | Action |
+|---                          |--- |
+| `Ctrl`+ `Space`             | trigger code completion. |
+| `Alt` + `Shift` + `E` `E`   | error view |
+| `Alt` + `Shift` + `E` `H`   | jump to 1st error |
+| `Alt` + `Shift` + `E` `J`   | jump to 2nd error |
+| `Alt` + `Shift` + `E` `K`   | jump to 3rd error |
+| `Alt` + `Shift` + `E` `L`   | jump to 4th error |
+| `F1`                        | show details about type under cursor |
+| `F2`                        | refactor under cursor <br>(beta: enable in settings first) |
+| `F4`                        | jump to declaration |
+| `F8` or `Ctrl`+`B`          | Build the project. |
+| `Shift`+`F5`                | reload (do this if autocompletion<br> is missing something or after <br> tsconfig.json changes) |
+
  * Goto Anything -> "ArcticTypescript: Terminate All Builds" if build is stuck
  * snippets: see below
 
@@ -147,6 +151,7 @@ updated. Example:
 
 You can configure ArcticTypescript as well (type, default):
 
+ * `enable_refactoring`        (boolean, false) Disabled by default (still beta)
  * `activate_build_system`     (boolean, true)
  * `auto_complete`             (boolean, true)
  * `node_path`                 (string, null) If null, then nodejs must be in $PATH
@@ -198,23 +203,23 @@ Example Settings in project file `mytsproject.sublime-settings`:
                 "post_processing_commands": [
                     "node .settings/.silns.js",
                     "r.js.cmd -o .settings/.build.js",
-                    "cat $tsconfig",
+                    "cat ${tsconfig}",
                     "echo a\\\\nbc | cat"
                 ]
             }
         }
     }
 
-The working directory for all commands is `$tsconfig_path`. They will be executed
+The working directory for all commands is `${tsconfig_path}`. They will be executed
 using `subprocess.Popen(cmd, shell=True)`. shell=True -> You can use pipes, ...
 
 You can use variables for the string values:
 
  * [Sublime Variables][sublime_variables]
- * All your compilerOptions, e.g. `$outDir`
- * `$platform` : sys.platform = "linux" | "darwin" | "nt"
- * `$tsconfig` : the path to tsconfig.json
- * `$tsconfig_path` : the folder of tsconfig.json
+ * All your compilerOptions, e.g. `${outDir}`
+ * `${platform}` : sys.platform = "linux" | "darwin" | "nt"
+ * `${tsconfig}` : the path to tsconfig.json
+ * `${tsconfig_path}` : the folder of tsconfig.json
 
 
  [sublime_variables]: http://docs.sublimetext.info/en/latest/reference/build_systems/configuration.html?highlight=file_name#build-system-variables
@@ -334,6 +339,10 @@ the dependency in `package.json` to
 
 Important Changes
 ----------------------------------------------------------------------------
+
+v0.7.0:
+*  Variable replacements for post or pre processing commands now require curly braces: `${tsconfig}`
+*  Typescript 1.5 beta
 
 v0.6.0:
 

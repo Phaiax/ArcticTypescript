@@ -39,6 +39,7 @@ allowed_compileroptions = list(compileroptions_validations.keys())
 
 settings_validations = {
     "activate_build_system": bool,     #?:boolean;   default: true
+    "enable_refactoring": bool,      #?:boolean,   default: false
     "auto_complete": bool,             #?:boolean,   default: true
     "node_path": str,                 #?:string,    default: null -> nodejs in $PATH
     "tsc_path": str,                  #?:string,    default: null -> search a node_modules dir with tsc or use ArcticTypescript's tsc
