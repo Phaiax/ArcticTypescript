@@ -1,7 +1,7 @@
 ArcticTypescript
 ================
 
- * Wizzard for project creation (create .ts file to activate).
+ * Wizard for project creation (create .ts file to activate).
  * syntax highlighting
  * auto completion
  * live error highlighting
